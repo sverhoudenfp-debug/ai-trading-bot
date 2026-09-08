@@ -39,12 +39,16 @@ export function PositionsChart({ candles, trades }: { candles: OhlcPoint[]; trad
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
 
-  // Chart eenmalig opzetten
+  // Chart eenmalig opzetten — bewust GEEN autoSize: die bleek in deze
+  // layout (flex/grid-kaarten) soms een hoogte van 0 te berekenen, waardoor
+  // de grafiek onzichtbaar was. Expliciete breedte/hoogte + eigen resize-
+  // listener is betrouwbaarder.
   useEffect(() => {
     const el = container.current;
     if (!el) return;
     const chart = createChart(el, {
-      autoSize: true,
+      width: el.clientWidth || 800,
+      height: 460,
       layout: {
         background: { color: "transparent" },
         textColor: "#9fb4c9",
@@ -74,7 +78,19 @@ export function PositionsChart({ candles, trades }: { candles: OhlcPoint[]; trad
     });
     chartRef.current = chart;
     seriesRef.current = series;
+
+    const onResize = () => {
+      if (el.clientWidth > 0) chart.applyOptions({ width: el.clientWidth, height: 460 });
+    };
+    const ro = new ResizeObserver(onResize);
+    ro.observe(el);
+    window.addEventListener("resize", onResize);
+    // eerste keer direct ook forceren (na layout van kaarten/knoppen)
+    setTimeout(onResize, 0);
+
     return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", onResize);
       chart.remove();
       chartRef.current = null;
       seriesRef.current = null;

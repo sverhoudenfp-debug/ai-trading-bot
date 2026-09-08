@@ -28,6 +28,7 @@ export interface PaperState {
   day: string | null; // YYYY-MM-DD (UTC)
   day_start_equity: number;
   halted: boolean;
+  updated_at?: string | null; // laatste bot-tick (cron-levensbewijs)
 }
 
 export interface PaperOrder {
@@ -58,6 +59,7 @@ export async function getStates(): Promise<PaperState[]> {
     day: s.day === null ? null : String(s.day),
     day_start_equity: Number(s.day_start_equity),
     halted: Boolean(s.halted),
+    updated_at: s.updated_at ? String(s.updated_at) : null,
   }));
 }
 

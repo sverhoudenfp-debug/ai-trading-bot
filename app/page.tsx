@@ -41,6 +41,7 @@ interface PaperState {
   entry_price: number | null; entry_time: string | null;
   size: number | null; cost: number | null;
   day: string | null; day_start_equity: number; halted: boolean;
+  updated_at?: string | null; // laatste bot-tick (levensbewijs van de cron)
 }
 interface FeedItem { id: string; time: string; text: string; kind: "info" | "tick" | "order" }
 
@@ -136,6 +137,18 @@ export default function Dashboard() {
 
   const sel = multi?.pairs.find((p) => p.pair === pair) ?? null;
   const stateOf = (pair_: string) => paper?.states.find((s) => s.pair === pair_);
+  // Levend bewijs dat de cron de bot wakker maakt: jongste updated_at
+  // van de coin-states → "X min geleden". Meer dan 15 min oud = waarschuwing,
+  // want dan zijn er minstens 3 ticks van de 5-minuten-wekker overgeslagen.
+  const lastTickHint = (() => {
+    const stamps = (paper?.states ?? []).map((s) => s.updated_at).filter(Boolean) as string[];
+    if (!stamps.length) return null;
+    const ms = Date.now() - Math.max(...stamps.map((t) => Date.parse(t)));
+    if (!isFinite(ms) || ms < 0) return null;
+    const min = Math.round(ms / 60000);
+    if (min > 15) return `⚠ ${min} min geleden`;
+    return `${min} min geleden`;
+  })();
 
   return (
     <main className="hud">
@@ -214,7 +227,7 @@ export default function Dashboard() {
       </section>
 
       <section id="grafieken">
-        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">bot-posities rechtstreeks op de candles · ▲ koop/short · ▼ exit (groen = winst)</span></h2>
+        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">bot-posities rechtstreeks op de candles · ▲ koop/short · ▼ exit (groen = winst){lastTickHint ? ` · bot-tick: ${lastTickHint}` : ""}</span></h2>
         <div className="grid4">
           {(multi?.pairs ?? []).map((p) => (
             <MiniChart key={p.pair} p={p} live={stateOf(p.pair)} active={p.pair === pair} onPick={() => setPair(p.pair)} />
