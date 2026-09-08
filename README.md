@@ -57,3 +57,20 @@ npm run dev   # → http://localhost:3000
 **Eerlijke waarschuwing.** Dit is een leerproject. Crypto is risicovol; je kunt
 je inleg volledig verliezen. Een backtest kijkt alleen achterom en zegt niets
 over de toekomst. Niets in deze repository is financieel advies.
+
+## Fase 2 — Paper trading (setup, eenmalig, ~10 min)
+
+De bot handelt gesimuleerd op live koersen. Drie stappen:
+
+1. **Database** — plak `supabase-setup.sql` in Supabase → SQL Editor → Run.
+2. **Environment variables in Vercel** (Settings → Environment Variables, daarna Redeploy):
+   - `SUPABASE_URL` — je Project URL
+   - `SUPABASE_SERVICE_ROLE_KEY` — je service_role key
+   - `PAPER_TOKEN` — een lang willekeurig geheim (bijv. uit `openssl rand -hex 20`)
+3. **Cron-wekker** — maak een gratis account op cron-job.org → Add cron job:
+   - URL: `https://JOUW-APP.vercel.app/api/paper/run?token=JOUW-PAPER_TOKEN`
+   - Schedule: every 5 minutes
+   - De bot checkt daarna zelfstandig de markt, elke 5 min, 24/7.
+
+Geen echte orders in deze fase. Fase 3 (echt geld) start pas als fase 2
+minstens een maand winstgevender dan buy&hold is — zie de roadmap.

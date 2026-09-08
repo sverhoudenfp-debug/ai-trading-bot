@@ -33,6 +33,8 @@ const REASONS: Record<Trade["reason"], string> = {
   "daglimiet": "Daglimiet",
 };
 
+import PaperPanel from "./paper";
+
 export default function Dashboard() {
   const [data, setData] = useState<Result | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -102,7 +104,7 @@ export default function Dashboard() {
           <p className="sub">BTC/EUR · 15-minuten candles · {data ? data.candlesUsed.toLocaleString("nl-NL") + " candles geanalyseerd" : "…"}</p>
         </div>
         <div className="status" title="De bot plaatst geen echte orders in deze fase">
-          <span className="dot" /> Bot: backtest
+          <span className="dot" /> Bot: paper (gesimuleerd)
         </div>
       </header>
 
@@ -126,6 +128,11 @@ export default function Dashboard() {
             {s.dailyStops > 0 && " (bot is automatisch gestopt op een verliesdag)"}
           </p>
         )}
+      </section>
+
+      <section>
+        <h2>Fase 2 · Paper trading — live op actuele koersen</h2>
+        <PaperPanel />
       </section>
 
       <section>
@@ -169,8 +176,8 @@ export default function Dashboard() {
       <section>
         <h2>Roadmap</h2>
         <div className="phases">
-          <div className="phase now"><b>1 · Backtest</b><span>actief — dit is wat je ziet</span></div>
-          <div className="phase"><b>2 · Paper trading</b><span>live meekijken, gesimuleerde orders</span></div>
+          <div className="phase done"><b>1 · Backtest</b><span>afgerond ✓</span></div>
+          <div className="phase now"><b>2 · Paper trading</b><span>actief — live meekijken, gesimuleerde orders</span></div>
           <div className="phase"><b>3 · Live trading</b><span>echte orders — alleen na goed fase 2</span></div>
         </div>
         <p className="note center">

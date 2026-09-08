@@ -69,6 +69,7 @@ button.primary:disabled { opacity: 0.5; cursor: wait; }
 .phase b { display: block; font-size: 0.95rem; }
 .phase span { color: var(--muted); font-size: 0.78rem; }
 .phase.now { border-color: var(--gold); box-shadow: 0 0 0 1px var(--gold-dim) inset; }
+.phase.done b { color: #7ea77b; }
 .phase.now b { color: var(--gold); }
 
 footer { margin-top: 60px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--muted); font-size: 0.78rem; text-align: center; }
