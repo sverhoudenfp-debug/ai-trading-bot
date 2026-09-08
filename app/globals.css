@@ -128,6 +128,10 @@ h3 { margin: 0 0 8px; font-size: 13px; letter-spacing: .08em; color: var(--text)
 .mc-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; font-size: 14px; }
 .mc-foot { display: flex; justify-content: space-between; font-family: ui-monospace, monospace; font-size: 12.5px; color: var(--muted); margin-top: 4px; }
 .minichart canvas { width: 100%; height: 92px; display: block; }
+.tv-mini { height: 168px; }
+.tv-wrap { height: 440px; margin-top: 4px; }
+.tv-big { height: 100%; width: 100%; }
+.mc-head, .mc-foot { cursor: pointer; }
 
 /* ── statistieken-regel onder grote grafiek ── */
 .statrow {

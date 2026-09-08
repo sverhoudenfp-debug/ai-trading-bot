@@ -14,6 +14,7 @@ import { Candle } from "./exchange/marketdata";
 import { emaSeries, rsiSeries, momentumSeries } from "./indicators";
 
 export interface StrategyParams {
+  allowShorts: boolean; // shorts uit na data-experiment (verliezen in beide testvensters)
   // Signalen — long
   rsiPeriod: number;
   rsiBuy: number;    // RSI kruist ONDER deze waarde = verse dip (koopsignaal)
@@ -35,6 +36,7 @@ export interface StrategyParams {
 }
 
 export const DEFAULT_PARAMS: StrategyParams = {
+  allowShorts: false,
   rsiPeriod: 14,
   rsiBuy: 30,
   rsiExit: 55,
@@ -76,6 +78,7 @@ export function longSignal(s: StrategyState, candles: Candle[], i: number, p: St
 
 /** Shortsignaal: RSI kruist net over de pomp-drempel ÉN trend staat omlaag */
 export function shortSignal(s: StrategyState, candles: Candle[], i: number, p: StrategyParams): boolean {
+  if (!p.allowShorts) return false;
   if (i < 1) return false;
   const freshPump = s.rsi[i - 1] <= p.rsiShort && s.rsi[i] > p.rsiShort;
   const downtrend = candles[i].c < s.emaTrend[i];

@@ -61,8 +61,9 @@ over de toekomst. Niets in deze repository is financieel advies.
 ## Fase 2 — Paper trading (multi-coin, long & short)
 
 De bot volgt 4 coins (BTC, ETH, SOL, XRP) met elk een eigen virtueel potje
-van €1000, 24/7: long bij een verse RSI-dip in een stijgende trend, short
-bij een verse RSI-pomp in een dalende trend. Alle orders gesimuleerd.
+van €1000, 24/7: long bij een verse RSI-dip in een stijgende trend.
+Shorts zijn na het data-experiment van 8 sep 2026 UITGEZET (verloor in beide
+testvensters); her-evaluatie na de paper-periode. Alle orders gesimuleerd.
 
 ## Setup (eenmalig, ~10 min)
 

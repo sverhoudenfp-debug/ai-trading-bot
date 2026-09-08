@@ -6,6 +6,7 @@
 // De bot-logica (API's, strategie) is volledig onveranderd.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { TVMini, TVAdvanced, TV_SYMBOLS } from "./tradingview";
 
 const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
 const fmtEUR0 = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -69,41 +70,17 @@ function marker(ctx: CanvasRenderingContext2D, x: number, y: number, up: boolean
 }
 
 function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperState; onPick: () => void; active: boolean }) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
-  useEffect(() => {
-    const cv = ref.current; const ctx = cv?.getContext("2d");
-    if (!cv || !ctx) return;
-    const W = cv.width, H = cv.height, pad = 8;
-    const pr = p.prices;
-    const lo = Math.min(...pr), hi = Math.max(...pr);
-    const X = (i: number) => pad + (i / (pr.length - 1)) * (W - 2 * pad);
-    const Y = (v: number) => pad + (1 - (v - lo) / (hi - lo || 1)) * (H - 2 * pad);
-    ctx.clearRect(0, 0, W, H);
-    // gradient vulling
-    const grad = ctx.createLinearGradient(0, 0, 0, H);
-    grad.addColorStop(0, "rgba(56,225,255,0.22)"); grad.addColorStop(1, "rgba(56,225,255,0)");
-    ctx.beginPath();
-    pr.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))));
-    ctx.lineTo(X(pr.length - 1), H); ctx.lineTo(X(0), H); ctx.closePath();
-    ctx.fillStyle = grad; ctx.fill();
-    drawLine(ctx, pr, X, Y, "#38e1ff", 1.5);
-    // trade-markers
-    for (const t of p.trades) {
-      marker(ctx, X(idxForTime(p.times, t.entryTime)), Y(t.entryPrice), t.side === "long", "#d9b45f");
-      marker(ctx, X(idxForTime(p.times, t.exitTime)), Y(t.exitPrice), false, t.pnl >= 0 ? "#3ddc84" : "#ff5470");
-    }
-  }, [p]);
   const st = live?.status ?? "flat";
   return (
-    <div className={"minichart" + (active ? " active" : "")} onClick={onPick}>
-      <div className="mc-head">
+    <div className={"minichart" + (active ? " active" : "")}>
+      <div className="mc-head" onClick={onPick}>
         <b>{p.name}</b>
         <span className={"pill " + (live?.halted ? "halt" : st === "long" ? "long" : st === "short" ? "short" : "wait")}>
           {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : st === "short" ? "🔴 SHORT" : "⏳ SCAN"}
         </span>
       </div>
-      <canvas ref={ref} width={272} height={92} />
-      <div className="mc-foot">
+      <TVMini symbol={TV_SYMBOLS[p.pair] ?? "BITVAVO:BTCEUR"} />
+      <div className="mc-foot" onClick={onPick}>
         <span>{fmtPrice(p.price)}</span>
         <span className={cls(p.stats.totalReturnPct)}>bot 45d {sign(p.stats.totalReturnPct, 1)}</span>
       </div>
@@ -305,7 +282,7 @@ export default function Dashboard() {
       </section>
 
       <section id="grafieken">
-        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">klik een coin voor details · ▲ entry · ▼ exit (groen = winst)</span></h2>
+        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">live TradingView-charts · ▲ entry · ▼ exit (groen = winst) op de analyse-grafiek</span></h2>
         <div className="grid4">
           {(multi?.pairs ?? []).map((p) => (
             <MiniChart key={p.pair} p={p} live={stateOf(p.pair)} active={p.pair === pair} onPick={() => setPair(p.pair)} />
@@ -321,6 +298,8 @@ export default function Dashboard() {
               <button className="btn" onClick={loadMulti} disabled={busy}>{busy ? "analyse draait…" : "↻ opnieuw analyseren"}</button>
             </div>
             <BigChart p={sel} />
+            <h3 style={{ marginTop: 22 }}>◆ Live TradingView — {sel.name}</h3>
+            <div className="tv-wrap"><TVAdvanced symbol={TV_SYMBOLS[pair] ?? "BITVAVO:BTCEUR"} /></div>
             <div className="statrow">
               <span>bot: <b className={cls(sel.stats.totalReturnPct)}>{sign(sel.stats.totalReturnPct)}</b></span>
               <span>buy&amp;hold: <b className={cls(sel.stats.buyHoldPct)}>{sign(sel.stats.buyHoldPct)}</b></span>
