@@ -1,8 +1,7 @@
 "use client";
 
-// ── Fase 2-paneel: live paper trading ───────────────────────────────────
-// Toont wat de bot NU aan het doen is op live data (gesimuleerd geld).
-// Wordt pas "live" zodra de cron-wekker (en Supabase) actief is.
+// ── Fase 2-paneel: live paper trading (meerdere coins) ─────────────────
+// Elke coin heeft zijn eigen virtuele potje van €1000. Verversen elke minuut.
 
 import { useEffect, useState } from "react";
 
@@ -10,41 +9,41 @@ const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EU
 const dt = (t: string) => new Date(t).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
 const sign = (x: number, d = 2) => (x >= 0 ? "+" : "") + x.toFixed(d) + "%";
 
+const COIN_NAMES: Record<string, string> = {
+  "BTC-EUR": "Bitcoin", "ETH-EUR": "Ethereum", "SOL-EUR": "Solana", "XRP-EUR": "XRP",
+};
+
 interface Order {
-  id: number; created_at: string; side: "buy" | "sell"; price: number;
+  id: number; created_at: string; pair: string; side: "buy" | "sell"; price: number;
   size: number; reason: string; equity_after: number;
   pnl_eur: number | null; pnl_pct: number | null;
 }
+interface State {
+  pair: string; status: "flat" | "long" | "short"; cash: number;
+  entry_price: number | null; entry_time: string | null;
+  size: number | null; cost: number | null;
+  day: string | null; day_start_equity: number; halted: boolean;
+}
 interface PaperStatus {
   configured?: boolean; initialized?: boolean; error?: string;
-  state?: {
-    status: "flat" | "long"; cash: number;
-    entry_price: number | null; entry_time: string | null;
-    size: number | null; cost: number | null;
-    day: string | null; day_start_equity: number; halted: boolean;
-  };
-  orders?: Order[];
+  states?: State[]; orders?: Order[];
 }
 
 export default function PaperPanel() {
   const [ps, setPs] = useState<PaperStatus | null>(null);
-  const [err, setErr] = useState<string | null>(null);
 
   const load = () => {
-    setErr(null);
     fetch("/api/paper/status")
       .then((r) => r.json())
       .then(setPs)
-      .catch((e) => setErr(e.message));
+      .catch(() => setPs({ configured: true, error: "onbereikbaar" }));
   };
 
   useEffect(load, []);
   useEffect(() => {
-    const iv = setInterval(load, 60_000); // elke minuut verversen
+    const iv = setInterval(load, 60_000);
     return () => clearInterval(iv);
   }, []);
-
-  if (err) return <div className="card"><p className="delta">Paper-status niet beschikbaar: {err}</p></div>;
 
   if (!ps?.configured) {
     return (
@@ -57,66 +56,53 @@ export default function PaperPanel() {
     );
   }
   if (ps.error) return <div className="card"><p className="delta">Supabase-fout: {ps.error} — draai je het SQL-script al?</p></div>;
-  if (!ps.initialized) {
-    return <div className="card"><p className="delta">Database gevonden, maar de tabellen bestaan nog niet — draai het SQL-script uit de README in de Supabase SQL-editor.</p></div>;
+  if (!ps.initialized || !ps.states?.length) {
+    return <div className="card"><p className="delta">Tabellen gevonden, maar nog geen bot-status — de cron-wekker vult dit zodra hij loopt.</p></div>;
   }
 
-  const s = ps.state!;
   const orders = ps.orders ?? [];
-  const inPos = s.status === "long" && s.size && s.entry_price;
-  const equity = s.cash + (inPos ? s.size! * s.entry_price! : 0);
-  const dayPnl = s.day ? (equity / s.day_start_equity - 1) * 100 : 0;
 
   return (
     <>
       <div className="grid">
-        <div className="card">
-          <h3>Bot-status</h3>
-          <div className="big">{s.halted ? "⏸ Pauze" : inPos ? "🟢 In positie" : "⏳ Wacht op signaal"}</div>
-          <div className="delta">
-            {s.halted
-              ? "daglimiet geraakt — bot rust tot morgen (UTC)"
-              : inPos
-              ? `LONG sinds ${s.entry_time ? dt(s.entry_time) : "?"}`
-              : "geen open positie — bot kijkt elke 5 min mee"}
-          </div>
-        </div>
-        <div className="card">
-          <h3>Virtueel vermogen</h3>
-          <div className="big">{fmtEUR.format(equity)}</div>
-          <div className={"delta " + (dayPnl >= 0 ? "up" : "down")}>vandaag {sign(dayPnl)} (daglimiet −3%)</div>
-        </div>
-        <div className="card">
-          <h3>Open positie</h3>
-          {inPos ? (
-            <>
-              <div className="big">{s.size!.toFixed(6)} BTC</div>
-              <div className="delta">gekocht @ {fmtEUR.format(s.entry_price!)} · kosten {fmtEUR.format(s.cost!)}</div>
-            </>
-          ) : (
-            <>
-              <div className="big">—</div>
-              <div className="delta">kas: {fmtEUR.format(s.cash)}</div>
-            </>
-          )}
-        </div>
-        <div className="card">
-          <h3>Trades tot nu toe</h3>
-          <div className="big">{orders.filter((o) => o.side === "sell").length}</div>
-          <div className="delta">gesimuleerd — geen echt geld in beweging</div>
-        </div>
+        {ps.states.map((s) => {
+          const inPos = s.status !== "flat" && s.size && s.entry_price;
+          const equity = s.cash + (inPos
+            ? s.status === "long"
+              ? s.size! * s.entry_price!
+              : s.size! * (2 * s.entry_price! - s.entry_price!)
+            : 0);
+          const dayPnl = s.day ? (equity / s.day_start_equity - 1) * 100 : 0;
+          return (
+            <div className="card" key={s.pair}>
+              <h3>{COIN_NAMES[s.pair] ?? s.pair}</h3>
+              <div className="big" style={{ fontSize: "1.4rem" }}>
+                {s.halted ? "⏸ Pauze" : s.status === "long" ? "🟢 LONG" : s.status === "short" ? "🔴 SHORT" : "⏳ Wacht"}
+              </div>
+              <div className="delta">
+                {fmtEUR.format(equity)} · vandaag <span className={dayPnl >= 0 ? "up" : "down"}>{sign(dayPnl)}</span>
+              </div>
+              <div className="delta">
+                {inPos
+                  ? `${s.size!.toFixed(6)} @ ${fmtEUR.format(s.entry_price!)}`
+                  : `kas: ${fmtEUR.format(s.cash)}`}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {orders.length > 0 ? (
         <table>
           <thead>
-            <tr><th>Tijdstip</th><th>Actie</th><th>Koers</th><th>Reden</th><th>Vermogen</th><th>Resultaat</th></tr>
+            <tr><th>Tijdstip</th><th>Coin</th><th>Actie</th><th>Koers</th><th>Reden</th><th>Vermogen</th><th>Resultaat</th></tr>
           </thead>
           <tbody>
-            {orders.map((o) => (
+            {orders.slice(0, 12).map((o) => (
               <tr key={o.id}>
                 <td>{dt(o.created_at!)}</td>
-                <td>{o.side === "buy" ? "Koop" : "Verkoop"}</td>
+                <td>{COIN_NAMES[o.pair] ?? o.pair}</td>
+                <td>{o.side === "buy" ? "🟢 Koop" : "🔴 Verkoop"}</td>
                 <td>{fmtEUR.format(o.price)}</td>
                 <td>{o.reason}</td>
                 <td>{fmtEUR.format(o.equity_after)}</td>
@@ -130,8 +116,8 @@ export default function PaperPanel() {
       ) : (
         <div className="card">
           <p className="delta">
-            Nog geen orders. Zodra de cron-wekker actief is en de strategie een signaal ziet,
-            verschijnen hier de gesimuleerde trades vanzelf.
+            Nog geen orders. De bot kijkt alle 4 de coins elke 5 minuten na — zodra er ergens een
+            signaal is (long of short), verschijnt het hier vanzelf.
           </p>
         </div>
       )}

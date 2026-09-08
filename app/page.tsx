@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 
 interface Trade {
+  side: "long" | "short";
   entryTime: number; exitTime: number; entryPrice: number; exitPrice: number;
   size: number; pnl: number; pnlPct: number;
   reason: "take-profit" | "stop-loss" | "signaal" | "max-hold" | "daglimiet";
@@ -10,7 +11,7 @@ interface Trade {
 }
 interface Result {
   stats: {
-    totalReturnPct: number; buyHoldPct: number; winRatePct: number; numTrades: number;
+    totalReturnPct: number; buyHoldPct: number; winRatePct: number; numTrades: number; numShorts: number;
     maxDrawdownPct: number; dailyStops: number; avgHoldHours: number; feesPaid: number;
     bestTradePct: number; worstTradePct: number;
   };
@@ -39,18 +40,19 @@ export default function Dashboard() {
   const [data, setData] = useState<Result | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [pair, setPair] = useState("BTC-EUR");
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
   const load = () => {
     setLoading(true); setErr(null);
-    fetch("/api/backtest")
+    fetch(`/api/backtest?pair=${pair}`)
       .then((r) => r.json())
       .then((j) => { if (j.error) throw new Error(j.error); setData(j); })
       .catch((e) => setErr(e.message))
       .finally(() => setLoading(false));
   };
 
-  useEffect(load, []);
+  useEffect(() => { load(); }, [pair]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!data || !canvasRef.current) return;
@@ -113,12 +115,24 @@ export default function Dashboard() {
       <section className="grid">
         <div className="card"><h3>Rendement (bot)</h3><div className={"big " + cls(s?.totalReturnPct ?? 0)}>{loading && !data ? "…" : s ? sign(s.totalReturnPct) : "—"}</div><div className="delta">na kosten (fee + slippage)</div></div>
         <div className="card"><h3>Buy &amp; hold</h3><div className={"big " + cls(s?.buyHoldPct ?? 0)}>{s ? sign(s.buyHoldPct) : "—"}</div><div className="delta">gewoon kopen en vasthouden</div></div>
-        <div className="card"><h3>Winrate</h3><div className="big">{s ? s.winRatePct.toFixed(0) + "%" : "—"}</div><div className="delta">{s ? `${s.numTrades} trades · gem. ${s.avgHoldHours.toFixed(1)}u vastgehouden` : ""}</div></div>
+        <div className="card"><h3>Winrate</h3><div className="big">{s ? s.winRatePct.toFixed(0) + "%" : "—"}</div><div className="delta">{s ? `${s.numTrades} trades (${s.numShorts} short) · gem. ${s.avgHoldHours.toFixed(1)}u` : ""}</div></div>
         <div className="card"><h3>Max. dip</h3><div className="big down">{s ? "−" + s.maxDrawdownPct.toFixed(1) + "%" : "—"}</div><div className="delta">diepste vermogensdaling in de periode</div></div>
       </section>
 
       <section>
-        <h2>Kapitaalcurve — bot vs. vasthouden</h2>
+        <h2>
+          Kapitaalcurve — bot vs. vasthouden
+          <select
+            value={pair}
+            onChange={(e) => setPair(e.target.value)}
+            style={{ marginLeft: 12, background: "#1c1c2a", color: "#e8e6ef", border: "1px solid #3a3a52", borderRadius: 8, padding: "4px 8px", fontSize: 14 }}
+          >
+            <option value="BTC-EUR">Bitcoin</option>
+            <option value="ETH-EUR">Ethereum</option>
+            <option value="SOL-EUR">Solana</option>
+            <option value="XRP-EUR">XRP</option>
+          </select>
+        </h2>
         <div className="card">
           <canvas ref={canvasRef} width={920} height={280} />
         </div>
@@ -140,11 +154,12 @@ export default function Dashboard() {
         {data && data.trades.length > 0 ? (
           <table>
             <thead>
-              <tr><th>Geopend</th><th>Gesloten</th><th>Koop</th><th>Verkoop</th><th>Reden</th><th>Uren</th><th>Resultaat</th></tr>
+              <tr><th>Richting</th><th>Geopend</th><th>Gesloten</th><th>Koop</th><th>Verkoop</th><th>Reden</th><th>Uren</th><th>Resultaat</th></tr>
             </thead>
             <tbody>
               {[...data.trades].reverse().slice(0, 25).map((t, i) => (
                 <tr key={i}>
+                  <td>{t.side === "long" ? "🟢 Long" : "🔴 Short"}</td>
                   <td>{dt(t.entryTime)}</td>
                   <td>{dt(t.exitTime)}</td>
                   <td>{fmtEUR.format(t.entryPrice)}</td>

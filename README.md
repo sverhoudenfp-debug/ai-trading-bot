@@ -58,11 +58,18 @@ npm run dev   # → http://localhost:3000
 je inleg volledig verliezen. Een backtest kijkt alleen achterom en zegt niets
 over de toekomst. Niets in deze repository is financieel advies.
 
-## Fase 2 — Paper trading (setup, eenmalig, ~10 min)
+## Fase 2 — Paper trading (multi-coin, long & short)
+
+De bot volgt 4 coins (BTC, ETH, SOL, XRP) met elk een eigen virtueel potje
+van €1000, 24/7: long bij een verse RSI-dip in een stijgende trend, short
+bij een verse RSI-pomp in een dalende trend. Alle orders gesimuleerd.
+
+## Setup (eenmalig, ~10 min)
 
 De bot handelt gesimuleerd op live koersen. Drie stappen:
 
-1. **Database** — plak `supabase-setup.sql` in Supabase → SQL Editor → Run.
+1. **Database** — plak `supabase-setup.sql` in Supabase → SQL Editor → Run
+   (dit verwijdert de oude tabellen en maakt de multi-coin-versie aan).
 2. **Environment variables in Vercel** (Settings → Environment Variables, daarna Redeploy):
    - `SUPABASE_URL` — je Project URL
    - `SUPABASE_SERVICE_ROLE_KEY` — je service_role key
