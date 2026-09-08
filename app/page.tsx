@@ -6,7 +6,7 @@
 // De bot-logica (API's, strategie) is volledig onveranderd.
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TVMini, TVAdvanced, TV_SYMBOLS } from "./tradingview";
+import { PositionsChart } from "./positionschart";
 
 const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
 const fmtEUR0 = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -29,7 +29,7 @@ interface MultiPair {
     numShorts: number; maxDrawdownPct: number; avgHoldHours: number; feesPaid: number;
     dailyStops: number; bestTradePct: number; worstTradePct: number;
   };
-  times: number[]; prices: number[]; equity: number[]; trades: MiniTrade[];
+  candles: { t: number; o: number; h: number; l: number; c: number }[]; trades: MiniTrade[];
 }
 interface PaperOrder {
   id: number; created_at: string; pair: string; side: "buy" | "sell";
@@ -44,92 +44,24 @@ interface PaperState {
 }
 interface FeedItem { id: string; time: string; text: string; kind: "info" | "tick" | "order" }
 
-/** x-positie van een timestamp in een (gedownsamplede) tijdreeks */
-function idxForTime(times: number[], t: number): number {
-  let lo = 0, hi = times.length - 1;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if (times[mid] < t) lo = mid + 1; else hi = mid;
-  }
-  return lo;
-}
-
-function drawLine(ctx: CanvasRenderingContext2D, values: number[], X: (i: number) => number, Y: (v: number) => number, color: string, width = 1.6) {
-  ctx.strokeStyle = color; ctx.lineWidth = width; ctx.beginPath();
-  values.forEach((v, i) => (i ? ctx.lineTo(X(i), Y(v)) : ctx.moveTo(X(i), Y(v))));
-  ctx.stroke();
-}
-
-function marker(ctx: CanvasRenderingContext2D, x: number, y: number, up: boolean, color: string) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  const s = 5;
-  if (up) { ctx.moveTo(x, y - s); ctx.lineTo(x - s, y + s * 0.8); ctx.lineTo(x + s, y + s * 0.8); }
-  else { ctx.moveTo(x, y + s); ctx.lineTo(x - s, y - s * 0.8); ctx.lineTo(x + s, y - s * 0.8); }
-  ctx.closePath(); ctx.fill();
-}
-
 function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperState; onPick: () => void; active: boolean }) {
   const st = live?.status ?? "flat";
   return (
-    <div className={"minichart" + (active ? " active" : "")}>
-      <div className="mc-head" onClick={onPick}>
+    <div className={"minichart" + (active ? " active" : "")} onClick={onPick}>
+      <div className="mc-head">
         <b>{p.name}</b>
         <span className={"pill " + (live?.halted ? "halt" : st === "long" ? "long" : st === "short" ? "short" : "wait")}>
           {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : st === "short" ? "🔴 SHORT" : "⏳ SCAN"}
         </span>
       </div>
-      <TVMini symbol={TV_SYMBOLS[p.pair] ?? "BITVAVO:BTCEUR"} />
-      <div className="mc-foot" onClick={onPick}>
-        <span>{fmtPrice(p.price)}</span>
+      <div className="mc-price">{fmtPrice(p.price)}</div>
+      <div className="mc-stats">
         <span className={cls(p.stats.totalReturnPct)}>bot 45d {sign(p.stats.totalReturnPct, 1)}</span>
+        <span>{p.stats.numTrades} trades</span>
+        <span>win {p.stats.winRatePct.toFixed(0)}%</span>
       </div>
     </div>
   );
-}
-
-function BigChart({ p }: { p: MultiPair }) {
-  const ref = useRef<HTMLCanvasElement | null>(null);
-  useEffect(() => {
-    const cv = ref.current; const ctx = cv?.getContext("2d");
-    if (!cv || !ctx) return;
-    const W = cv.width, H = cv.height, padL = 62, padR = 12, padT = 14, padB = 26;
-    const eq = p.equity, pr = p.prices;
-    const bh = pr.map((v) => (v / pr[0]) * 1000);
-    const all = [...eq, ...bh];
-    const lo = Math.min(...all), hi = Math.max(...all);
-    const X = (i: number) => padL + (i / (eq.length - 1)) * (W - padL - padR);
-    const Y = (v: number) => padT + (1 - (v - lo) / (hi - lo || 1)) * (H - padT - padB);
-    const Yp = (v: number) => padT + (1 - (v - Math.min(...pr)) / (Math.max(...pr) - Math.min(...pr) || 1)) * (H - padT - padB);
-
-    ctx.clearRect(0, 0, W, H);
-    ctx.strokeStyle = "rgba(56,225,255,0.10)"; ctx.fillStyle = "#7d8aa0"; ctx.font = "10px ui-monospace, monospace";
-    for (let g = 0; g <= 4; g++) {
-      const v = lo + ((hi - lo) * g) / 4, y = Y(v);
-      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(W - padR, y); ctx.stroke();
-      ctx.fillText(fmtEUR0.format(v), 4, y + 3);
-    }
-    ctx.strokeStyle = "rgba(56,225,255,0.20)"; ctx.setLineDash([4, 4]); ctx.beginPath();
-    ctx.moveTo(padL, Y(1000)); ctx.lineTo(W - padR, Y(1000)); ctx.stroke(); ctx.setLineDash([]);
-    drawLine(ctx, bh, X, Y, "rgba(125,138,160,0.55)", 1.3);
-    drawLine(ctx, eq, X, Y, "#d9b45f", 2);
-    // koers-lijn (rechter as, transparant)
-    drawLine(ctx, pr, X, Yp, "rgba(56,225,255,0.35)", 1);
-    // trade-markers op de koers
-    for (const t of p.trades) {
-      marker(ctx, X(idxForTime(p.times, t.entryTime)), Yp(t.entryPrice), t.side === "long", "#d9b45f");
-      marker(ctx, X(idxForTime(p.times, t.exitTime)), Yp(t.exitPrice), false, t.pnl >= 0 ? "#3ddc84" : "#ff5470");
-    }
-    ctx.font = "11px ui-monospace, monospace";
-    ctx.fillStyle = "#d9b45f"; ctx.fillText("● bot-vermogen", W - 240, padT + 8);
-    ctx.fillStyle = "rgba(125,138,160,0.8)"; ctx.fillText("● buy & hold", W - 150, padT + 8);
-    ctx.fillStyle = "rgba(56,225,255,0.6)"; ctx.fillText("— koers (rechter as)", W - 60, padT + 8);
-    ctx.fillStyle = "#7d8aa0";
-    ctx.fillText(dt(p.times[0]), padL, H - 8);
-    const end = dt(p.times[p.times.length - 1]);
-    ctx.fillText(end, W - padR - ctx.measureText(end).width, H - 8);
-  }, [p]);
-  return <canvas ref={ref} width={1080} height={320} />;
 }
 
 export default function Dashboard() {
@@ -282,7 +214,7 @@ export default function Dashboard() {
       </section>
 
       <section id="grafieken">
-        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">live TradingView-charts · ▲ entry · ▼ exit (groen = winst) op de analyse-grafiek</span></h2>
+        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">bot-posities rechtstreeks op de candles · ▲ koop/short · ▼ exit (groen = winst)</span></h2>
         <div className="grid4">
           {(multi?.pairs ?? []).map((p) => (
             <MiniChart key={p.pair} p={p} live={stateOf(p.pair)} active={p.pair === pair} onPick={() => setPair(p.pair)} />
@@ -291,15 +223,13 @@ export default function Dashboard() {
         {sel && (
           <div className="card wide">
             <div className="big-head">
-              <h3>{sel.name} — vermogenscurve 45 dagen</h3>
+              <h3>{sel.name} — candles met bot-posities (45 dagen)</h3>
               <select value={pair} onChange={(e) => setPair(e.target.value)} className="sel">
                 {multi!.pairs.map((p) => <option key={p.pair} value={p.pair}>{p.name}</option>)}
               </select>
               <button className="btn" onClick={loadMulti} disabled={busy}>{busy ? "analyse draait…" : "↻ opnieuw analyseren"}</button>
             </div>
-            <BigChart p={sel} />
-            <h3 style={{ marginTop: 22 }}>◆ Live TradingView — {sel.name}</h3>
-            <div className="tv-wrap"><TVAdvanced symbol={TV_SYMBOLS[pair] ?? "BITVAVO:BTCEUR"} /></div>
+            <div className="lw-chart-wrap"><PositionsChart candles={sel.candles} trades={sel.trades} /></div>
             <div className="statrow">
               <span>bot: <b className={cls(sel.stats.totalReturnPct)}>{sign(sel.stats.totalReturnPct)}</b></span>
               <span>buy&amp;hold: <b className={cls(sel.stats.buyHoldPct)}>{sign(sel.stats.buyHoldPct)}</b></span>

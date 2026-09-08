@@ -1,7 +1,8 @@
-// ── Multi-coin backtest-overzicht voor het dashboard ───────────────────
-// Levert per coin: actuele koers, stats en een gedownsamplede
-// equity/koers-curve met alle trades (voor de grafiek-markers).
-// De backtest-logica zelf is onveranderd — dit is puur een lees-API.
+// ── Multi-coin overzicht voor het dashboard ─────────────────────────────
+// Levert per coin: actuele koers, stats, volledige OHLC-candles (voor de
+// candlestick-chart) en alle trades (voor de bot-positie-markers op die
+// candles). De backtest-logica zelf is onveranderd — dit is puur een
+// lees-API.
 
 import { fetchCandles } from "@/lib/exchange/marketdata";
 import { runBacktest } from "@/lib/backtest";
@@ -27,17 +28,6 @@ export async function GET() {
       periodStart = periodStart || candles[0].t;
       periodEnd = candles[n - 1].t;
 
-      // Downsamplen naar ~150 punten voor een vlotte grafiek
-      const step = Math.max(1, Math.floor(n / 150));
-      const times: number[] = [];
-      const prices: number[] = [];
-      const equity: number[] = [];
-      for (let i = 0; i < n; i += step) {
-        times.push(candles[i].t);
-        prices.push(candles[i].c);
-        equity.push(result.equity[i]);
-      }
-
       out.push({
         pair,
         name: PAIR_NAMES[pair],
@@ -55,9 +45,9 @@ export async function GET() {
           bestTradePct: result.stats.bestTradePct,
           worstTradePct: result.stats.worstTradePct,
         },
-        times,
-        prices,
-        equity,
+        // Volledige OHLC-reeks — lightweight-charts kan duizenden candles
+        // vlekkeloos tekenen, dus geen downsampling nodig.
+        candles: candles.map((c) => ({ t: c.t, o: c.o, h: c.h, l: c.l, c: c.c })),
         trades: result.trades.map((t) => ({
           side: t.side,
           entryTime: t.entryTime,
