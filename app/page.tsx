@@ -325,7 +325,7 @@ export default function Dashboard() {
         </div>
         <div className="phases">
           <div className="phase done"><b>1 · Backtest</b><span>afgerond ✓</span></div>
-          <div className="phase now"><b>2 · Paper trading</b><span>actief — 4 coins · long &amp; short · 24/7</span></div>
+          <div className="phase now"><b>2 · Paper trading</b><span>actief — 4 coins · long-only · 24/7</span></div>
           <div className="phase"><b>3 · Live trading</b><span>echte orders — alleen na goed fase 2</span></div>
         </div>
       </section>

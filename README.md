@@ -58,7 +58,7 @@ npm run dev   # → http://localhost:3000
 je inleg volledig verliezen. Een backtest kijkt alleen achterom en zegt niets
 over de toekomst. Niets in deze repository is financieel advies.
 
-## Fase 2 — Paper trading (multi-coin, long & short)
+## Fase 2 — Paper trading (multi-coin, long-only)
 
 De bot volgt 4 coins (BTC, ETH, SOL, XRP) met elk een eigen virtueel potje
 van €1000, 24/7: long bij een verse RSI-dip in een stijgende trend.
