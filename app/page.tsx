@@ -71,6 +71,10 @@ export default function Dashboard() {
     states: PaperState[]; orders: PaperOrder[];
     pot?: { cash: number; day_start_equity: number; halted: boolean } | null;
   blofin?: { configured: boolean; live: boolean; equityUsd: number | null; positions: { instId: string; contracts: number; entry: number; mark: number; upl: number }[]; error?: string };
+  agents?: {
+    signals: { id: number; created_at: string; pair: string; side: string; kind: string; reason: string; strategy_version: string; outcome: string; outcome_reason: string | null }[];
+    news: { id: number; created_at: string; level: string; reason: string; valid_until: string } | null;
+  } | null;
   } | null>(null);
   const [pair, setPair] = useState("BTC-EUR");
   const [feed, setFeed] = useState<FeedItem[]>([]);
@@ -104,7 +108,7 @@ export default function Dashboard() {
       .then((j) => {
         if (!j.configured || j.error) return;
         const orders: PaperOrder[] = j.orders ?? [];
-        setPaper({ states: j.states ?? [], orders, blofin: j.blofin });
+        setPaper({ states: j.states ?? [], orders, blofin: j.blofin, agents: j.agents ?? null });
         if (j.blofin?.live) addFeed(`Paper-live actief op Blofin demo — virtueel vermogen $${Number(j.blofin.equityUsd).toFixed(0)}`, "ok");
         else if (j.blofin?.error) addFeed(`Blofin demo: verbinding mislukt — ${j.blofin.error}`, "err");
         tickNo.current++;
@@ -293,6 +297,64 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
+          </div>
+          <div className="card feedcard">
+            <h3>◆ Agent-activiteit <span className="hint">analyse · nieuws · orders</span></h3>
+            {paper?.agents ? (
+              <>
+                <div style={{ marginBottom: 12 }}>
+                  {(() => {
+                    const nw = paper.agents.news;
+                    if (!nw) return <p className="delta">Nieuws-agent: nog geen status.</p>;
+                    const lvl = nw.level === "high" ? "halt" : nw.level === "caution" ? "wait" : "long";
+                    const verlopen = Date.parse(nw.valid_until) < Date.now();
+                    const label = nw.level === "high" ? "HOOG RISICO" : nw.level === "caution" ? "WAAKZAAM" : "RUSTIG";
+                    return (
+                      <span className={"pill " + lvl}>
+                        NIEUWS: {verlopen ? (label + " (oude status)") : label}
+                      </span>
+                    );
+                  })()}
+                  {paper.agents.news && (
+                    <p className="delta" style={{ marginTop: 6 }}>
+                      {paper.agents.news.reason}
+                    </p>
+                  )}
+                </div>
+                {paper.agents.signals.length === 0 ? (
+                  <p className="delta">Nog geen signalen — de analyse-agent scant elke minuut alle coins.</p>
+                ) : (
+                  <div className="ordertable-wrap">
+                  <table>
+                    <thead><tr><th>Tijd</th><th>Coin</th><th>Signaal</th><th>Uitkomst</th></tr></thead>
+                    <tbody>
+                      {paper.agents.signals.map((s) => (
+                        <tr key={s.id}>
+                          <td>{dt(s.created_at)}</td>
+                          <td>{s.pair.replace("-EUR", "")}</td>
+                          <td>{s.kind === "entry" ? (s.side === "buy" ? "🟢 koop-kans" : "🔴 verkoop-kans") : "🔶 exit"}</td>
+                          <td>
+                            {s.outcome === "executed" ? "✅ uitgevoerd" :
+                             s.outcome === "blocked_news" ? "⛔ geblokkeerd (nieuws)" :
+                             s.outcome === "skipped" ? "⏭ overgeslagen" :
+                             s.outcome === "expired" ? "⌛ verlopen" :
+                             s.outcome === "preview" ? "👁 test (dry)" : "⏳ wacht op order-agent"}
+                            {s.outcome_reason && <span className="delta"> — {s.outcome_reason}</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  </div>
+                )}
+              </>
+            ) : (
+              <p className="delta">Agent-tabellen nog niet actief — draai supabase-agents-setup.sql om de 3-agent-modus te starten.</p>
+            )}
+            <p className="delta" style={{ marginTop: 12 }}>
+              Werkwijze: de analyse-agent zet kansen klaar, de nieuws-agent beoordeelt het risico,
+              en de order-agent plaatst alleen een order als beide het toelaten (exits gaan altijd vóór).
+            </p>
           </div>
           <div className="card">
             <h3>◆ Paper-orderhistorie</h3>
