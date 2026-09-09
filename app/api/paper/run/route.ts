@@ -20,17 +20,20 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchCandles } from "@/lib/exchange/marketdata";
 import { PAIRS } from "@/lib/exchange/pairs";
-import { DEFAULT_PARAMS, prepare, longSignal, exitLongSignal } from "@/lib/strategy";
+import {
+  DEFAULT_PARAMS, prepare, longSignal, exitLongSignal,
+  shortSignal, exitShortSignal,
+} from "@/lib/strategy";
 import { getStates, initState, saveState, insertOrder } from "@/lib/paper/store";
 import {
-  blofinLive, BLOFIN_INST, setLeverage1x, contractsFor, marketLong, closePosition,
+  blofinLive, BLOFIN_INST, setLeverage1x, contractsFor, marketLong, marketShort, closePosition,
 } from "@/lib/exchange/blofin";
 
 export const dynamic = "force-dynamic";
 
 interface TickState {
   pair: string;
-  status: "flat" | "long";
+  status: "flat" | "long" | "short";
   cash: number;
   entry_price: number | null;
   entry_time: string | null;
@@ -61,7 +64,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function mirrorBlofin(
-  action: "open" | "close",
+  action: "open" | "open_short" | "close",
   pair: string,
   coinSize: number,
   actions: string[]
@@ -70,15 +73,20 @@ async function mirrorBlofin(
   const instId = BLOFIN_INST[pair];
   if (!instId) return;
   try {
-    if (action === "open") {
+    if (action === "open" || action === "open_short") {
       const contracts = await contractsFor(instId, coinSize);
       if (contracts <= 0) {
         actions.push(`blofin: skipped — ${coinSize.toPrecision(3)} te klein voor minimale ordergrootte`);
         return;
       }
       await setLeverage1x(instId);
-      const orderId = await marketLong(instId, contracts);
-      actions.push(`blofin demo: LONG ${contracts} contracts ${instId} geplaatst (order ${orderId.slice(-6)})`);
+      if (action === "open") {
+        const orderId = await marketLong(instId, contracts);
+        actions.push(`blofin demo: LONG ${contracts} contracts ${instId} geplaatst (order ${orderId.slice(-6)})`);
+      } else {
+        const orderId = await marketShort(instId, contracts);
+        actions.push(`blofin demo: SHORT ${contracts} contracts ${instId} geplaatst (order ${orderId.slice(-6)})`);
+      }
     } else {
       const orderId = await closePosition(instId);
       if (orderId) actions.push(`blofin demo: positie ${instId} gesloten (order ${orderId.slice(-6)})`);
@@ -118,8 +126,12 @@ async function tick(p: typeof DEFAULT_PARAMS) {
   }
   const today = new Date().toISOString().slice(0, 10);
 
-  const posValue = (s: TickState) =>
-    s.status === "long" && s.size && priceOf[s.pair] ? s.size * priceOf[s.pair] : 0;
+  const posValue = (s: TickState) => {
+    if (!s.size || !priceOf[s.pair]) return 0;
+    if (s.status === "long") return s.size * priceOf[s.pair];
+    if (s.status === "short" && s.entry_price) return s.size * (2 * s.entry_price - priceOf[s.pair]); // short: onderpand + (entry − nu)
+    return 0;
+  };
   const totalEquity = () => states.reduce((a, s) => a + s.cash + posValue(s), 0);
 
   // ── nieuwe dag? → daglimiet verversen (globale pot als ijkpunt) ─────
@@ -162,6 +174,39 @@ async function tick(p: typeof DEFAULT_PARAMS) {
           equity_after: totalEquity(), pnl_eur: pnl, pnl_pct: (pnl / closedCost) * 100,
         });
         actions.push(`LONG GESLOTEN (${reason}): ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR`);
+        await mirrorBlofin("close", s.pair, closedSize, actions);
+        feedActions.push(`${s.pair}: ${actions[actions.length - 1]}`);
+      }
+    }
+    else if (s.status === "short" && s.entry_price && s.size && s.cost) {
+      // ── short-positie beheren (alleen actief als allowShorts aanstaat) ──
+      const candles = candlesByPair[s.pair];
+      const closedIdx = candles.length - 2;
+      const sgn = prepare(candles, p);
+      const stop = s.entry_price * (1 + p.slPct / 100);
+      const target = s.entry_price * (1 - p.tpPct / 100);
+      let exitPrice: number;
+      let reason = "signaal";
+      if (price >= stop) { exitPrice = stop * (1 + slip); reason = "stop-loss"; }
+      else if (price <= target) { exitPrice = target * (1 + slip); reason = "take-profit"; }
+      else if (exitShortSignal(sgn, candles, closedIdx, p)) { exitPrice = price * (1 + slip); reason = "signaal"; }
+      else if (s.entry_time && Date.now() - Date.parse(s.entry_time) >= p.maxHoldBars * 15 * 60 * 1000) {
+        exitPrice = price * (1 + slip); reason = "max-houdtijd";
+      } else exitPrice = 0;
+
+      if (exitPrice) {
+        // short terugkopen: opbrengst = entry + (entry − exit) minus fee
+        const proceeds = s.entry_price * s.size + (s.entry_price - exitPrice) * s.size - exitPrice * s.size * fee;
+        const pnl = proceeds - s.cost;
+        s.cash += proceeds;
+        const closedSize = s.size;
+        const closedCost = s.cost;
+        s.status = "flat"; s.entry_price = null; s.entry_time = null; s.size = null; s.cost = null;
+        await insertOrder({
+          pair: s.pair, side: "buy", price: exitPrice, size: closedSize, reason,
+          equity_after: totalEquity(), pnl_eur: pnl, pnl_pct: (pnl / closedCost) * 100,
+        });
+        actions.push(`SHORT GESLOTEN (${reason}): ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR`);
         await mirrorBlofin("close", s.pair, closedSize, actions);
         feedActions.push(`${s.pair}: ${actions[actions.length - 1]}`);
       }
@@ -237,6 +282,49 @@ async function tick(p: typeof DEFAULT_PARAMS) {
       r.actions = [...((r.actions as string[]) ?? []), `LONG ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR`, ...acts];
       r.status = "long";
       feedActions.push(`${s.pair}: LONG ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR${acts.length ? ` · ${acts[0]}` : ""}`);
+    }
+  }
+
+  // ── stap 3b: short-entries (uitsluitend als allowShorts aanstaat) ────
+  // Data 9 sep 2026: 80 long+short-combinaties gesweept — shorts haalden
+  // 40-44% winrate en negatief rendement op élk venster. Daarom staat
+  // allowShorts standaard UIT; de code is wel klaar voor als de cijfers
+  // (of de eigenaar) het rechtvaardigen.
+  if (p.allowShorts) {
+    const openCosts2 = states.reduce((a, s) => a + (s.cost ?? 0), 0);
+    const totalCash2 = states.reduce((a, s) => a + s.cash, 0);
+    for (const s of states) {
+      if (s.status !== "flat" || s.halted) continue;
+      const candles = candlesByPair[s.pair];
+      const closedIdx = candles.length - 2;
+      const sgn = prepare(candles, p);
+      const price = priceOf[s.pair];
+      if (!shortSignal(sgn, candles, closedIdx, p)) continue;
+
+      const entry = price * (1 - slip); // short-entry = verkopen
+      const eq = totalEquity();
+      const riskAmount = (eq * p.riskPerTrade) / 100;
+      let size = riskAmount / (entry * (p.slPct / 100));
+      const capNotional = Math.min(totalCash2 * 0.25, (totalCash2 - openCosts2) * 0.98);
+      size = Math.min(size, capNotional / entry);
+      const cost = entry * size * (1 + fee);
+      const potAfter = totalEquity() - cost;
+      if (size <= 0 || cost <= 0 || potAfter <= 0) continue;
+      s.cash -= cost;
+      s.status = "short";
+      s.entry_price = entry; s.entry_time = new Date().toISOString();
+      s.size = size; s.cost = cost;
+      await insertOrder({
+        pair: s.pair, side: "sell", price: entry, size,
+        reason: "short: RSI-pomp + dalende trend",
+        equity_after: totalEquity(), pnl_eur: null, pnl_pct: null,
+      });
+      const acts: string[] = [];
+      await mirrorBlofin("open_short", s.pair, size, acts);
+      const r = results.find((x) => x.pair === s.pair) as Record<string, unknown>;
+      r.actions = [...((r.actions as string[]) ?? []), `SHORT ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR`, ...acts];
+      r.status = "short";
+      feedActions.push(`${s.pair}: SHORT ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR${acts.length ? ` · ${acts[0]}` : ""}`);
     }
   }
 

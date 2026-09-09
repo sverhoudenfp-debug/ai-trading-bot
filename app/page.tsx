@@ -51,8 +51,8 @@ function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperStat
     <div className={"minichart" + (active ? " active" : "")} onClick={onPick}>
       <div className="mc-head">
         <b>{p.name}</b>
-        <span className={"pill " + (live?.halted ? "halt" : st === "long" ? "long" : "wait")}>
-          {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : "⏳ SCAN"}
+        <span className={"pill " + (live?.halted ? "halt" : st === "long" ? "long" : st === "short" ? "short" : "wait")}>
+          {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : st === "short" ? "🔴 SHORT" : "⏳ SCAN"}
         </span>
       </div>
       <div className="mc-price">{fmtPrice(p.price)}</div>
@@ -191,8 +191,8 @@ export default function Dashboard() {
               <b>{p.pair.replace("-EUR", "")}</b>
               <span>{fmtPrice(p.price)}</span>
               <span className={cls(p.stats.buyHoldPct)}>{sign(p.stats.buyHoldPct, 1)}</span>
-              <span className={"pill sm " + (st?.halted ? "halt" : st?.status === "long" ? "long" : "wait")}>
-                {st?.halted ? "PAUZE" : st?.status === "long" ? "LONG" : "SCAN"}
+              <span className={"pill sm " + (st?.halted ? "halt" : st?.status === "long" ? "long" : st?.status === "short" ? "short" : "wait")}>
+                {st?.halted ? "PAUZE" : st?.status === "long" ? "LONG" : st?.status === "short" ? "SHORT" : "SCAN"}
               </span>
             </span>
           );
@@ -218,8 +218,8 @@ export default function Dashboard() {
               <div className="statcard" key={p.pair}>
                 <div className="sc-top">
                   <b>{p.name}</b>
-                  <span className={"pill " + (st?.halted ? "halt" : st?.status === "long" ? "long" : "wait")}>
-                    {st?.halted ? "⏸ PAUZE" : st?.status === "long" ? "🟢 LONG" : "⏳ SCAN"}
+                  <span className={"pill " + (st?.halted ? "halt" : st?.status === "long" ? "long" : st?.status === "short" ? "short" : "wait")}>
+                    {st?.halted ? "⏸ PAUZE" : st?.status === "long" ? "🟢 LONG" : st?.status === "short" ? "🔴 SHORT" : "⏳ SCAN"}
                   </span>
                 </div>
                 <div className="big">{fmtEUR.format(equity)}</div>

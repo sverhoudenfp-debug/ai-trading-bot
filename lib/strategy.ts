@@ -7,14 +7,15 @@
 // trade-churn; fees zijn de stille moordenaar van day-trading):
 //   LONG:  RSI kruist ONDER 30 én koers boven EMA-200  → koop de verse dip
 //   SHORT: RSI kruist BOVEN 70 én koers onder EMA-200  → verkoop de verse pomp
-// Shorten wordt in fase 2 gesimuleerd zodat we met data leren of het
-// überhaupt iets toevoegt (op Bitvavo spot kan het in fase 3 niet écht).
+// SHORT: RSI kruist BOVEN de drempel én koers onder EMA-200 → verkoop de
+// verse pomp. Standaard UIT (data, zie allowShorts); op Blofin kan het wél
+// echt — de mirror ondersteunt short sinds 9 sep 2026.
 
 import { Candle } from "./exchange/marketdata";
 import { emaSeries, rsiSeries, momentumSeries } from "./indicators";
 
 export interface StrategyParams {
-  allowShorts: boolean; // shorts uit na data-experiment (verliezen in beide testvensters)
+  allowShorts: boolean; // 9 sep 2026: 80 long+short-combo's getest — shorts 40-44% wr, negatief; daarom UIT. Code is klaar; kan met één vlag aan.
   // Signalen — long
   rsiPeriod: number;
   rsiBuy: number;    // RSI kruist ONDER deze waarde = verse dip (koopsignaal)

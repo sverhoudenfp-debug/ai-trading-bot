@@ -127,18 +127,32 @@ export async function marketLong(instId: string, contracts: number): Promise<str
   return d[0]?.orderId ?? "";
 }
 
-/** Sluit de gehele positie op een instrument (market sell, net-modus). */
+/** Sluit de gehele positie op een instrument (long → sell, short → buy back). */
 export async function closePosition(instId: string): Promise<string> {
   const positions = await getPositions();
-  const pos = positions.find((p) => p.instId === instId && Number(p.positions) > 0);
+  const pos = positions.find((p) => p.instId === instId && Number(p.positions) !== 0);
   if (!pos) return "";
+  const size = Math.abs(Number(pos.positions));
+  const d = await blofin<{ orderId: string }[]>("POST", "/api/v1/trade/order", {
+    instId,
+    marginMode: "cross",
+    positionMode: "one_way",
+    side: Number(pos.positions) > 0 ? "sell" : "buy", // long sluiten = sell; short sluiten = buy back
+    orderType: "market",
+    size: String(size),
+  });
+  return d[0]?.orderId ?? "";
+}
+
+/** Open een short via market-order (sell, net-modus, 1x). */
+export async function marketShort(instId: string, contracts: number): Promise<string> {
   const d = await blofin<{ orderId: string }[]>("POST", "/api/v1/trade/order", {
     instId,
     marginMode: "cross",
     positionMode: "one_way",
     side: "sell",
     orderType: "market",
-    size: pos.positions,
+    size: String(contracts),
   });
   return d[0]?.orderId ?? "";
 }
