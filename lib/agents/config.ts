@@ -13,7 +13,10 @@ export const AI_SL_MAX_PCT = 10;
 export const AI_TP_MIN_PCT = 0.5;    // geldige take-profit range
 export const AI_TP_MAX_PCT = 15;
 export const AI_MAX_COST_PCT = 95;   // max % van de kas in één positie
-export const AI_INTERVAL_MIN = Number(process.env.AI_INTERVAL_MIN ?? "1"); // elke N min een AI-run
+// Slim interval: open posities of hoge volatiliteit → AI scant elke minuut
+// (cron-tik); rustige markt → hoogstens elke AI_QUIET_INTERVAL_MIN minuten.
+export const AI_QUIET_INTERVAL_MIN = Number(process.env.AI_QUIET_INTERVAL_MIN ?? "15");
+export const AI_VOLATILITY_PCT = Number(process.env.AI_VOLATILITY_PCT ?? "1.2"); // % 15-min range
 export const AI_MODEL = process.env.ANTHROPIC_MODEL ?? "claude-haiku-4-5";
 
 // Testmodus: AI voorstellen loggen maar NIET laten uitvoeren.

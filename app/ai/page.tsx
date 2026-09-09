@@ -86,6 +86,7 @@ export default function AiPage() {
           <span className="hash">◎</span> AI-ZOECHTTOCHT
           <span className="hint">
             {data.executeMode ? "LIVE — voorstellen worden gekeurd en uitgevoerd" : "TESTMODUS — voorstellen worden alleen gelogd"}
+            {" "}· slim interval: open positie of hoge volatiliteit → elke minuut, rustige markt → max elke 15 min
           </span>
         </h2>
 

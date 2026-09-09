@@ -1,6 +1,7 @@
 // ── GECOMBINEERDE AI-AGENT (nieuws + koersanalyse) ────────────────────────
 // Vervangt de losse nieuws-agent en analyse-agent door één Claude Haiku-
-// aanroep per interval (standaard elke minuut, AI_INTERVAL_MIN).
+// aanroep per interval — slim: open positie of hoge volatiliteit → elke
+// minuut; rustige markt → hoogstens elke AI_QUIET_INTERVAL_MIN (15) min.
 //
 // Wat de AI per aanroep krijgt:
 //   • indicatoren-snapshots van alle coins op 3 timeframes (5m / 15m / 1h)
@@ -28,7 +29,7 @@ import {
 } from "./db";
 import { callClaude, logAiRun, parseJsonLoose } from "./anthropic";
 import { RSS_FEEDS, fetchFeed } from "./news";
-import { AI_INTERVAL_MIN, aiExecuteEnabled } from "./config";
+import { AI_QUIET_INTERVAL_MIN, AI_VOLATILITY_PCT, aiExecuteEnabled } from "./config";
 
 // ── systeem-instructie (statisch → cachebaar via prompt caching) ────────
 const SYSTEM_PROMPT = `You are the combined analysis engine of a crypto day-trading bot (paper trading, EUR pairs on Bitvavo prices).
@@ -150,6 +151,34 @@ async function strategyPerformance(): Promise<PerfStat[]> {
 }
 
 // ── de agent-run ─────────────────────────────────────────────────────────
+// Bepaalt hoe lang de AI maximaal mag zwijgen: met open posities of een
+// volatiele markt (≥ AI_VOLATILITY_PCT range op 15 min) wordt élke cron-tik
+// gescand; anders is een scan per AI_QUIET_INTERVAL_MIN genoeg.
+async function smartInterval(): Promise<{ min: number; reason: string }> {
+  try {
+    const states = await getStates();
+    if (states.some((s) => s.pair !== POT_PAIR && s.status !== "flat")) {
+      return { min: 0, reason: "open positie — elke minuut scannen" };
+    }
+  } catch { /* states onbereikbaar → volatiliteitscheck geldt nog steeds */ }
+  try {
+    let vol = 0; let volPair = "";
+    for (const p of PAIRS) {
+      const c = await fetchCandles(p, 5, 1);
+      const recent = c.slice(-3); // laatste 15 minuten (3 × 5m)
+      if (recent.length < 3) continue;
+      const hi = Math.max(...recent.map((x) => x.h));
+      const lo = Math.min(...recent.map((x) => x.l));
+      const pct = ((hi - lo) / recent[recent.length - 1].c) * 100;
+      if (pct > vol) { vol = pct; volPair = p; }
+    }
+    if (vol >= AI_VOLATILITY_PCT) {
+      return { min: 0, reason: `volatiliteit ${volPair.replace("-EUR", "")} ${vol.toFixed(1)}% in 15 min — elke minuut scannen` };
+    }
+  } catch { /* candle-data onbereikbaar → rustig-interval geldt */ }
+  return { min: AI_QUIET_INTERVAL_MIN, reason: `rustige markt — max elke ${AI_QUIET_INTERVAL_MIN} min` };
+}
+
 export async function aiAgent(): Promise<{
   ran: boolean;
   proposals: number;
@@ -161,13 +190,15 @@ export async function aiAgent(): Promise<{
     return { ran: false, proposals: 0, level: "unknown", skipped: "geen ANTHROPIC_API_KEY" };
   }
 
-  // throttle: hoogstens 1 AI-run per AI_INTERVAL_MIN
+  // throttle: slim interval — open positie of hoge volatiliteit → elke
+  // minuut; rustige markt → hoogstens elke AI_QUIET_INTERVAL_MIN minuten
   let last: Awaited<ReturnType<typeof lastAgentRun>> = null;
   try {
     last = await lastAgentRun();
   } catch { /* tabel er nog niet → gewoon draaien */ }
-  if (last && Date.now() - Date.parse(last.created_at) < AI_INTERVAL_MIN * 60_000) {
-    return { ran: false, proposals: 0, level: "unknown", skipped: `throttle (${AI_INTERVAL_MIN} min interval)` };
+  const smart = await smartInterval();
+  if (last && Date.now() - Date.parse(last.created_at) < smart.min * 60_000) {
+    return { ran: false, proposals: 0, level: "unknown", skipped: `throttle (slim interval — ${smart.reason})` };
   }
 
   // data verzamelen (elk stuk mag falen zonder de run te breken)
