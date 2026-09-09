@@ -51,8 +51,8 @@ function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperStat
     <div className={"minichart" + (active ? " active" : "")} onClick={onPick}>
       <div className="mc-head">
         <b>{p.name}</b>
-        <span className={"pill " + (live?.halted ? "halt" : st === "long" ? "long" : st === "short" ? "short" : "wait")}>
-          {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : st === "short" ? "🔴 SHORT" : "⏳ SCAN"}
+        <span className={"pill " + (live?.halted ? "halt" : st === "long" ? "long" : "wait")}>
+          {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : "⏳ SCAN"}
         </span>
       </div>
       <div className="mc-price">{fmtPrice(p.price)}</div>
@@ -142,6 +142,12 @@ export default function Dashboard() {
 
   const sel = multi?.pairs.find((p) => p.pair === pair) ?? null;
   const stateOf = (pair_: string) => paper?.states.find((s) => s.pair === pair_);
+  // Eén gedeelde pot: som van alle cash + waarde van open long-posities
+  const potTotal = (paper?.states ?? []).reduce((acc, s) => {
+    const px = multi?.pairs.find((m) => m.pair === s.pair)?.price ?? 0;
+    const posVal = s.status === "long" && s.size ? s.size * px : 0;
+    return acc + s.cash + posVal;
+  }, 0);
   // Levend bewijs dat de cron de bot wakker maakt: jongste updated_at
   // van de coin-states → "X min geleden". Meer dan 15 min oud = waarschuwing,
   // want dan zijn er minstens 3 ticks van de 5-minuten-wekker overgeslagen.
@@ -162,7 +168,7 @@ export default function Dashboard() {
           <span className="logo">◤</span>
           <div>
             <div className="brand-name">AI TRADING <span>SYSTEM</span></div>
-            <div className="brand-sub">mission control · fase 2 · paper trading</div>
+            <div className="brand-sub">mission control · fase 2 · paper trading · één pot van {fmtEUR0.format(potTotal)}</div>
           </div>
         </div>
         <nav className="nav">
@@ -185,8 +191,8 @@ export default function Dashboard() {
               <b>{p.pair.replace("-EUR", "")}</b>
               <span>{fmtPrice(p.price)}</span>
               <span className={cls(p.stats.buyHoldPct)}>{sign(p.stats.buyHoldPct, 1)}</span>
-              <span className={"pill sm " + (st?.halted ? "halt" : st?.status === "long" ? "long" : st?.status === "short" ? "short" : "wait")}>
-                {st?.halted ? "PAUZE" : st?.status === "long" ? "LONG" : st?.status === "short" ? "SHORT" : "SCAN"}
+              <span className={"pill sm " + (st?.halted ? "halt" : st?.status === "long" ? "long" : "wait")}>
+                {st?.halted ? "PAUZE" : st?.status === "long" ? "LONG" : "SCAN"}
               </span>
             </span>
           );
@@ -212,8 +218,8 @@ export default function Dashboard() {
               <div className="statcard" key={p.pair}>
                 <div className="sc-top">
                   <b>{p.name}</b>
-                  <span className={"pill " + (st?.halted ? "halt" : st?.status === "long" ? "long" : st?.status === "short" ? "short" : "wait")}>
-                    {st?.halted ? "⏸ PAUZE" : st?.status === "long" ? "🟢 LONG" : st?.status === "short" ? "🔴 SHORT" : "⏳ SCAN"}
+                  <span className={"pill " + (st?.halted ? "halt" : st?.status === "long" ? "long" : "wait")}>
+                    {st?.halted ? "⏸ PAUZE" : st?.status === "long" ? "🟢 LONG" : "⏳ SCAN"}
                   </span>
                 </div>
                 <div className="big">{fmtEUR.format(equity)}</div>
@@ -222,7 +228,7 @@ export default function Dashboard() {
                   {inPos ? `${st?.status} @ ${fmtEUR.format(st!.entry_price!)}` : `kas ${fmtEUR.format(st?.cash ?? 1000)}`}
                 </div>
                 <div className="delta dim">
-                  backtest 45d: <span className={cls(p.stats.totalReturnPct)}>{sign(p.stats.totalReturnPct, 1)}</span> · {p.stats.numTrades} trades ({p.stats.numShorts} short) · win {p.stats.winRatePct.toFixed(0)}%
+                  backtest 45d: <span className={cls(p.stats.totalReturnPct)}>{sign(p.stats.totalReturnPct, 1)}</span> · {p.stats.numTrades} trades · win {p.stats.winRatePct.toFixed(0)}%
                 </div>
               </div>
             );
@@ -247,7 +253,13 @@ export default function Dashboard() {
               </select>
               <button className="btn" onClick={loadMulti} disabled={busy}>{busy ? "analyse draait…" : "↻ opnieuw analyseren"}</button>
             </div>
-            <div className="lw-chart-wrap"><PositionsChart candles={sel.candles} trades={sel.trades} /></div>
+            <div className="lw-chart-wrap"><PositionsChart
+              candles={sel.candles} trades={sel.trades}
+              paper={paper?.orders
+                .filter((o) => o.pair === pair)
+                .map((o) => ({ time: o.created_at, side: o.side, price: o.price, pnl: o.pnl_eur }))
+                .reverse()}
+            /></div>
             <div className="statrow">
               <span>bot: <b className={cls(sel.stats.totalReturnPct)}>{sign(sel.stats.totalReturnPct)}</b></span>
               <span>buy&amp;hold: <b className={cls(sel.stats.buyHoldPct)}>{sign(sel.stats.buyHoldPct)}</b></span>
@@ -288,10 +300,11 @@ export default function Dashboard() {
           <div className="card">
             <h3>◆ Paper-orderhistorie</h3>
             {paper && paper.orders.length > 0 ? (
+              <div className="ordertable-wrap">
               <table>
                 <thead><tr><th>Tijd</th><th>Coin</th><th>Actie</th><th>Koers</th><th>Resultaat</th></tr></thead>
                 <tbody>
-                  {paper.orders.slice(0, 12).map((o) => (
+                  {paper.orders.map((o) => (
                     <tr key={o.id}>
                       <td>{dt(o.created_at)}</td>
                       <td>{o.pair.replace("-EUR", "")}</td>
@@ -304,6 +317,7 @@ export default function Dashboard() {
                   ))}
                 </tbody>
               </table>
+              </div>
             ) : (
               <p className="delta">Nog geen paper-orders — de bot scant elke minuut alle coins. Zodra er een signaal valt, verschijnt het hier én in de feed.</p>
             )}

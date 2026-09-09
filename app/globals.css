@@ -205,3 +205,6 @@ footer {
   background: rgba(26, 58, 74, 0.15);
   line-height: 1.6;
 }
+
+/* Alle echte paper-trades, scrollbaar binnen de kaart */
+.ordertable-wrap { max-height: 420px; overflow-y: auto; }

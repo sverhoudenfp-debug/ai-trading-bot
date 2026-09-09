@@ -34,7 +34,13 @@ const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EU
 const localDayTime = (sec: number) =>
   new Date(sec * 1000).toLocaleString("nl-NL", { timeZone: "Europe/Amsterdam", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
 
-export function PositionsChart({ candles, trades }: { candles: OhlcPoint[]; trades: TradeMarker[] }) {
+export interface PaperTick {
+  time: string; side: "buy" | "sell"; price: number; pnl: number | null;
+}
+
+export function PositionsChart({ candles, trades, paper }: {
+  candles: OhlcPoint[]; trades: TradeMarker[]; paper?: PaperTick[];
+}) {
   const container = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
@@ -123,6 +129,18 @@ export function PositionsChart({ candles, trades }: { candles: OhlcPoint[]; trad
         color: t.pnl >= 0 ? "#3ddc84" : "#ff5470",
         text: `${t.pnl >= 0 ? "+" : ""}${t.pnlPct.toFixed(2)}% · ${REASON_NL[t.reason] ?? t.reason}`,
       });
+    }
+    // Echte paper-trades van het account: cirkels i.p.v. pijlen, met een
+    // ● erin zodat je ze direct van de backtest-historie onderscheidt.
+    for (const pt of paper ?? []) {
+      const ts = Math.floor(Date.parse(pt.time + "Z") / 1000) as UTCTimestamp;
+      markers.push(
+        pt.side === "buy"
+          ? { time: ts, position: "belowBar", shape: "circle", color: "#38e1ff", text: "● ECHTE KOOP" }
+          : { time: ts, position: "aboveBar", shape: "circle",
+              color: pt.pnl == null ? "#38e1ff" : pt.pnl >= 0 ? "#3ddc84" : "#ff5470",
+              text: pt.pnl == null ? "● ECHTE VERKOOP" : `● ECHTE EXIT ${pt.pnl >= 0 ? "+" : ""}${pt.pnl.toFixed(2)} EUR` }
+      );
     }
     markers.sort((a, b) => (a.time as number) - (b.time as number));
     createSeriesMarkers(series, markers);

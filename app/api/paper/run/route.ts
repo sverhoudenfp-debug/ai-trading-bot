@@ -1,7 +1,18 @@
 // ── Paper-trading-engine: één "tick" van de bot (alle coins) ────────────
 // Dit eindpunt wordt elke 5 minuten door de cron-wekker aangeroepen.
-// Per coin: verse candles → risicoregels → signaal (long/short) → opslaan.
-// Elke coin heeft zijn eigen virtuele potje van €1000.
+// Per coin: verse candles → risicoregels → signaal → opslaan.
+//
+// ÉÉN GEDEELDE POT: alle 4 de coins handelen samen uit één virtuele pot
+// van €1000 (i.p.v. 4 losse potjes). De pot = som van alle cash-rijen +
+// de waarde van open posities. Per positie geldt: max 1% risico van de
+// totale pot, max 25% van de pot aan inleg per trade, en samen max 98%.
+//
+// LONG-ONLY: de short-tak is verwijderd — backtests (sep 2026) lieten
+// zien dat shorts in beide testvensters kapitaal vernietigden.
+//
+// PAPER-LIVE (optioneel): met PAPER_LIVE=blofin spiegelt elke long-entry
+// en -exit als market-order naar het Blofin demo-account (1x, cross,
+// virtueel geld). Fouten daar breken de interne simulatie nooit.
 //
 // Beveiliging: ?token=<PAPER_TOKEN>. Nog steeds géén echt geld — fase 3
 // start pas na een goed verlopen fase 2.
@@ -9,14 +20,46 @@
 import { NextRequest, NextResponse } from "next/server";
 import { fetchCandles } from "@/lib/exchange/marketdata";
 import { PAIRS } from "@/lib/exchange/pairs";
-import { DEFAULT_PARAMS, prepare, longSignal, shortSignal, exitLongSignal, exitShortSignal } from "@/lib/strategy";
-import { getState, initState, saveState, insertOrder } from "@/lib/paper/store";
+import { DEFAULT_PARAMS, prepare, longSignal, exitLongSignal } from "@/lib/strategy";
+import { getStates, initState, saveState, insertOrder } from "@/lib/paper/store";
 import {
   blofinLive, BLOFIN_INST, setLeverage1x, contractsFor, marketLong, closePosition,
 } from "@/lib/exchange/blofin";
 
-// Spiegel een interne paper-trade naar het Blofin-demo-account (long-only,
-// 1x, virtueel geld). Fouten hierin mogen de interne simulatie nooit breken.
+export const dynamic = "force-dynamic";
+
+interface TickState {
+  pair: string;
+  status: "flat" | "long";
+  cash: number;
+  entry_price: number | null;
+  entry_time: string | null;
+  size: number | null;
+  cost: number | null;
+  day: string | null;
+  day_start_equity: number;
+  halted: boolean;
+  updated_at?: string | null;
+}
+
+export async function GET(req: NextRequest) {
+  const token = req.nextUrl.searchParams.get("token");
+  if (!process.env.PAPER_TOKEN || token !== process.env.PAPER_TOKEN) {
+    return NextResponse.json({ error: "onbevoegd — token vereist" }, { status: 401 });
+  }
+  const p = DEFAULT_PARAMS;
+  try {
+    const out = await tick(p);
+    return NextResponse.json({ ok: true, ...out });
+  } catch (e) {
+    return NextResponse.json({ ok: false, error: String(e instanceof Error ? e.message : e) }, { status: 500 });
+  }
+}
+
+export async function POST(req: NextRequest) {
+  return GET(req);
+}
+
 async function mirrorBlofin(
   action: "open" | "close",
   pair: string,
@@ -46,147 +89,157 @@ async function mirrorBlofin(
   }
 }
 
-export const dynamic = "force-dynamic";
-
-export async function GET(req: NextRequest) {
-  const token = req.nextUrl.searchParams.get("token");
-  if (!process.env.PAPER_TOKEN || token !== process.env.PAPER_TOKEN) {
-    return NextResponse.json({ error: "onbevoegd — token vereist" }, { status: 401 });
-  }
-  const p = DEFAULT_PARAMS;
-  const results: Record<string, unknown>[] = [];
-
-  for (const pair of PAIRS) {
-    try {
-      results.push(await tickPair(pair, p));
-    } catch (e) {
-      results.push({ pair, error: String(e instanceof Error ? e.message : e) });
-    }
-  }
-  return NextResponse.json({ ok: true, pairs: results });
-}
-
-export async function POST(req: NextRequest) {
-  return GET(req);
-}
-
-async function tickPair(pair: string, p: typeof DEFAULT_PARAMS) {
-  const candles = await fetchCandles(pair, 15, 45);
-  if (candles.length < 300) throw new Error("te weinig candledata");
-
-  const lastIdx = candles.length - 1;
-  const closedIdx = lastIdx - 1; // laatst gesloten candle → signalen
-  const price = candles[lastIdx].c; // huidige koers
-  const today = new Date(candles[lastIdx].t * 1000).toISOString().slice(0, 10);
-
-  let s = (await getState(pair)) ?? (await initState(pair));
-  const actions: string[] = [];
-
-  const posValue =
-    s.status === "long" && s.size
-      ? s.size * price
-      : s.status === "short" && s.size && s.entry_price
-      ? s.size * (2 * s.entry_price - price)
-      : 0;
-  let equity = s.cash + posValue;
-
-  // Nieuwe dag? → daglimiet verversen
-  if (s.day !== today) {
-    s.day = today;
-    s.day_start_equity = equity;
-    s.halted = false;
-  }
-
-  const sgn = prepare(candles, p);
+async function tick(p: typeof DEFAULT_PARAMS) {
   const slip = p.slippagePct / 100;
   const fee = p.feePct / 100;
 
-  // ── Open positie beheren ────────────────────────────────────────────
-  if (s.status !== "flat" && s.entry_price && s.size && s.cost) {
-    let sellPrice: number | null = null;
-    let reason = "";
-    let exitPrice: number;
+  // ── states laden (init bij eerste run) ─────────────────────────────
+  let rows = await getStates();
+  if (!rows.length) {
+    for (const pair of PAIRS) await initState(pair);
+    rows = await getStates();
+  }
+  const states: TickState[] = PAIRS.map(
+    (pair) =>
+      (rows.find((r) => r.pair === pair) as TickState | undefined) ?? {
+        pair, status: "flat", cash: 0, entry_price: null, entry_time: null,
+        size: null, cost: null, day: null, day_start_equity: 0, halted: false,
+      }
+  );
 
-    if (s.status === "long") {
+  // ── verse candles + koersen ─────────────────────────────────────────
+  const candlesByPair: Record<string, Awaited<ReturnType<typeof fetchCandles>>> = {};
+  for (const pair of PAIRS) candlesByPair[pair] = await fetchCandles(pair, 15, 45);
+  const priceOf: Record<string, number> = {};
+  for (const pair of PAIRS) {
+    const cs = candlesByPair[pair];
+    if (cs.length < 300) throw new Error(`te weinig candledata voor ${pair}`);
+    priceOf[pair] = cs[cs.length - 1].c;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+
+  const posValue = (s: TickState) =>
+    s.status === "long" && s.size && priceOf[s.pair] ? s.size * priceOf[s.pair] : 0;
+  const totalEquity = () => states.reduce((a, s) => a + s.cash + posValue(s), 0);
+
+  // ── nieuwe dag? → daglimiet verversen (globale pot als ijkpunt) ─────
+  if (states.some((s) => s.day !== today)) {
+    const eq = totalEquity();
+    for (const s of states) { s.day = today; s.day_start_equity = eq; s.halted = false; }
+  }
+
+  const results: Record<string, unknown>[] = [];
+  const feedActions: string[] = [];
+
+  // ── stap 1: open posities beheren (long-only) ───────────────────────
+  for (const s of states) {
+    const actions: string[] = [];
+    const price = priceOf[s.pair];
+    if (s.status === "long" && s.entry_price && s.size && s.cost) {
+      const candles = candlesByPair[s.pair];
+      const closedIdx = candles.length - 2; // laatst gesloten candle
+      const sgn = prepare(candles, p);
       const stop = s.entry_price * (1 - p.slPct / 100);
       const target = s.entry_price * (1 + p.tpPct / 100);
+      let exitPrice: number;
+      let reason = "signaal";
       if (price <= stop) { exitPrice = stop * (1 - slip); reason = "stop-loss"; }
       else if (price >= target) { exitPrice = target * (1 - slip); reason = "take-profit"; }
       else if (exitLongSignal(sgn, candles, closedIdx, p)) { exitPrice = price * (1 - slip); reason = "signaal"; }
       else if (s.entry_time && Date.now() - Date.parse(s.entry_time) >= p.maxHoldBars * 15 * 60 * 1000) {
         exitPrice = price * (1 - slip); reason = "max-houdtijd";
-      } else if (equity / s.day_start_equity - 1 <= -p.dailyLossLimitPct / 100) {
-        exitPrice = price * (1 - slip); reason = "daglimiet";
       } else exitPrice = 0;
+
       if (exitPrice) {
         const proceeds = exitPrice * s.size * (1 - fee);
         const pnl = proceeds - s.cost;
-        s.cash += proceeds; equity = s.cash;
-        if (reason === "daglimiet") s.halted = true;
-        await insertOrder({ pair, side: "sell", price: exitPrice, size: s.size, reason, equity_after: equity,
-          pnl_eur: pnl, pnl_pct: (pnl / s.cost) * 100 });
-        actions.push(`LONG GESLOTEN (${reason}): ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR`);
+        s.cash += proceeds;
         const closedSize = s.size;
+        const closedCost = s.cost;
         s.status = "flat"; s.entry_price = null; s.entry_time = null; s.size = null; s.cost = null;
-        sellPrice = exitPrice; // marker
-        await mirrorBlofin("close", pair, closedSize ?? 0, actions);
-      }
-    } else {
-      const stop = s.entry_price * (1 + p.slPct / 100);
-      const target = s.entry_price * (1 - p.tpPct / 100);
-      if (price >= stop) { exitPrice = stop * (1 + slip); reason = "stop-loss"; }
-      else if (price <= target) { exitPrice = target * (1 + slip); reason = "take-profit"; }
-      else if (exitShortSignal(sgn, candles, closedIdx, p)) { exitPrice = price * (1 + slip); reason = "signaal"; }
-      else if (s.entry_time && Date.now() - Date.parse(s.entry_time) >= p.maxHoldBars * 15 * 60 * 1000) {
-        exitPrice = price * (1 + slip); reason = "max-houdtijd";
-      } else if (equity / s.day_start_equity - 1 <= -p.dailyLossLimitPct / 100) {
-        exitPrice = price * (1 + slip); reason = "daglimiet";
-      } else exitPrice = 0;
-      if (exitPrice) {
-        const entryFee = s.cost - s.entry_price * s.size;
-        const pnl = (s.entry_price - exitPrice) * s.size - exitPrice * s.size * fee - entryFee;
-        s.cash += s.entry_price * s.size + (s.entry_price - exitPrice) * s.size - exitPrice * s.size * fee;
-        equity = s.cash;
-        if (reason === "daglimiet") s.halted = true;
-        await insertOrder({ pair, side: "buy", price: exitPrice, size: s.size, reason: `short gesloten (${reason})`,
-          equity_after: equity, pnl_eur: pnl, pnl_pct: (pnl / s.cost) * 100 });
-        actions.push(`SHORT GESLOTEN (${reason}): ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR`);
-        s.status = "flat"; s.entry_price = null; s.entry_time = null; s.size = null; s.cost = null;
-        sellPrice = exitPrice; // marker
+        await insertOrder({
+          pair: s.pair, side: "sell", price: exitPrice, size: closedSize, reason,
+          equity_after: totalEquity(), pnl_eur: pnl, pnl_pct: (pnl / closedCost) * 100,
+        });
+        actions.push(`LONG GESLOTEN (${reason}): ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR`);
+        await mirrorBlofin("close", s.pair, closedSize, actions);
+        feedActions.push(`${s.pair}: ${actions[actions.length - 1]}`);
       }
     }
-    void sellPrice;
+    results.push({
+      pair: s.pair, price,
+      status: s.halted ? "gepauzeerd (daglimiet)" : s.status,
+      position: posValue(s) > 0 ? { size: s.size, entry: s.entry_price, value: posValue(s) } : null,
+      actions,
+    });
   }
 
-  // ── Nieuwe entry? (long of short) ──────────────────────────────────
-  if (s.status === "flat" && !s.halted) {
-    const goLong = longSignal(sgn, candles, closedIdx, p);
-    const goShort = shortSignal(sgn, candles, closedIdx, p);
-    if (goLong || goShort) {
-      const entry = goLong ? price * (1 + slip) : price * (1 - slip);
-      const riskAmount = (equity * p.riskPerTrade) / 100;
-      let size = riskAmount / (entry * (p.slPct / 100));
-      size = Math.min(size, (s.cash * 0.99) / entry);
-      const cost = entry * size * (1 + fee);
-      if (size > 0 && cost <= s.cash * 0.999) {
-        s.cash -= cost;
-        s.status = goLong ? "long" : "short";
-        s.entry_price = entry; s.entry_time = new Date().toISOString();
-        s.size = size; s.cost = cost;
-        equity = s.cash + (goLong ? size * price : size * (2 * entry - price));
-        await insertOrder({ pair, side: goLong ? "buy" : "sell", price: entry, size,
-          reason: goLong ? "long: RSI-dip + stijgende trend" : "short: RSI-pomp + dalende trend",
-          equity_after: equity, pnl_eur: null, pnl_pct: null });
-        actions.push(`${goLong ? "LONG" : "SHORT"} ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR`);
-        if (goLong) await mirrorBlofin("open", pair, size, actions);
+  // ── stap 2: daglimiet check (globale pot) ───────────────────────────
+  const eqNow = totalEquity();
+  const dayStart = states[0].day_start_equity || eqNow;
+  if (dayStart > 0 && eqNow / dayStart - 1 <= -p.dailyLossLimitPct / 100) {
+    for (const s of states) {
+      if (s.status === "long" && s.size && s.entry_price && s.cost) {
+        const price = priceOf[s.pair];
+        const proceeds = price * (1 - slip) * s.size * (1 - fee);
+        const pnl = proceeds - s.cost;
+        s.cash += proceeds;
+        const closedSize = s.size;
+        await insertOrder({
+          pair: s.pair, side: "sell", price: price * (1 - slip), size: closedSize,
+          reason: "daglimiet", equity_after: 0, pnl_eur: pnl, pnl_pct: (pnl / s.cost) * 100,
+        });
+        s.status = "flat"; s.entry_price = null; s.entry_time = null; s.size = null; s.cost = null;
+        const acts: string[] = [];
+        await mirrorBlofin("close", s.pair, closedSize, acts);
+        feedActions.push(`${s.pair}: gesloten wegens DAGLIMIET (${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR)`);
       }
+      s.halted = true;
+    }
+    feedActions.push(`⚠ DAGLIMIET GERAKT — bot staat vandaag pauze`);
+  }
+
+  // ── stap 3: nieuwe entries (uit de gedeelde pot) ────────────────────
+  const openCosts = states.reduce((a, s) => a + (s.cost ?? 0), 0);
+  const totalCash = states.reduce((a, s) => a + s.cash, 0);
+  for (const s of states) {
+    if (s.status !== "flat" || s.halted) continue;
+    const candles = candlesByPair[s.pair];
+    const closedIdx = candles.length - 2;
+    const sgn = prepare(candles, p);
+    const price = priceOf[s.pair];
+    if (!longSignal(sgn, candles, closedIdx, p)) continue;
+
+    const entry = price * (1 + slip);
+    const eq = totalEquity();
+    const riskAmount = (eq * p.riskPerTrade) / 100;
+    let size = riskAmount / (entry * (p.slPct / 100));
+    // cap: max 25% van de pot per trade, samen max 98% van de cash
+    const capNotional = Math.min(totalCash * 0.25, (totalCash - openCosts) * 0.98);
+    size = Math.min(size, capNotional / entry);
+    const cost = entry * size * (1 + fee);
+    // De kas is gezamenlijk: deze rij mag negatief zolang de pot als
+    // geheel ruim positief blijft (cap hierboven bewaakt dat al).
+    const potAfter = totalEquity() - cost;
+    if (size > 0 && cost > 0 && potAfter > 0) {
+      s.cash -= cost;
+      s.status = "long";
+      s.entry_price = entry; s.entry_time = new Date().toISOString();
+      s.size = size; s.cost = cost;
+      await insertOrder({
+        pair: s.pair, side: "buy", price: entry, size,
+        reason: "long: RSI-dip + stijgende trend",
+        equity_after: totalEquity(), pnl_eur: null, pnl_pct: null,
+      });
+      const acts: string[] = [];
+      await mirrorBlofin("open", s.pair, size, acts);
+      const r = results.find((x) => x.pair === s.pair) as Record<string, unknown>;
+      r.actions = [...((r.actions as string[]) ?? []), `LONG ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR`, ...acts];
+      r.status = "long";
+      feedActions.push(`${s.pair}: LONG ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR${acts.length ? ` · ${acts[0]}` : ""}`);
     }
   }
 
-  await saveState(s);
-  return {
-    pair, price, equity,
-    status: s.halted ? "gepauzeerd (daglimiet)" : s.status,
-    actions,
-  };
+  await Promise.all(states.map((s) => saveState(s as never)));
+  return { pot: totalEquity(), pairs: results, actions: feedActions };
 }
