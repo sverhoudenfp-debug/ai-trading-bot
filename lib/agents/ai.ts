@@ -40,9 +40,11 @@ STRATEGIES (pick per situation; weight strategies with better recent performance
 2. "pullback": clear uptrend (price above EMA-200 on 15m and 1h), price pulls back to/near EMA-50 and momentum stabilizes — buy the continuation.
 3. "breakout": price breaks above its 24h high with positive momentum and above EMA-200 — buy the breakout.
 4. "news-momentum": a fresh headline is a direct positive catalyst for one of our coins (major listing, ETF approval, big adoption) — ride the momentum. Use sparingly, only with a clear catalyst.
+5. "rsi-fade-short": clear DOWNTREND (price below EMA-200 on 15m and 1h), RSI bounces above 70 — short the overbought bounce against the downtrend. Use sparingly.
 
 RULES:
-- Long-only policy: NEVER propose short entries. You MAY propose exits (kind "exit", side "sell") for open long positions.
+- Long entries (side "buy") are the bread-and-butter. Short entries (side "sell") are ALLOWED but only in a convincing downtrend: price below EMA-200 on the chosen timeframe AND confirmed on 1h. Use shorts sparingly.
+- Exits: kind "exit" closes the open position (side "sell" for longs, side "buy" for shorts).
 - Default answer is NO trade. Only propose when the edge is clear. At most 2 proposals per run.
 - This is day-trading: positions are meant to last hours, not days. Propose exits when the thesis is broken or momentum fades.
 - risk_pct: percent of the pot to risk on this trade (SL hit = that loss). Choose 5-10.
@@ -236,15 +238,6 @@ export async function aiAgent(): Promise<{
       if (!isPair(pair)) continue;
       if (pr.side !== "buy" && pr.side !== "sell") continue;
       if (pr.kind !== "entry" && pr.kind !== "exit") continue;
-      // long-only: short-entries van de AI structuurmatig weren
-      if (pr.kind === "entry" && pr.side === "sell") {
-        await insertSignal({
-          pair, side: "sell", kind: "entry", reason: "AI stelde short voor (geblokkeerd: long-only)",
-          strategy_version: "ai-short", proposed_by: "ai", ai_explanation: pr.explanation ?? null,
-          consumed: true, outcome: "blocked_long_only",
-        } as NewSignal);
-        continue;
-      }
       const age10 = Date.now() - 10 * 60_000;
       const dupe = recent.some(
         (s) => s.pair === pair && s.kind === pr.kind && s.side === pr.side && Date.parse(s.created_at) >= age10
