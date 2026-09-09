@@ -69,7 +69,8 @@ export default function Dashboard() {
   const [multi, setMulti] = useState<{ pairs: MultiPair[]; periodStart: number; periodEnd: number } | null>(null);
   const [paper, setPaper] = useState<{
     states: PaperState[]; orders: PaperOrder[];
-    blofin?: { configured: boolean; live: boolean; equityUsd: number | null; positions: { instId: string; contracts: number; entry: number; mark: number; upl: number }[]; error?: string };
+    pot?: { cash: number; day_start_equity: number; halted: boolean } | null;
+  blofin?: { configured: boolean; live: boolean; equityUsd: number | null; positions: { instId: string; contracts: number; entry: number; mark: number; upl: number }[]; error?: string };
   } | null>(null);
   const [pair, setPair] = useState("BTC-EUR");
   const [feed, setFeed] = useState<FeedItem[]>([]);
@@ -142,12 +143,15 @@ export default function Dashboard() {
 
   const sel = multi?.pairs.find((p) => p.pair === pair) ?? null;
   const stateOf = (pair_: string) => paper?.states.find((s) => s.pair === pair_);
-  // Eén gedeelde pot: som van alle cash + waarde van open long-posities
-  const potTotal = (paper?.states ?? []).reduce((acc, s) => {
+  // Eén gedeelde pot: cash uit de pot-rij + waarde van alle open posities
+  const potTotal = (paper?.pot?.cash ?? 0) + (paper?.states ?? []).reduce((acc, s) => {
     const px = multi?.pairs.find((m) => m.pair === s.pair)?.price ?? 0;
-    const posVal = s.status === "long" && s.size ? s.size * px : 0;
-    return acc + s.cash + posVal;
+    if (!s.size || !s.entry_price) return acc;
+    const posVal = s.status === "long" ? s.size * px : s.size * (2 * s.entry_price - px);
+    return acc + posVal;
   }, 0);
+  const potDayPnl = paper?.pot?.day_start_equity
+    ? (potTotal / paper.pot.day_start_equity - 1) * 100 : 0;
   // Levend bewijs dat de cron de bot wakker maakt: jongste updated_at
   // van de coin-states → "X min geleden". Meer dan 15 min oud = waarschuwing,
   // want dan zijn er minstens 3 ticks van de 5-minuten-wekker overgeslagen.
@@ -201,19 +205,11 @@ export default function Dashboard() {
       </div>
 
       <section id="overzicht">
-        <h2><span className="hash">01</span> LIVE OVERZICHT <span className="hint">papieren vermogen per coin: €1000 start</span></h2>
+        <h2><span className="hash">01</span> LIVE OVERZICHT <span className="hint">één gedeelde pot van €1000 · vandaag {sign(potDayPnl, 1)}</span></h2>
         <div className="grid4">
           {(multi?.pairs ?? []).map((p) => {
             const st = stateOf(p.pair);
             const inPos = st && st.status !== "flat" && st.size && st.entry_price;
-            const equity = st
-              ? st.cash + (inPos
-                ? st.status === "long"
-                  ? st.size! * st.entry_price!
-                  : st.size! * (2 * st.entry_price! - st.entry_price!)
-                : 0)
-              : 1000;
-            const dayPnl = st?.day ? (equity / st.day_start_equity - 1) * 100 : 0;
             return (
               <div className="statcard" key={p.pair}>
                 <div className="sc-top">
@@ -222,10 +218,11 @@ export default function Dashboard() {
                     {st?.halted ? "⏸ PAUZE" : st?.status === "long" ? "🟢 LONG" : st?.status === "short" ? "🔴 SHORT" : "⏳ SCAN"}
                   </span>
                 </div>
-                <div className="big">{fmtEUR.format(equity)}</div>
+                <div className="big">{fmtEUR.format(p.price)}</div>
                 <div className="delta">
-                  vandaag <span className={cls(dayPnl)}>{sign(dayPnl)}</span> ·{" "}
-                  {inPos ? `${st?.status} @ ${fmtEUR.format(st!.entry_price!)}` : `kas ${fmtEUR.format(st?.cash ?? 1000)}`}
+                  {inPos
+                    ? `${st?.status === "long" ? "🟢" : "🔴"} ${st?.status} @ ${fmtEUR.format(st!.entry_price!)}`
+                    : "geen positie — de bot scant"}
                 </div>
                 <div className="delta dim">
                   backtest 45d: <span className={cls(p.stats.totalReturnPct)}>{sign(p.stats.totalReturnPct, 1)}</span> · {p.stats.numTrades} trades · win {p.stats.winRatePct.toFixed(0)}%

@@ -17,6 +17,10 @@ function headers(extra?: Record<string, string>) {
   };
 }
 
+// De gedeelde kas leeft in één aparte rij met pair = POT_PAIR.
+// De coin-rijen bewaren alleen hun positie; alle cash zit in de pot.
+export const POT_PAIR = "__POT__";
+
 export interface PaperState {
   pair: string;
   status: "flat" | "long" | "short";
@@ -68,10 +72,10 @@ export async function getState(pair: string): Promise<PaperState | null> {
   return rows.find((r) => r.pair === pair) ?? null;
 }
 
-export async function initState(pair: string): Promise<PaperState> {
+export async function initState(pair: string, cash = 1000, dayStartEquity = cash): Promise<PaperState> {
   const fresh: PaperState = {
-    pair, status: "flat", cash: 1000, entry_price: null, entry_time: null,
-    size: null, cost: null, day: null, day_start_equity: 1000, halted: false,
+    pair, status: "flat", cash, entry_price: null, entry_time: null,
+    size: null, cost: null, day: null, day_start_equity: dayStartEquity, halted: false,
   };
   const r = await fetch(`${URL_}/rest/v1/paper_state`, {
     method: "POST",

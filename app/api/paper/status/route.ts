@@ -3,7 +3,7 @@
 // hier staat niets geheims in.
 
 import { NextResponse } from "next/server";
-import { getStates, listOrders, supabaseConfigured } from "@/lib/paper/store";
+import { getStates, listOrders, supabaseConfigured, POT_PAIR } from "@/lib/paper/store";
 import { snapshot as blofinSnapshot } from "@/lib/exchange/blofin";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +16,16 @@ export async function GET() {
     const [states, orders, blofin] = await Promise.all([
       getStates(), listOrders(50), blofinSnapshot(),
     ]);
-    return NextResponse.json({ configured: true, initialized: states.length > 0, states, orders, blofin });
+    const potRow = states.find((s) => s.pair === POT_PAIR);
+    return NextResponse.json({
+      configured: true,
+      initialized: states.length > 0,
+      pot: potRow
+        ? { cash: potRow.cash, day_start_equity: potRow.day_start_equity, halted: potRow.halted }
+        : null,
+      states: states.filter((s) => s.pair !== POT_PAIR),
+      orders, blofin,
+    });
   } catch (e) {
     return NextResponse.json({ configured: true, error: String(e instanceof Error ? e.message : e) });
   }
