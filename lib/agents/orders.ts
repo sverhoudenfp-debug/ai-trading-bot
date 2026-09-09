@@ -13,6 +13,7 @@
 //
 // dry=true → alles doorrekenen maar niets uitvoeren/wegschrijven (testmodus).
 
+import { maybeLearn } from "./learn";
 import { fetchCandles } from "@/lib/exchange/marketdata";
 import { PAIRS } from "@/lib/exchange/pairs";
 import { DEFAULT_PARAMS } from "@/lib/strategy";
@@ -97,7 +98,17 @@ export async function orderAgent(dry = false): Promise<{
   actions: string[];
   news: { level: string; reason: string; fresh: boolean };
   signalsProcessed: Record<string, unknown>[];
+  learned: string | null;
 }> {
+  // ── zelflerende laag: dagelijkse leronde (eerste tick na middernacht UTC) ──
+  // Faalt de leronde, dan draait de bot gewoon door — leren mag nooit blokkeren.
+  let learned: string | null = null;
+  if (!dry) {
+    try {
+      const r = await maybeLearn();
+      if (r) learned = `${r.version}: ${r.note}`;
+    } catch { /* leronde mag falen zonder gevolgen */ }
+  }
   const p = DEFAULT_PARAMS;
   const slip = p.slippagePct / 100;
   const fee = p.feePct / 100;
@@ -358,5 +369,5 @@ export async function orderAgent(dry = false): Promise<{
 
   // ── opslaan: alle positie-rijen + de pot-rij ────────────────────────────
   if (!dry) await Promise.all([...states.map((s) => saveState(s)), saveState(pot)]);
-  return { pot: totalEquity(), pairs: results, actions: feedActions, news, signalsProcessed };
+  return { pot: totalEquity(), pairs: results, actions: feedActions, news, signalsProcessed, learned };
 }

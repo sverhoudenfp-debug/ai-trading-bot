@@ -30,13 +30,15 @@ import {
 import { callClaude, logAiRun, parseJsonLoose } from "./anthropic";
 import { RSS_FEEDS, fetchFeed } from "./news";
 import { AI_QUIET_INTERVAL_MIN, AI_VOLATILITY_PCT, aiExecuteEnabled } from "./config";
+import { getActiveWeights, StrategyWeights } from "./learn";
 
 // ── systeem-instructie (statisch → cachebaar via prompt caching) ────────
 const SYSTEM_PROMPT = `You are the combined analysis engine of a crypto day-trading bot (paper trading, EUR pairs on Bitvavo prices).
 You receive: per-coin indicator snapshots on 3 timeframes (5m/15m/1h), fresh news headlines, recent strategy performance, open positions and pot status.
 Every coin: ${PAIRS.join(", ")}.
 
-STRATEGIES (pick per situation; weight strategies with better recent performance more heavily):
+STRATEGIES (pick per situation; weight strategies with better recent performance more heavily).
+SELF-LEARNING LAYER: "strategy_weights" in the data holds a daily-updated multiplier per strategy (from real trade results): ×1.0 = neutral, >1.0 = performing well (may enter more readily), <1.0 = underperforming (only propose it on an A-grade setup and/or with lower confidence). Weights are guidance, not a ban — a truly convincing setup may still be proposed.
 1. "rsi-dip": RSI drops under 30 while price is above EMA-200 (uptrend) — buy the fresh dip. Exit when RSI recovers.
 2. "pullback": clear uptrend (price above EMA-200 on 15m and 1h), price pulls back to/near EMA-50 and momentum stabilizes — buy the continuation.
 3. "breakout": price breaks above its 24h high with positive momentum and above EMA-200 — buy the breakout.
@@ -204,12 +206,17 @@ export async function aiAgent(): Promise<{
   // data verzamelen (elk stuk mag falen zonder de run te breken)
   let coins: Awaited<ReturnType<typeof coinSnapshots>> = { data: [], unavailable: [] };
   try { coins = await coinSnapshots(); } catch { /* hieronder merkbaar als unavailable */ }
-  const [news, perf, states, recent] = await Promise.all([
+  const [news, perf, states, recent, learned] = await Promise.all([
     newsHeadlines().catch(() => ({ headlines: [], source: "onbekend" }) as Awaited<ReturnType<typeof newsHeadlines>>),
     strategyPerformance().catch(() => [] as PerfStat[]),
     getStates().catch(() => []),
     listSignals(30).catch(() => [] as TradeSignal[]),
+    getActiveWeights().catch(() => null),
   ]);
+  const weights: StrategyWeights = learned?.weights ?? {};
+  const weightLine = Object.entries(weights).length
+    ? Object.entries(weights).map(([s, w]) => `${s} x${w.toFixed(2)}`).join(", ")
+    : "none yet (all neutral 1.0)";
   const potRow = states.find((s) => s.pair === POT_PAIR);
   const positions = states
     .filter((s) => s.status !== "flat" && s.pair !== POT_PAIR)
@@ -226,6 +233,8 @@ export async function aiAgent(): Promise<{
     coins_unavailable: coins.unavailable,
     news_last_hour: { source: news.source, headlines: news.headlines },
     strategy_performance_7d: perf,
+    strategy_weights: weights,
+    strategy_weights_note: `self-learning layer ${learned?.version ?? "uninitialized"}: ${weightLine}`,
     execute_mode: aiExecuteEnabled ? "LIVE — proposals are checked by the safety layer and executed" : "TEST — proposals are only logged, nothing is executed",
   });
 
