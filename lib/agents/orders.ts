@@ -24,6 +24,32 @@ import {
 } from "@/lib/exchange/blofin";
 import { freshUnconsumedSignals, markSignal, TradeSignal } from "./db";
 import { currentNewsStatus } from "./news";
+import {
+  AI_RISK_MIN_PCT, AI_RISK_MAX_PCT, AI_DAY_LIMIT_PCT,
+  AI_SL_MIN_PCT, AI_SL_MAX_PCT, AI_TP_MIN_PCT, AI_TP_MAX_PCT, AI_MAX_COST_PCT,
+} from "./config";
+
+// ── VEILIGHEIDS-LAAGJE (pure code, geen AI) ─────────────────────────────
+// Keurt elk AI-voorstel vóór uitvoering: geldige coin/kant, SL/TP binnen
+// de vaste grenzen, risico 5-10% van de pot. Voldoet het voorstel niet →
+// blokkeren + loggen met reden. Regel-signalen vallen hier niet onder
+// (die komen uit de gekeurde eigen strategie met 1% risico).
+export function validateAiProposal(sig: TradeSignal):
+  | { ok: true; sl: number; tp: number; risk: number }
+  | { ok: false; reason: string } {
+  const sl = sig.sl_pct ?? 0;
+  const tp = sig.tp_pct ?? 0;
+  const risk = sig.risk_pct ?? 0;
+  if (!(sl >= AI_SL_MIN_PCT && sl <= AI_SL_MAX_PCT))
+    return { ok: false, reason: `stop-loss ${sl}% buiten toegestane ${AI_SL_MIN_PCT}-${AI_SL_MAX_PCT}%` };
+  if (!(tp >= AI_TP_MIN_PCT && tp <= AI_TP_MAX_PCT))
+    return { ok: false, reason: `take-profit ${tp}% buiten toegestane ${AI_TP_MIN_PCT}-${AI_TP_MAX_PCT}%` };
+  if (!(risk >= AI_RISK_MIN_PCT && risk <= AI_RISK_MAX_PCT))
+    return { ok: false, reason: `risico ${risk}% buiten toegestane ${AI_RISK_MIN_PCT}-${AI_RISK_MAX_PCT}%` };
+  if (!sig.ai_explanation)
+    return { ok: false, reason: "geen onderbouwing meegegeven" };
+  return { ok: true, sl, tp, risk };
+}
 
 async function mirrorBlofin(
   action: "open" | "open_short" | "close",
@@ -157,8 +183,10 @@ export async function orderAgent(dry = false): Promise<{
     const price = priceOf[s.pair];
     if ((s.status === "long" || s.status === "short") && s.entry_price && s.size && s.cost) {
       const isLong = s.status === "long";
-      const stop = s.entry_price * (isLong ? 1 - p.slPct / 100 : 1 + p.slPct / 100);
-      const target = s.entry_price * (isLong ? 1 + p.tpPct / 100 : 1 - p.tpPct / 100);
+      const posSl = s.sl_pct ?? p.slPct;   // AI-posities: door AI voorgestelde SL
+      const posTp = s.tp_pct ?? p.tpPct;   // (oude posities: standaardwaarden)
+      const stop = s.entry_price * (isLong ? 1 - posSl / 100 : 1 + posSl / 100);
+      const target = s.entry_price * (isLong ? 1 + posTp / 100 : 1 - posTp / 100);
       let exitPrice = 0;
       let reason = "signaal";
       if (isLong ? price <= stop : price >= stop) { exitPrice = stop * (isLong ? 1 - slip : 1 + slip); reason = "stop-loss"; }
@@ -179,10 +207,13 @@ export async function orderAgent(dry = false): Promise<{
         pot.cash += proceeds;
         const closedSize = s.size;
         const closedCost = s.cost;
+        const closedStrategy = s.strategy ?? null;
         s.status = "flat"; s.entry_price = null; s.entry_time = null; s.size = null; s.cost = null;
+        s.sl_pct = null; s.tp_pct = null; s.strategy = null;
         await insertOrder({
           pair: s.pair, side: isLong ? "sell" : "buy", price: exitPrice, size: closedSize, reason,
           equity_after: totalEquity(), pnl_eur: pnl, pnl_pct: (pnl / closedCost) * 100,
+          strategy: closedStrategy, ai_explanation: null,
         });
         actions.push(`${isLong ? "LONG" : "SHORT"} GESLOTEN (${reason}): ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR`);
         await mirrorBlofin("close", s.pair, closedSize, actions);
@@ -202,7 +233,9 @@ export async function orderAgent(dry = false): Promise<{
   // ── stap 2: daglimiet check (op de pot) — identiek aan eerst ──────────
   const eqNow = totalEquity();
   const dayStart = pot.day_start_equity || eqNow;
-  if (dayStart > 0 && eqNow / dayStart - 1 <= -p.dailyLossLimitPct / 100) {
+  // daglimiet sinds 9 sep 2026: -15% van de pot (was -3%), passend bij
+  // 5-10% risico per AI-trade — vangt 2 volle verlies-trades op rij op.
+  if (dayStart > 0 && eqNow / dayStart - 1 <= -AI_DAY_LIMIT_PCT / 100) {
     if (!dry) {
       for (const s of states) {
         if ((s.status === "long" || s.status === "short") && s.size && s.entry_price && s.cost) {
@@ -220,6 +253,7 @@ export async function orderAgent(dry = false): Promise<{
             pnl_eur: pnl, pnl_pct: (pnl / s.cost) * 100,
           });
           s.status = "flat"; s.entry_price = null; s.entry_time = null; s.size = null; s.cost = null;
+          s.sl_pct = null; s.tp_pct = null; s.strategy = null;
           await mirrorBlofin("close", s.pair, closedSize, feedActions);
           feedActions.push(`${s.pair}: gesloten wegens DAGLIMIET (${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR)`);
         }
@@ -253,13 +287,32 @@ export async function orderAgent(dry = false): Promise<{
       continue;
     }
 
-    // ── positionering: identiek aan de oude tick ────────────────────────
+    // ── VEILIGHEIDS-LAAGJE: AI-voorstellen eerst keuren (pure code) ────
+    const isAi = (sig.proposed_by ?? "rule") === "ai";
+    let slPct = p.slPct;
+    let tpPct = p.tpPct;
+    let riskPct = p.riskPerTrade;
+    if (isAi) {
+      const check = validateAiProposal(sig);
+      if (!check.ok) {
+        await mark(sig, "blocked_risk", `AI-voorstel afgewezen door risicocheck: ${check.reason}`);
+        feedActions.push(`⛔ ${s.pair}: AI-voorstel afgewezen door risicocheck — ${check.reason}`);
+        const rb = results.find((x) => x.pair === s.pair) as Record<string, unknown>;
+        rb.actions = [...((rb.actions as string[]) ?? []), `AI-voorstel afgewezen: ${check.reason}`];
+        continue;
+      }
+      slPct = check.sl; tpPct = check.tp; riskPct = check.risk;
+    }
+
+    // ── positionering ──────────────────────────────────────────────────
     const price = priceOf[s.pair];
     const entry = price * (1 + (isLong ? slip : -slip));
     const eq = totalEquity();
-    const riskAmount = (eq * p.riskPerTrade) / 100;
-    let size = riskAmount / (entry * (p.slPct / 100));
-    const capNotional = Math.min(pot.cash * 0.25, (pot.cash - openCosts) * 0.98);
+    const riskAmount = (eq * riskPct) / 100;
+    let size = riskAmount / (entry * (slPct / 100));
+    // regel-signalen: max 25% van de pot · AI: max 95% van de kas
+    const costCapPct = isAi ? AI_MAX_COST_PCT / 100 : 0.25;
+    const capNotional = Math.min(pot.cash * costCapPct, (pot.cash - openCosts) * 0.98);
     size = Math.min(size, capNotional / entry);
     const cost = entry * size * (1 + fee);
     const potAfter = totalEquity() - cost;
@@ -278,10 +331,12 @@ export async function orderAgent(dry = false): Promise<{
     s.status = isLong ? "long" : "short";
     s.entry_price = entry; s.entry_time = new Date().toISOString();
     s.size = size; s.cost = cost;
+    s.sl_pct = slPct; s.tp_pct = tpPct; s.strategy = sig.strategy_version;
     await insertOrder({
       pair: s.pair, side: isLong ? "buy" : "sell", price: entry, size,
       reason: sig.reason,
       equity_after: totalEquity(), pnl_eur: null, pnl_pct: null,
+      strategy: sig.strategy_version, ai_explanation: sig.ai_explanation ?? null,
     });
     const acts: string[] = [];
     await mirrorBlofin(isLong ? "open" : "open_short", s.pair, size, acts);

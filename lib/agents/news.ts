@@ -36,12 +36,12 @@ const CAUTION_KEYWORDS = [
   "treasury", "approval", "delay", "veto", "tariff", "downgrade",
 ];
 
-interface NewsItem {
+export interface NewsItem {
   title: string;
   publishedOn: number; // unix sec
 }
 
-const RSS_FEEDS = [
+export const RSS_FEEDS = [
   "https://cointelegraph.com/rss",
   "https://www.coindesk.com/arc/outboundfeeds/rss/",
 ];
@@ -66,7 +66,7 @@ function parseRss(xml: string): NewsItem[] {
   return items;
 }
 
-async function fetchFeed(url: string): Promise<NewsItem[]> {
+export async function fetchFeed(url: string): Promise<NewsItem[]> {
   const res = await fetch(url, {
     headers: { "User-Agent": "ai-trading-bot/2.0 (news-agent)" },
     cache: "no-store",

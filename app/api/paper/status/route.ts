@@ -5,7 +5,7 @@
 import { NextResponse } from "next/server";
 import { getStates, listOrders, supabaseConfigured, POT_PAIR } from "@/lib/paper/store";
 import { snapshot as blofinSnapshot } from "@/lib/exchange/blofin";
-import { listSignals, latestNewsAlert } from "@/lib/agents/db";
+import { listSignals, latestNewsAlert, aiStats24h, lastAgentRun } from "@/lib/agents/db";
 
 export const dynamic = "force-dynamic";
 
@@ -29,6 +29,8 @@ export async function GET() {
     } catch {
       signals = null; news = null;
     }
+    const aiStats = await aiStats24h(); // null als agent_runs er nog niet is
+    const aiLast = await lastAgentRun().catch(() => null);
 
     return NextResponse.json({
       configured: true,
@@ -38,7 +40,7 @@ export async function GET() {
         : null,
       states: states.filter((s) => s.pair !== POT_PAIR),
       orders, blofin,
-      agents: signals ? { signals, news } : null,
+      agents: signals ? { signals, news, aiStats, aiLast } : null,
     });
   } catch (e) {
     return NextResponse.json({ configured: true, error: String(e instanceof Error ? e.message : e) });

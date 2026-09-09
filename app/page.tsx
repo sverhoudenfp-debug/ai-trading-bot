@@ -72,8 +72,10 @@ export default function Dashboard() {
     pot?: { cash: number; day_start_equity: number; halted: boolean } | null;
   blofin?: { configured: boolean; live: boolean; equityUsd: number | null; positions: { instId: string; contracts: number; entry: number; mark: number; upl: number }[]; error?: string };
   agents?: {
-    signals: { id: number; created_at: string; pair: string; side: string; kind: string; reason: string; strategy_version: string; outcome: string; outcome_reason: string | null }[];
+    signals: { id: number; created_at: string; pair: string; side: string; kind: string; reason: string; strategy_version: string; outcome: string; outcome_reason: string | null; ai_explanation?: string | null; proposed_by?: string | null; timeframe?: string | null }[];
     news: { id: number; created_at: string; level: string; reason: string; valid_until: string } | null;
+    aiStats?: { calls: number; errors: number; proposals: number; costUsd: number } | null;
+    aiLast?: { created_at: string; error: string | null } | null;
   } | null;
   } | null>(null);
   const [pair, setPair] = useState("BTC-EUR");
@@ -299,7 +301,14 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="card feedcard">
-            <h3>◆ Agent-activiteit <span className="hint">analyse · nieuws · orders</span></h3>
+            <h3>◆ Agent-activiteit <span className="hint">AI · nieuws · orders</span></h3>
+            {paper?.agents?.aiStats ? (
+              <div className="blofin-strip" style={{ marginBottom: 10 }}>
+                🤖 AI-agent (24u): {paper.agents.aiStats.calls} aanroepen · {paper.agents.aiStats.proposals} voorstellen
+                {paper.agents.aiStats.errors > 0 ? ` · ${paper.agents.aiStats.errors} fouten` : ""}
+                {" "}· kosten ≈ ${paper.agents.aiStats.costUsd.toFixed(3)}
+              </div>
+            ) : null}
             {paper?.agents ? (
               <>
                 <div style={{ marginBottom: 12 }}>
@@ -326,7 +335,7 @@ export default function Dashboard() {
                 ) : (
                   <div className="ordertable-wrap">
                   <table>
-                    <thead><tr><th>Tijd</th><th>Coin</th><th>Signaal</th><th>Uitkomst</th></tr></thead>
+                    <thead><tr><th>Tijd</th><th>Coin</th><th>Signaal</th><th>Uitkomst</th><th>Strategie</th><th>AI-onderbouwing</th></tr></thead>
                     <tbody>
                       {paper.agents.signals.map((s) => (
                         <tr key={s.id}>
@@ -336,11 +345,16 @@ export default function Dashboard() {
                           <td>
                             {s.outcome === "executed" ? "✅ uitgevoerd" :
                              s.outcome === "blocked_news" ? "⛔ geblokkeerd (nieuws)" :
+                             s.outcome === "blocked_risk" ? "⛔ risicocheck wees af" :
+                             s.outcome === "blocked_long_only" ? "⛔ short (long-only)" :
                              s.outcome === "skipped" ? "⏭ overgeslagen" :
                              s.outcome === "expired" ? "⌛ verlopen" :
+                             s.outcome === "logged_test" ? "👁 testvoorstel (nog niet uitvoerend)" :
                              s.outcome === "preview" ? "👁 test (dry)" : "⏳ wacht op order-agent"}
                             {s.outcome_reason && <span className="delta"> — {s.outcome_reason}</span>}
                           </td>
+                          <td>{s.strategy_version}{s.proposed_by === "ai" ? " 🤖" : ""}</td>
+                          <td className="delta" style={{ maxWidth: 260 }}>{s.ai_explanation ?? "—"}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -352,8 +366,9 @@ export default function Dashboard() {
               <p className="delta">Agent-tabellen nog niet actief — draai supabase-agents-setup.sql om de 3-agent-modus te starten.</p>
             )}
             <p className="delta" style={{ marginTop: 12 }}>
-              Werkwijze: de analyse-agent zet kansen klaar, de nieuws-agent beoordeelt het risico,
-              en de order-agent plaatst alleen een order als beide het toelaten (exits gaan altijd vóór).
+              Werkwijze: de AI-agent (Claude Haiku) combineert nieuws + koersanalyse in één voorstel per
+              interval; het vaste veiligheids-laagje keurt elk voorstel (risico 5-10%, SL/TP binnen grenzen,
+              daglimiet -15%) vóór de order-agent het uitvoert. In testmodus worden voorstellen alleen gelogd.
             </p>
           </div>
           <div className="card">

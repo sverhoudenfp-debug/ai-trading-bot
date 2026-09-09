@@ -33,6 +33,10 @@ export interface PaperState {
   day_start_equity: number;
   halted: boolean;
   updated_at?: string | null; // laatste bot-tick (cron-levensbewijs)
+  // AI-agent: per positie geldende stop-loss/take-profit + gebruikte strategie
+  sl_pct?: number | null;
+  tp_pct?: number | null;
+  strategy?: string | null;
 }
 
 export interface PaperOrder {
@@ -46,6 +50,8 @@ export interface PaperOrder {
   equity_after: number;
   pnl_eur: number | null;
   pnl_pct: number | null;
+  strategy?: string | null;      // welke strategie de trade aangaf
+  ai_explanation?: string | null; // korte AI-onderbouwing
 }
 
 export async function getStates(): Promise<PaperState[]> {
@@ -64,6 +70,9 @@ export async function getStates(): Promise<PaperState[]> {
     day_start_equity: Number(s.day_start_equity),
     halted: Boolean(s.halted),
     updated_at: s.updated_at ? String(s.updated_at) : null,
+    sl_pct: s.sl_pct === null || s.sl_pct === undefined ? null : Number(s.sl_pct),
+    tp_pct: s.tp_pct === null || s.tp_pct === undefined ? null : Number(s.tp_pct),
+    strategy: s.strategy === null || s.strategy === undefined ? null : String(s.strategy),
   }));
 }
 
@@ -122,5 +131,7 @@ export async function listOrders(limit = 50): Promise<PaperOrder[]> {
     equity_after: Number(x.equity_after),
     pnl_eur: x.pnl_eur === null ? null : Number(x.pnl_eur),
     pnl_pct: x.pnl_pct === null ? null : Number(x.pnl_pct),
+    strategy: x.strategy === null || x.strategy === undefined ? null : String(x.strategy),
+    ai_explanation: x.ai_explanation === null || x.ai_explanation === undefined ? null : String(x.ai_explanation),
   }));
 }
