@@ -4,7 +4,7 @@
 // Elke order met strategie-stempel en AI-onderbouwing, plus de pot-status
 // en het dagresultaat.
 
-import { useEffect, useState } from "react";
+import { useStatus } from "../status-store";
 
 const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
 const dt = (t: string) => new Date(t).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -22,27 +22,12 @@ interface State {
 }
 
 export default function OrdersPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [states, setStates] = useState<State[]>([]);
-  const [pot, setPot] = useState<{ cash: number; day_start_equity: number; halted: boolean } | null>(null);
-  const [ready, setReady] = useState(false);
-
-  useEffect(() => {
-    const load = () =>
-      fetch("/api/paper/status")
-        .then((r) => r.json())
-        .then((j) => {
-          if (!j.configured) return;
-          setOrders(j.orders ?? []);
-          setStates(j.states ?? []);
-          setPot(j.pot ?? null);
-          setReady(true);
-        })
-        .catch(() => {});
-    load();
-    const t = setInterval(load, 20_000);
-    return () => clearInterval(t);
-  }, []);
+  // Gedeelde status-cache: zelfde data als het dashboard, geen nieuwe load
+  // bij het wisselen van pagina.
+  const paper = useStatus();
+  const orders: Order[] = (paper?.orders ?? []) as Order[];
+  const states = paper?.states ?? [];
+  const pot = paper?.pot ?? null;
 
   const closed = orders.filter((o) => o.pnl_eur !== null);
   const wins = closed.filter((o) => (o.pnl_eur ?? 0) > 0).length;
@@ -90,7 +75,7 @@ export default function OrdersPage() {
               </tbody>
             </table></div>
           ) : (
-            <p className="delta">{ready ? "Nog geen orders — zodra de AI of de regel-bot handelt verschijnen ze hier." : "Laden…"}</p>
+            <p className="delta">{paper ? "Nog geen orders — zodra de AI of de regel-bot handelt verschijnen ze hier." : "Laden…"}</p>
           )}
         </div>
       </section>

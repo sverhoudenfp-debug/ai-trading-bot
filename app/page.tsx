@@ -7,6 +7,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { PositionsChart } from "./positionschart";
+import { useStatus, useMulti, useLivePrices, type PaperOrder, type PaperState, type MultiPair } from "./status-store";
 
 const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
 const fmtEUR0 = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
@@ -22,30 +23,9 @@ interface MiniTrade {
   entryPrice: number; exitPrice: number; pnl: number; pnlPct: number;
   reason: string; holdHours: number;
 }
-interface MultiPair {
-  pair: string; name: string; price: number;
-  stats: {
-    totalReturnPct: number; buyHoldPct: number; winRatePct: number; numTrades: number;
-    numShorts: number; maxDrawdownPct: number; avgHoldHours: number; feesPaid: number;
-    dailyStops: number; bestTradePct: number; worstTradePct: number;
-  };
-  candles: { t: number; o: number; h: number; l: number; c: number }[]; trades: MiniTrade[];
-}
-interface PaperOrder {
-  id: number; created_at: string; pair: string; side: "buy" | "sell";
-  price: number; size: number; reason: string; equity_after: number;
-  pnl_eur: number | null; pnl_pct: number | null;
-}
-interface PaperState {
-  pair: string; status: "flat" | "long" | "short"; cash: number;
-  entry_price: number | null; entry_time: string | null;
-  size: number | null; cost: number | null;
-  day: string | null; day_start_equity: number; halted: boolean;
-  updated_at?: string | null; // laatste bot-tick (levensbewijs van de cron)
-}
 interface FeedItem { id: string; time: string; text: string; kind: "info" | "tick" | "order" | "ok" | "err" }
 
-function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperState; onPick: () => void; active: boolean }) {
+function MiniChart({ p, live, onPick, active, livePrice }: { p: MultiPair; live?: PaperState; onPick: () => void; active: boolean; livePrice?: number }) {
   const st = live?.status ?? "flat";
   return (
     <div className={"minichart" + (active ? " active" : "")} onClick={onPick}>
@@ -55,7 +35,7 @@ function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperStat
           {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : st === "short" ? "🔴 SHORT" : "⏳ SCAN"}
         </span>
       </div>
-      <div className="mc-price">{fmtPrice(p.price)}</div>
+      <div className="mc-price">{fmtPrice(livePrice ?? p.price)}</div>
       <div className="mc-stats">
         <span className={cls(p.stats.totalReturnPct)}>bot 45d {sign(p.stats.totalReturnPct, 1)}</span>
         <span>{p.stats.numTrades} trades</span>
@@ -66,23 +46,14 @@ function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperStat
 }
 
 export default function Dashboard() {
-  const [multi, setMulti] = useState<{ pairs: MultiPair[]; periodStart: number; periodEnd: number } | null>(null);
-  const [paper, setPaper] = useState<{
-    states: PaperState[]; orders: PaperOrder[];
-    pot?: { cash: number; day_start_equity: number; halted: boolean } | null;
-  blofin?: { configured: boolean; live: boolean; equityUsd: number | null; positions: { instId: string; contracts: number; entry: number; mark: number; upl: number }[]; error?: string };
-  agents?: {
-    signals: { id: number; created_at: string; pair: string; side: string; kind: string; reason: string; strategy_version: string; outcome: string; outcome_reason: string | null; ai_explanation?: string | null; proposed_by?: string | null; timeframe?: string | null }[];
-    news: { id: number; created_at: string; level: string; reason: string; valid_until: string } | null;
-    aiStats?: { calls: number; errors: number; proposals: number; costUsd: number } | null;
-    aiLast?: { created_at: string; error: string | null } | null;
-    executeMode?: boolean;
-  } | null;
-  } | null>(null);
+  // Gedeelde, gecachte data: één statuspoll voor alle pagina's — paginawissel
+  // kost dus géén nieuwe laadtijd (de data zit al in het geheugen).
+  const paper = useStatus();
+  const { multi, reload: loadMulti } = useMulti();
+  const prices = useLivePrices();
   const [pair, setPair] = useState("BTC-EUR");
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [clock, setClock] = useState("");
-  const [busy, setBusy] = useState(true);
   const seen = useRef<Set<number>>(new Set());
   const tickNo = useRef(0);
 
@@ -92,67 +63,46 @@ export default function Dashboard() {
     );
   }, []);
 
-  const loadMulti = useCallback(() => {
-    setBusy(true);
-    fetch("/api/multi")
-      .then((r) => r.json())
-      .then((j) => {
-        if (j.error) throw new Error(j.error);
-        setMulti(j);
-        addFeed(`Analyse voltooid — ${j.pairs.length} coins × 45 dagen backtest`, "info");
-      })
-      .catch((e) => addFeed(`Fout in analyse: ${e.message}`, "tick"))
-      .finally(() => setBusy(false));
-  }, [addFeed]);
-
-  const loadPaper = useCallback(() => {
-    fetch("/api/paper/status")
-      .then((r) => r.json())
-      .then((j) => {
-        if (!j.configured || j.error) return;
-        const orders: PaperOrder[] = j.orders ?? [];
-        setPaper({ states: j.states ?? [], orders, blofin: j.blofin, agents: j.agents ?? null });
-        if (j.blofin?.live) addFeed(`Paper-live actief op Blofin demo — virtueel vermogen $${Number(j.blofin.equityUsd).toFixed(0)}`, "ok");
-        else if (j.blofin?.error) addFeed(`Blofin demo: verbinding mislukt — ${j.blofin.error}`, "err");
-        tickNo.current++;
-        const fresh = orders.filter((o) => !seen.current.has(o.id));
-        if (seen.current.size === 0) {
-          orders.forEach((o) => seen.current.add(o.id));
-          addFeed("Verbonden met Supabase — orderhistorie gesynchroniseerd", "info");
-        } else if (fresh.length) {
-          fresh.forEach((o) => {
-            seen.current.add(o.id);
-            const nm = o.pair.split("-")[0];
-            addFeed(
-              o.pnl_eur == null
-                ? `${nm} — ${o.side === "buy" ? "LONG GEOPEND" : "SHORT GEOPEND"} @ ${fmtEUR.format(o.price)} (${o.reason})`
-                : `${nm} — POSITIE GESLOTEN (${o.reason}): ${o.pnl_eur >= 0 ? "+" : "−"}${fmtEUR.format(Math.abs(o.pnl_eur))}`,
-              "order"
-            );
-          });
-        } else {
-          addFeed(`Marktscan #${tickNo.current} voltooid — 4 coins · geen nieuwe signalen`, "tick");
-        }
-      })
-      .catch(() => {});
-  }, [addFeed]);
+  // Feed vullen bij elke statuspoll: nieuwe orders direct als feed-item,
+  // anders een "geen nieuwe signalen"-tik.
+  useEffect(() => {
+    if (!paper) return;
+    const orders: PaperOrder[] = paper.orders ?? [];
+    const fresh = orders.filter((o) => !seen.current.has(o.id));
+    if (seen.current.size === 0) {
+      orders.forEach((o) => seen.current.add(o.id));
+      addFeed("Verbonden met Supabase — orderhistorie gesynchroniseerd", "info");
+      if (paper.blofin?.live) addFeed(`Paper-live actief op Blofin demo — virtueel vermogen $${Number(paper.blofin.equityUsd).toFixed(0)}`, "ok");
+      else if (paper.blofin?.error) addFeed(`Blofin demo: verbinding mislukt — ${paper.blofin.error}`, "err");
+    } else if (fresh.length) {
+      fresh.forEach((o) => {
+        seen.current.add(o.id);
+        const nm = o.pair.split("-")[0];
+        addFeed(
+          o.pnl_eur == null
+            ? `${nm} — ${o.side === "buy" ? "LONG GEOPEND" : "SHORT GEOPEND"} @ ${fmtEUR.format(o.price)} (${o.ai_explanation ? `AI: ${o.ai_explanation.slice(0, 70)}` : o.reason})`
+            : `${nm} — POSITIE GESLOTEN (${o.reason}): ${o.pnl_eur >= 0 ? "+" : "−"}${fmtEUR.format(Math.abs(o.pnl_eur))}`,
+          "order"
+        );
+      });
+    } else {
+      tickNo.current++;
+      addFeed(`Marktscan #${tickNo.current} voltooid — 8 coins · geen nieuwe signalen`, "tick");
+    }
+  }, [paper, addFeed]);
 
   useEffect(() => {
     setClock(new Date().toLocaleTimeString("nl-NL"));
     addFeed("SYSTEEM ONLINE — AI Trading System initialiseren…", "info");
-    loadMulti();
-    loadPaper();
-    const t = setInterval(loadPaper, 30_000);
     const c = setInterval(() => setClock(new Date().toLocaleTimeString("nl-NL")), 1000);
-    return () => { clearInterval(t); clearInterval(c); };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    return () => clearInterval(c);
   }, []);
 
   const sel = multi?.pairs.find((p) => p.pair === pair) ?? null;
   const stateOf = (pair_: string) => paper?.states.find((s) => s.pair === pair_);
   // Eén gedeelde pot: cash uit de pot-rij + waarde van alle open posities
   const potTotal = (paper?.pot?.cash ?? 0) + (paper?.states ?? []).reduce((acc, s) => {
-    const px = multi?.pairs.find((m) => m.pair === s.pair)?.price ?? 0;
+    const px = prices?.[s.pair] ?? multi?.pairs.find((m) => m.pair === s.pair)?.price ?? 0;
     if (!s.size || !s.entry_price) return acc;
     const posVal = s.status === "long" ? s.size * px : s.size * (2 * s.entry_price - px);
     return acc + posVal;
@@ -181,7 +131,7 @@ export default function Dashboard() {
           return (
             <span key={p.pair} className="tick-item">
               <b>{p.pair.replace("-EUR", "")}</b>
-              <span>{fmtPrice(p.price)}</span>
+              <span>{fmtPrice(prices?.[p.pair] ?? p.price)}</span>
               <span className={cls(p.stats.buyHoldPct)}>{sign(p.stats.buyHoldPct, 1)}</span>
               <span className={"pill sm " + (st?.halted ? "halt" : st?.status === "long" ? "long" : st?.status === "short" ? "short" : "wait")}>
                 {st?.halted ? "PAUZE" : st?.status === "long" ? "LONG" : st?.status === "short" ? "SHORT" : "SCAN"}
@@ -206,7 +156,7 @@ export default function Dashboard() {
                     {st?.halted ? "⏸ PAUZE" : st?.status === "long" ? "🟢 LONG" : st?.status === "short" ? "🔴 SHORT" : "⏳ SCAN"}
                   </span>
                 </div>
-                <div className="big">{fmtEUR.format(p.price)}</div>
+                <div className="big">{fmtEUR.format(prices?.[p.pair] ?? p.price)}</div>
                 <div className="delta">
                   {inPos
                     ? `${st?.status === "long" ? "🟢" : "🔴"} ${st?.status} @ ${fmtEUR.format(st!.entry_price!)}`
@@ -218,7 +168,7 @@ export default function Dashboard() {
               </div>
             );
           })}
-          {!multi && <div className="statcard"><div className="big dim">systemen analyseren{busy ? "…" : ""}</div></div>}
+          {!multi && <div className="statcard"><div className="big dim">systemen analyseren…</div></div>}
         </div>
       </section>
 
@@ -226,7 +176,7 @@ export default function Dashboard() {
         <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">bot-posities rechtstreeks op de candles · ▲ koop · ▼ exit (groen = winst){lastTickHint ? ` · bot-tick: ${lastTickHint}` : ""}</span></h2>
         <div className="grid4">
           {(multi?.pairs ?? []).map((p) => (
-            <MiniChart key={p.pair} p={p} live={stateOf(p.pair)} active={p.pair === pair} onPick={() => setPair(p.pair)} />
+            <MiniChart key={p.pair} p={p} live={stateOf(p.pair)} active={p.pair === pair} onPick={() => setPair(p.pair)} livePrice={prices?.[p.pair]} />
           ))}
         </div>
         {sel && (
@@ -236,13 +186,13 @@ export default function Dashboard() {
               <select value={pair} onChange={(e) => setPair(e.target.value)} className="sel">
                 {multi!.pairs.map((p) => <option key={p.pair} value={p.pair}>{p.name}</option>)}
               </select>
-              <button className="btn" onClick={loadMulti} disabled={busy}>{busy ? "analyse draait…" : "↻ opnieuw analyseren"}</button>
+              <button className="btn" onClick={() => loadMulti()} disabled={!multi}>{multi ? "↻ opnieuw analyseren" : "analyse draait…"}</button>
             </div>
             <div className="lw-chart-wrap"><PositionsChart
-              candles={sel.candles} trades={sel.trades}
+              candles={sel.candles} trades={sel.trades} pair={pair}
               paper={paper?.orders
                 .filter((o) => o.pair === pair)
-                .map((o) => ({ time: o.created_at, side: o.side, price: o.price, pnl: o.pnl_eur }))
+                .map((o) => ({ time: o.created_at, side: o.side, price: o.price, pnl: o.pnl_eur, strategy: o.strategy }))
                 .reverse()}
             /></div>
             <div className="statrow">

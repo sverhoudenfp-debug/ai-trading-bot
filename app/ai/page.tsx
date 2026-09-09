@@ -6,6 +6,7 @@
 // en de kosten van de zoektocht zelf.
 
 import { useEffect, useState } from "react";
+import { useStatus, type StatusPayload } from "../status-store";
 
 const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR" });
 const dt = (t: string) => new Date(t).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
@@ -21,27 +22,8 @@ interface AiRun { created_at: string; proposals: number; cost_usd_est: number; e
 interface StratStat { strategy: string; trades: number; wins: number; winrate: number; pnl_eur: number }
 
 export default function AiPage() {
-  const [data, setData] = useState<{
-    signals: Signal[];
-    news: { created_at: string; level: string; reason: string; valid_until: string } | null;
-    aiStats: { calls: number; errors: number; proposals: number; costUsd: number } | null;
-    aiLast: { created_at: string; error: string | null } | null;
-    aiRuns: AiRun[];
-    strategyStats: StratStat[];
-    executeMode: boolean;
-  } | null>(null);
-
-  useEffect(() => {
-    const load = () =>
-      fetch("/api/paper/status")
-        .then((r) => r.json())
-        .then((j) => j.configured && j.agents ? setData(j.agents) : setData(null))
-        .catch(() => {});
-    load();
-    const t = setInterval(load, 20_000);
-    return () => clearInterval(t);
-  }, []);
-
+  const status = useStatus();
+  const data: NonNullable<StatusPayload["agents"]> | null = (status?.agents ?? null);
   if (!data) {
     return (
       <main className="hud">
@@ -52,8 +34,9 @@ export default function AiPage() {
   }
 
   const aiSignals = data.signals.filter((s) => s.proposed_by === "ai");
+  const aiRuns = data.aiRuns ?? [];
   const runsWithProposals = new Set(
-    data.aiRuns.filter((r) => r.proposals > 0).map((r) => tm(r.created_at))
+    aiRuns.filter((r) => r.proposals > 0).map((r) => tm(r.created_at))
   );
   const signalsByMinute = new Map<string, Signal[]>();
   for (const s of aiSignals) {
@@ -135,11 +118,11 @@ export default function AiPage() {
           </div>
           <div className="card feedcard">
             <h3>◆ Strategie-prestaties <span className="hint">afgelopen 7 dagen — de AI weegt deze mee</span></h3>
-            {data.strategyStats.length ? (
+            {(data.strategyStats ?? []).length ? (
               <div className="ordertable-wrap"><table>
                 <thead><tr><th>Strategie</th><th>Trades</th><th>Winrate</th><th>Resultaat</th></tr></thead>
                 <tbody>
-                  {data.strategyStats.map((s) => (
+                  {(data.strategyStats ?? []).map((s) => (
                     <tr key={s.strategy}>
                       <td><b>{s.strategy}</b></td>
                       <td>{s.trades}</td>
@@ -160,7 +143,7 @@ export default function AiPage() {
         <h2><span className="hash">◷</span> DE ZOECHTTOCHT <span className="hint">elke regel = één AI-scan · per voorstel de volledige onderbouwing</span></h2>
         <div className="card feedcard">
           <div className="scanfeed">
-            {(data.aiRuns ?? []).map((r, i) => {
+            {aiRuns.map((r, i) => {
               const minute = tm(r.created_at);
               const sigs = signalsByMinute.get(minute) ?? [];
               return (
@@ -196,7 +179,7 @@ export default function AiPage() {
                 </div>
               );
             })}
-            {!data.aiRuns?.length && <p className="delta">Nog geen AI-scans gelogd.</p>}
+            {!aiRuns.length && <p className="delta">Nog geen AI-scans gelogd.</p>}
           </div>
         </div>
       </section>

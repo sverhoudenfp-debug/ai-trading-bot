@@ -36,10 +36,12 @@ const localDayTime = (sec: number) =>
 
 export interface PaperTick {
   time: string; side: "buy" | "sell"; price: number; pnl: number | null;
+  strategy?: string | null;
 }
 
-export function PositionsChart({ candles, trades, paper }: {
+export function PositionsChart({ candles, trades, paper, pair }: {
   candles: OhlcPoint[]; trades: TradeMarker[]; paper?: PaperTick[];
+  pair?: string;
 }) {
   const container = useRef<HTMLDivElement | null>(null);
   const chartRef = useRef<IChartApi | null>(null);
@@ -103,6 +105,32 @@ export function PositionsChart({ candles, trades, paper }: {
     };
   }, []);
 
+  // LIVE candles: elke 30 seconden de laatste candles ophalen en de
+  // lopende candle in de serie bijwerken (series.update) — de chart
+  // beweegt nu zonder refresh. Alleen bij een geselecteerde coin.
+  const lastApplied = useRef(0);
+  useEffect(() => {
+    if (!pair) return;
+    const tick = async () => {
+      const series = seriesRef.current;
+      if (!series) return;
+      try {
+        const r = await fetch(`/api/paper/candles?pair=${pair}&interval=15`);
+        const j = await r.json();
+        if (!j.candles?.length) return;
+        const lastT = lastApplied.current;
+        for (const c of j.candles as OhlcPoint[]) {
+          if (c.t < lastT) continue; // oude candle al definitief in de serie
+          series.update({ time: c.t as UTCTimestamp, open: c.o, high: c.h, low: c.l, close: c.c });
+          lastApplied.current = c.t;
+        }
+      } catch { /* netwerkhik: volgende tick probeert opnieuw */ }
+    };
+    tick();
+    const t = setInterval(tick, 30_000);
+    return () => clearInterval(t);
+  }, [pair]);
+
   // Candles + markers vullen zodra data binnenkomt of wijzigt
   useEffect(() => {
     const series = seriesRef.current;
@@ -112,18 +140,33 @@ export function PositionsChart({ candles, trades, paper }: {
     series.setData(
       candles.map((c) => ({ time: c.t as UTCTimestamp, open: c.o, high: c.h, low: c.l, close: c.c }))
     );
+    lastApplied.current = candles.length ? candles[candles.length - 1].t : 0;
+
+    // Candles zijn 15-min; een trade op 13:16 valt ertussen en een marker
+    // op een niet-bestaande candle-tijd wordt stilletjes niet getekend.
+    // Oplossing: elke marker naar de dichtstbijzijnde échte candle snappen.
+    const times = candles.map((c) => c.t).sort((a, b) => a - b);
+    const snap = (tSec: number) => {
+      if (!times.length) return tSec;
+      let best = times[0]; let bestDiff = Math.abs(times[0] - tSec);
+      for (const t of times) {
+        const d = Math.abs(t - tSec);
+        if (d < bestDiff) { best = t; bestDiff = d; }
+      }
+      return best;
+    };
 
     const markers: SeriesMarker<Time>[] = [];
     for (const t of trades) {
       markers.push({
-        time: t.entryTime as UTCTimestamp,
+        time: snap(t.entryTime) as UTCTimestamp,
         position: "belowBar",
         shape: "arrowUp",
         color: "#d9b45f",
         text: t.side === "long" ? "KOOP" : "SHORT",
       });
       markers.push({
-        time: t.exitTime as UTCTimestamp,
+        time: snap(t.exitTime) as UTCTimestamp,
         position: "aboveBar",
         shape: "arrowDown",
         color: t.pnl >= 0 ? "#3ddc84" : "#ff5470",
@@ -133,20 +176,21 @@ export function PositionsChart({ candles, trades, paper }: {
     // Echte paper-trades van het account: cirkels i.p.v. pijlen, met een
     // ● erin zodat je ze direct van de backtest-historie onderscheidt.
     for (const pt of paper ?? []) {
-      const ts = Math.floor(Date.parse(pt.time + "Z") / 1000) as UTCTimestamp;
+      const ts = snap(Math.floor(Date.parse(pt.time + "Z") / 1000)) as UTCTimestamp;
+      const strat = pt.strategy ? ` · ${pt.strategy}` : "";
       markers.push(
         pt.side === "buy"
-          ? { time: ts, position: "belowBar", shape: "circle", color: "#38e1ff", text: "● ECHTE KOOP" }
+          ? { time: ts, position: "belowBar", shape: "circle", color: "#38e1ff", text: `● KOOP${strat}` }
           : { time: ts, position: "aboveBar", shape: "circle",
               color: pt.pnl == null ? "#38e1ff" : pt.pnl >= 0 ? "#3ddc84" : "#ff5470",
-              text: pt.pnl == null ? "● ECHTE VERKOOP" : `● ECHTE EXIT ${pt.pnl >= 0 ? "+" : ""}${pt.pnl.toFixed(2)} EUR` }
+              text: pt.pnl == null ? `● VERKOOP${strat}` : `● EXIT ${pt.pnl >= 0 ? "+" : ""}${pt.pnl.toFixed(2)} EUR${strat}` }
       );
     }
     markers.sort((a, b) => (a.time as number) - (b.time as number));
     createSeriesMarkers(series, markers);
 
     chart.timeScale().fitContent();
-  }, [candles, trades]);
+  }, [candles, trades, paper]);
 
   return <div ref={container} className="lw-chart" />;
 }
