@@ -235,7 +235,7 @@ export default function Dashboard() {
       </section>
 
       <section id="grafieken">
-        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">bot-posities rechtstreeks op de candles · ▲ koop/short · ▼ exit (groen = winst){lastTickHint ? ` · bot-tick: ${lastTickHint}` : ""}</span></h2>
+        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">bot-posities rechtstreeks op de candles · ▲ koop · ▼ exit (groen = winst){lastTickHint ? ` · bot-tick: ${lastTickHint}` : ""}</span></h2>
         <div className="grid4">
           {(multi?.pairs ?? []).map((p) => (
             <MiniChart key={p.pair} p={p} live={stateOf(p.pair)} active={p.pair === pair} onPick={() => setPair(p.pair)} />
@@ -344,14 +344,14 @@ export default function Dashboard() {
       <section id="regels">
         <h2><span className="hash">04</span> RISICOREGELS &amp; FASES</h2>
         <div className="grid4">
-          <div className="card"><h3>Stop-loss / take-profit</h3><div className="big">−1,5% / +2,5%</div><div className="delta">per trade, beide richtingen</div></div>
+          <div className="card"><h3>Stop-loss / take-profit</h3><div className="big">−3% / +4%</div><div className="delta">per trade, long-only</div></div>
           <div className="card"><h3>Risico per trade</h3><div className="big">1%</div><div className="delta">positiegrootte hiernaar berekend</div></div>
           <div className="card"><h3>Daglimiet</h3><div className="big">−3%</div><div className="delta">bot pauzeert die dag</div></div>
           <div className="card"><h3>Max. houdtijd</h3><div className="big">16 u</div><div className="delta">alles gaat dicht</div></div>
         </div>
         <div className="phases">
           <div className="phase done"><b>1 · Backtest</b><span>afgerond ✓</span></div>
-          <div className="phase now"><b>2 · Paper trading</b><span>actief — 4 coins · long-only · 24/7</span></div>
+          <div className="phase now"><b>2 · Paper trading</b><span>actief — 8 coins · één pot · long-only · 24/7</span></div>
           <div className="phase"><b>3 · Live trading</b><span>echte orders — alleen na goed fase 2</span></div>
         </div>
       </section>

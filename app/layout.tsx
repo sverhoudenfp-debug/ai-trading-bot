@@ -9,7 +9,7 @@ const jbmono = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500", "700"
 export const metadata: Metadata = {
   title: "AI Trading Bot — Silvijn Verhouden",
   description:
-    "AI crypto day-trading bot: backtest-engine, paper trading en dashboard. Fase 1: backtesting op BTC/EUR.",
+    "AI crypto day-trading bot: backtest-engine, paper trading en dashboard. Fase 2: paper-live op Blofin demo, 8 coins, één pot.",
 };
 
 export default function RootLayout({
