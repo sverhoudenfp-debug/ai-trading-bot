@@ -76,6 +76,7 @@ export default function Dashboard() {
     news: { id: number; created_at: string; level: string; reason: string; valid_until: string } | null;
     aiStats?: { calls: number; errors: number; proposals: number; costUsd: number } | null;
     aiLast?: { created_at: string; error: string | null } | null;
+    executeMode?: boolean;
   } | null;
   } | null>(null);
   const [pair, setPair] = useState("BTC-EUR");
@@ -173,25 +174,6 @@ export default function Dashboard() {
 
   return (
     <main className="hud">
-      <header className="topbar">
-        <div className="brand">
-          <span className="logo">◤</span>
-          <div>
-            <div className="brand-name">AI TRADING <span>SYSTEM</span></div>
-            <div className="brand-sub">mission control · fase 2 · paper trading · één pot van {fmtEUR0.format(potTotal)}</div>
-          </div>
-        </div>
-        <nav className="nav">
-          <a href="#overzicht">OVERZICHT</a>
-          <a href="#grafieken">GRAFIEKEN</a>
-          <a href="#activiteit">ACTIVITEIT</a>
-          <a href="#regels">REGELS</a>
-        </nav>
-        <div className="topright">
-          <span className="heartbeat"><i /> LIVE</span>
-          <span className="clock">{clock}</span>
-        </div>
-      </header>
 
       <div className="ticker">
         {(multi?.pairs ?? []).map((p) => {
@@ -277,7 +259,7 @@ export default function Dashboard() {
       </section>
 
       <section id="activiteit">
-        <h2><span className="hash">03</span> LIVE ACTIVITEIT</h2>
+        <h2><span className="hash">03</span> LIVE ACTIVITEIT <span className="hint">systeemfeed · wat de bot en de AI doen</span></h2>
         <div className="cols">
           <div className="card feedcard">
             <h3>◆ Systeemfeed</h3>
@@ -291,6 +273,13 @@ export default function Dashboard() {
                 )}
               </div>
             )}
+            {paper?.agents?.aiStats ? (
+              <div className="blofin-strip ai-strip" style={{ marginBottom: 10 }}>
+                🤖 AI-agent {paper.agents.executeMode ? "STUURT LIVE" : "TESTMODUS"} (24u):{" "}
+                {paper.agents.aiStats.calls} scans · {paper.agents.aiStats.proposals} voorstellen · kosten ≈ ${paper.agents.aiStats.costUsd.toFixed(3)}
+                {" "}<a href="/ai" className="ai-link">→ naar de AI-zoektocht</a>
+              </div>
+            ) : null}
             <div className="feed">
               {feed.map((f) => (
                 <div key={f.id} className={"feed-item " + f.kind}>
@@ -301,119 +290,23 @@ export default function Dashboard() {
             </div>
           </div>
           <div className="card feedcard">
-            <h3>◆ Agent-activiteit <span className="hint">AI · nieuws · orders</span></h3>
-            {paper?.agents?.aiStats ? (
-              <div className="blofin-strip" style={{ marginBottom: 10 }}>
-                🤖 AI-agent (24u): {paper.agents.aiStats.calls} aanroepen · {paper.agents.aiStats.proposals} voorstellen
-                {paper.agents.aiStats.errors > 0 ? ` · ${paper.agents.aiStats.errors} fouten` : ""}
-                {" "}· kosten ≈ ${paper.agents.aiStats.costUsd.toFixed(3)}
-              </div>
-            ) : null}
-            {paper?.agents ? (
-              <>
-                <div style={{ marginBottom: 12 }}>
-                  {(() => {
-                    const nw = paper.agents.news;
-                    if (!nw) return <p className="delta">Nieuws-agent: nog geen status.</p>;
-                    const lvl = nw.level === "high" ? "halt" : nw.level === "caution" ? "wait" : "long";
-                    const verlopen = Date.parse(nw.valid_until) < Date.now();
-                    const label = nw.level === "high" ? "HOOG RISICO" : nw.level === "caution" ? "WAAKZAAM" : "RUSTIG";
-                    return (
-                      <span className={"pill " + lvl}>
-                        NIEUWS: {verlopen ? (label + " (oude status)") : label}
-                      </span>
-                    );
-                  })()}
-                  {paper.agents.news && (
-                    <p className="delta" style={{ marginTop: 6 }}>
-                      {paper.agents.news.reason}
-                    </p>
-                  )}
-                </div>
-                {paper.agents.signals.length === 0 ? (
-                  <p className="delta">Nog geen signalen — de analyse-agent scant elke minuut alle coins.</p>
-                ) : (
-                  <div className="ordertable-wrap">
-                  <table>
-                    <thead><tr><th>Tijd</th><th>Coin</th><th>Signaal</th><th>Uitkomst</th><th>Strategie</th><th>AI-onderbouwing</th></tr></thead>
-                    <tbody>
-                      {paper.agents.signals.map((s) => (
-                        <tr key={s.id}>
-                          <td>{dt(s.created_at)}</td>
-                          <td>{s.pair.replace("-EUR", "")}</td>
-                          <td>{s.kind === "entry" ? (s.side === "buy" ? "🟢 koop-kans" : "🔴 verkoop-kans") : "🔶 exit"}</td>
-                          <td>
-                            {s.outcome === "executed" ? "✅ uitgevoerd" :
-                             s.outcome === "blocked_news" ? "⛔ geblokkeerd (nieuws)" :
-                             s.outcome === "blocked_risk" ? "⛔ risicocheck wees af" :
-                             s.outcome === "blocked_long_only" ? "⛔ short (long-only)" :
-                             s.outcome === "skipped" ? "⏭ overgeslagen" :
-                             s.outcome === "expired" ? "⌛ verlopen" :
-                             s.outcome === "logged_test" ? "👁 testvoorstel (nog niet uitvoerend)" :
-                             s.outcome === "preview" ? "👁 test (dry)" : "⏳ wacht op order-agent"}
-                            {s.outcome_reason && <span className="delta"> — {s.outcome_reason}</span>}
-                          </td>
-                          <td>{s.strategy_version}{s.proposed_by === "ai" ? " 🤖" : ""}</td>
-                          <td className="delta" style={{ maxWidth: 260 }}>{s.ai_explanation ?? "—"}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="delta">Agent-tabellen nog niet actief — draai supabase-agents-setup.sql om de 3-agent-modus te starten.</p>
-            )}
-            <p className="delta" style={{ marginTop: 12 }}>
-              Werkwijze: de AI-agent (Claude Haiku) combineert nieuws + koersanalyse in één voorstel per
-              interval; het vaste veiligheids-laagje keurt elk voorstel (risico 5-10%, SL/TP binnen grenzen,
-              daglimiet -15%) vóór de order-agent het uitvoert. In testmodus worden voorstellen alleen gelogd.
-            </p>
-          </div>
-          <div className="card">
-            <h3>◆ Paper-orderhistorie</h3>
-            {paper && paper.orders.length > 0 ? (
-              <div className="ordertable-wrap">
-              <table>
-                <thead><tr><th>Tijd</th><th>Coin</th><th>Actie</th><th>Koers</th><th>Resultaat</th></tr></thead>
-                <tbody>
-                  {paper.orders.map((o) => (
-                    <tr key={o.id}>
-                      <td>{dt(o.created_at)}</td>
-                      <td>{o.pair.replace("-EUR", "")}</td>
-                      <td>{o.side === "buy" ? "🟢 koop" : "🔴 verkoop"}</td>
-                      <td>{fmtEUR.format(o.price)}</td>
-                      <td className={o.pnl_eur == null ? "" : cls(o.pnl_eur)}>
-                        {o.pnl_eur == null ? "—" : `${o.pnl_eur >= 0 ? "+" : "−"}${fmtEUR.format(Math.abs(o.pnl_eur))}`}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
-            ) : (
-              <p className="delta">Nog geen paper-orders — de bot scant elke minuut alle coins. Zodra er een signaal valt, verschijnt het hier én in de feed.</p>
-            )}
-            <h3 style={{ marginTop: 18 }}>◆ Backtest-historie {sel?.name}</h3>
-            {sel && sel.trades.length > 0 ? (
-              <table>
-                <thead><tr><th>#</th><th>Richting</th><th>Geopend</th><th>Gesloten</th><th>Reden</th><th>Uren</th><th>Resultaat</th></tr></thead>
-                <tbody>
-                  {[...sel.trades].reverse().map((t, i) => (
-                    <tr key={i}>
-                      <td>{sel.trades.length - i}</td>
-                      <td>{t.side === "long" ? "🟢 long" : "🔴 short"}</td>
-                      <td>{dt(t.entryTime)}</td>
-                      <td>{dt(t.exitTime)}</td>
-                      <td>{t.reason}</td>
-                      <td>{t.holdHours.toFixed(1)}</td>
-                      <td className={cls(t.pnl)}>{t.pnl >= 0 ? "+" : "−"}{fmtEUR.format(Math.abs(t.pnl))} ({sign(t.pnlPct)})</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            ) : <p className="delta">Geen trades in deze periode — de strategie was streng.</p>}
+            <h3>◆ Nieuws-radar <span className="hint">de AI beoordeelt het nieuwsbeeld mee</span></h3>
+            {(() => {
+              const nw = paper?.agents?.news;
+              if (!nw) return <p className="delta">Nog geen nieuws-status — de AI-agent schrijft die bij zijn eerste scan.</p>;
+              const lvl = nw.level === "high" ? "halt" : nw.level === "caution" ? "wait" : "long";
+              const verlopen = Date.parse(nw.valid_until) < Date.now();
+              const label = nw.level === "high" ? "HOOG RISICO — geen entries" : nw.level === "caution" ? "WAAKZAAM" : "RUSTIG NIEUWSBEELD";
+              return (
+                <>
+                  <span className={"pill " + lvl}>{verlopen ? label + " (oude status)" : label}</span>
+                  <p className="delta" style={{ marginTop: 8 }}>{nw.reason}</p>
+                  <p className="delta dim" style={{ marginTop: 6 }}>
+                    Laatste beoordeling: {dt(nw.created_at)} · bron: {nw.reason.startsWith("AI:") ? "AI-agent" : "trefwoord-radar"}
+                  </p>
+                </>
+              );
+            })()}
           </div>
         </div>
       </section>
@@ -421,21 +314,21 @@ export default function Dashboard() {
       <section id="regels">
         <h2><span className="hash">04</span> RISICOREGELS &amp; FASES</h2>
         <div className="grid4">
-          <div className="card"><h3>Stop-loss / take-profit</h3><div className="big">−3% / +4%</div><div className="delta">per trade, long-only</div></div>
-          <div className="card"><h3>Risico per trade</h3><div className="big">1%</div><div className="delta">positiegrootte hiernaar berekend</div></div>
-          <div className="card"><h3>Daglimiet</h3><div className="big">−3%</div><div className="delta">bot pauzeert die dag</div></div>
-          <div className="card"><h3>Max. houdtijd</h3><div className="big">16 u</div><div className="delta">alles gaat dicht</div></div>
+          <div className="card"><h3>Stop-loss / take-profit</h3><div className="big">AI per trade</div><div className="delta">SL 1-10% · TP 0,5-15% — risicocheck keurt elk voorstel</div></div>
+          <div className="card"><h3>Risico per trade</h3><div className="big">5-10%</div><div className="delta">van de pot — AI kiest, code keurt</div></div>
+          <div className="card"><h3>Daglimiet</h3><div className="big">−15%</div><div className="delta">bot pauzeert die dag</div></div>
+          <div className="card"><h3>Houdtijd</h3><div className="big">uren</div><div className="delta">day-trading — AI stuit ook zelf af</div></div>
         </div>
         <div className="phases">
           <div className="phase done"><b>1 · Backtest</b><span>afgerond ✓</span></div>
-          <div className="phase now"><b>2 · Paper trading</b><span>actief — 8 coins · één pot · long-only · 24/7</span></div>
+          <div className="phase now"><b>2 · Paper trading</b><span>actief — 8 coins · één pot · AI stuurt (longs + shorts) · 24/7</span></div>
           <div className="phase"><b>3 · Live trading</b><span>echte orders — alleen na goed fase 2</span></div>
         </div>
       </section>
 
       <footer>
-        AI Trading System · data: Bitvavo publieke API · orders: gesimuleerd (paper) · leerproject — niets hier is financieel advies.
-        Live-check elke minuut via cron-wekker. Echt geld beweegt er niet.
+        AI Trading System · data: Bitvavo publieke API · orders: paper + Blofin demo-spiegel · leerproject — niets hier is financieel advies.
+        Cron-tick elke minuut · AI: Claude Haiku · echt geld beweegt er niet.
       </footer>
     </main>
   );
