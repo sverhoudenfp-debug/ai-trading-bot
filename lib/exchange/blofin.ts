@@ -21,6 +21,10 @@ export const BLOFIN_INST: Record<string, string> = {
   "ETH-EUR": "ETH-USDT",
   "SOL-EUR": "SOL-USDT",
   "XRP-EUR": "XRP-USDT",
+  "WLD-EUR": "WLD-USDT",
+  "NEAR-EUR": "NEAR-USDT",
+  "ALGO-EUR": "ALGO-USDT",
+  "ICP-EUR": "ICP-USDT",
 };
 
 interface Instrument {
