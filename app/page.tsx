@@ -43,7 +43,7 @@ interface PaperState {
   day: string | null; day_start_equity: number; halted: boolean;
   updated_at?: string | null; // laatste bot-tick (levensbewijs van de cron)
 }
-interface FeedItem { id: string; time: string; text: string; kind: "info" | "tick" | "order" }
+interface FeedItem { id: string; time: string; text: string; kind: "info" | "tick" | "order" | "ok" | "err" }
 
 function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperState; onPick: () => void; active: boolean }) {
   const st = live?.status ?? "flat";
@@ -67,7 +67,10 @@ function MiniChart({ p, live, onPick, active }: { p: MultiPair; live?: PaperStat
 
 export default function Dashboard() {
   const [multi, setMulti] = useState<{ pairs: MultiPair[]; periodStart: number; periodEnd: number } | null>(null);
-  const [paper, setPaper] = useState<{ states: PaperState[]; orders: PaperOrder[] } | null>(null);
+  const [paper, setPaper] = useState<{
+    states: PaperState[]; orders: PaperOrder[];
+    blofin?: { configured: boolean; live: boolean; equityUsd: number | null; positions: { instId: string; contracts: number; entry: number; mark: number; upl: number }[]; error?: string };
+  } | null>(null);
   const [pair, setPair] = useState("BTC-EUR");
   const [feed, setFeed] = useState<FeedItem[]>([]);
   const [clock, setClock] = useState("");
@@ -100,7 +103,9 @@ export default function Dashboard() {
       .then((j) => {
         if (!j.configured || j.error) return;
         const orders: PaperOrder[] = j.orders ?? [];
-        setPaper({ states: j.states ?? [], orders });
+        setPaper({ states: j.states ?? [], orders, blofin: j.blofin });
+        if (j.blofin?.live) addFeed(`Paper-live actief op Blofin demo — virtueel vermogen $${Number(j.blofin.equityUsd).toFixed(0)}`, "ok");
+        else if (j.blofin?.error) addFeed(`Blofin demo: verbinding mislukt — ${j.blofin.error}`, "err");
         tickNo.current++;
         const fresh = orders.filter((o) => !seen.current.has(o.id));
         if (seen.current.size === 0) {
@@ -261,6 +266,16 @@ export default function Dashboard() {
         <div className="cols">
           <div className="card feedcard">
             <h3>◆ Systeemfeed</h3>
+            {paper?.blofin?.live && (
+              <div className="blofin-strip">
+                ◆ Blofin demo (paper-live): vermogen {" "}
+                {paper.blofin.equityUsd != null ? paper.blofin.equityUsd.toFixed(0) : "?"}{" "}
+                · open posities: {paper.blofin.positions.length}
+                {paper.blofin.positions.length > 0 && (
+                  <> — {paper.blofin.positions.map((q) => `${q.instId} ×${q.contracts} (${q.upl >= 0 ? "+" : ""}${q.upl.toFixed(2)}$)`).join(", ")}</>
+                )}
+              </div>
+            )}
             <div className="feed">
               {feed.map((f) => (
                 <div key={f.id} className={"feed-item " + f.kind}>

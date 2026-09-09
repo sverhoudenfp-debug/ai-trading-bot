@@ -60,6 +60,15 @@ over de toekomst. Niets in deze repository is financieel advies.
 
 ## Fase 2 — Paper trading (multi-coin, long-only)
 
+### Paper-live op het Blofin demo-account (optioneel)
+Met `PAPER_LIVE=blofin` spiegel je de paper-trades 1-op-1 naar het
+demo-account bij Blofin (`demo-trading-openapi.blofin.com`): long-only,
+hefboom 1x, cross margin — virtueel geld, echte matching-engine.
+Vereiste env-variabelen: `BLOFIN_API_KEY`, `BLOFIN_SECRET_KEY`,
+`BLOFIN_PASSPHRASE` (demo-keys uit de Demo Trading-omgeving, alleen
+Read+Trade-rechten). Fouten in de spiegeling breken de interne
+simulatie nooit; het dashboard toont de Blofin-status in de feed.
+
 De bot volgt 4 coins (BTC, ETH, SOL, XRP) met elk een eigen virtueel potje
 van €1000, 24/7: long bij een verse RSI-dip in een stijgende trend.
 Shorts zijn na het data-experiment van 8 sep 2026 UITGEZET (verloor in beide

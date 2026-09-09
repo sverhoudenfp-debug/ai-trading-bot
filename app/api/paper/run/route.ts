@@ -11,6 +11,40 @@ import { fetchCandles } from "@/lib/exchange/marketdata";
 import { PAIRS } from "@/lib/exchange/pairs";
 import { DEFAULT_PARAMS, prepare, longSignal, shortSignal, exitLongSignal, exitShortSignal } from "@/lib/strategy";
 import { getState, initState, saveState, insertOrder } from "@/lib/paper/store";
+import {
+  blofinLive, BLOFIN_INST, setLeverage1x, contractsFor, marketLong, closePosition,
+} from "@/lib/exchange/blofin";
+
+// Spiegel een interne paper-trade naar het Blofin-demo-account (long-only,
+// 1x, virtueel geld). Fouten hierin mogen de interne simulatie nooit breken.
+async function mirrorBlofin(
+  action: "open" | "close",
+  pair: string,
+  coinSize: number,
+  actions: string[]
+): Promise<void> {
+  if (!blofinLive) return;
+  const instId = BLOFIN_INST[pair];
+  if (!instId) return;
+  try {
+    if (action === "open") {
+      const contracts = await contractsFor(instId, coinSize);
+      if (contracts <= 0) {
+        actions.push(`blofin: skipped — ${coinSize.toPrecision(3)} te klein voor minimale ordergrootte`);
+        return;
+      }
+      await setLeverage1x(instId);
+      const orderId = await marketLong(instId, contracts);
+      actions.push(`blofin demo: LONG ${contracts} contracts ${instId} geplaatst (order ${orderId.slice(-6)})`);
+    } else {
+      const orderId = await closePosition(instId);
+      if (orderId) actions.push(`blofin demo: positie ${instId} gesloten (order ${orderId.slice(-6)})`);
+      else actions.push(`blofin demo: geen open positie ${instId} om te sluiten`);
+    }
+  } catch (e) {
+    actions.push(`blofin demo FOUT: ${String(e instanceof Error ? e.message : e)}`);
+  }
+}
 
 export const dynamic = "force-dynamic";
 
@@ -92,8 +126,10 @@ async function tickPair(pair: string, p: typeof DEFAULT_PARAMS) {
         await insertOrder({ pair, side: "sell", price: exitPrice, size: s.size, reason, equity_after: equity,
           pnl_eur: pnl, pnl_pct: (pnl / s.cost) * 100 });
         actions.push(`LONG GESLOTEN (${reason}): ${pnl >= 0 ? "+" : ""}${pnl.toFixed(2)} EUR`);
+        const closedSize = s.size;
         s.status = "flat"; s.entry_price = null; s.entry_time = null; s.size = null; s.cost = null;
         sellPrice = exitPrice; // marker
+        await mirrorBlofin("close", pair, closedSize ?? 0, actions);
       }
     } else {
       const stop = s.entry_price * (1 + p.slPct / 100);
@@ -142,6 +178,7 @@ async function tickPair(pair: string, p: typeof DEFAULT_PARAMS) {
           reason: goLong ? "long: RSI-dip + stijgende trend" : "short: RSI-pomp + dalende trend",
           equity_after: equity, pnl_eur: null, pnl_pct: null });
         actions.push(`${goLong ? "LONG" : "SHORT"} ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR`);
+        if (goLong) await mirrorBlofin("open", pair, size, actions);
       }
     }
   }
