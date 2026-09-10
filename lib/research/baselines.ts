@@ -4,8 +4,34 @@
 // hypotheses (Deel 7). news-momentum is niet backtestbaar zonder
 // nieuws-historie — expliciet gemarkeerd, niet verzonnen.
 
-import { StrategySpec } from "./spec";
+import { StrategySpec, Timeframe, TF_MINUTES, TF_HOLD_RANGE, ALLOWED_TIMEFRAMES } from "./spec";
 import { PAIRS } from "@/lib/exchange/pairs";
+
+/** Baseline naar een andere horizon schuiven: duur-idee (uren) blijft gelijk,
+ *  alleen de bar-telling schaalt mee. Naam krijgt een timeframe-stempel zodat
+ *  de resultaten als aparte candidates naast elkaar landen. */
+export function scaleBaselineToTimeframe(b: StrategySpec, tf: Timeframe): StrategySpec {
+  if (tf === "15m") return { ...b }; // v1-situatie ongewijzigd
+  const ratio = TF_MINUTES["15m"] / TF_MINUTES[tf]; // 15m→5m = ×3 bars, 15m→1h = ÷4 (zelfde duur)
+  const hr = TF_HOLD_RANGE[tf];
+  const hold = Math.min(hr.max, Math.max(hr.min, Math.round(b.max_hold_bars * ratio)));
+  return {
+    ...b,
+    name: `${b.name.replace(/^baseline-/, "")}-${tf}`, // slug-safe
+    timeframe: tf,
+    max_hold_bars: hold,
+    expected_holding_time_min: b.expected_holding_time_min,
+  };
+}
+
+/** Alle baselines op alle horizons (master-prompt Deel 3). */
+export function baselinesAllHorizons(): StrategySpec[] {
+  const out: StrategySpec[] = [];
+  for (const b of baselines()) {
+    for (const tf of ALLOWED_TIMEFRAMES) out.push(scaleBaselineToTimeframe(b, tf));
+  }
+  return out;
+}
 
 export function baselines(): StrategySpec[] {
   const pairs = [...PAIRS];

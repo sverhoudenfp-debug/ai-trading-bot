@@ -33,8 +33,23 @@ export interface Condition {
   bars?: number;    // momentum-venster
 }
 
-export type Timeframe = "15m"; // v1 van de research-engine: 15m-executie
-export const ALLOWED_TIMEFRAMES: Timeframe[] = ["15m"];
+// ── HORIZON (master-prompt Deel 3): de research-engine is NIET vooraf als
+// scalper/intraday/swing gefixeerd. Executie op 5m (scalping), 15m (intraday)
+// of 1h (swing); de context-timeframe (trend-filter) schaalt mee:
+//   5m-executie → 1h-context · 15m → 1h · 1h → 4h
+// Horizons zijn géén label maar een meetbaar kenmerk van de strategie:
+// timeframe + max_hold bepalen samen de horizon.
+export type Timeframe = "5m" | "15m" | "1h";
+export const ALLOWED_TIMEFRAMES: Timeframe[] = ["5m", "15m", "1h"];
+export const TF_MINUTES: Record<Timeframe, number> = { "5m": 5, "15m": 15, "1h": 60 };
+/** context-trend-timeframe bij elke executie-timeframe (no-look-ahead in frame.ts) */
+export const TF_CONTEXT_MINUTES: Record<Timeframe, number> = { "5m": 60, "15m": 60, "1h": 240 };
+/** max_hold_bars-bereik per timeframe (zelfde min/max duur-idea als v1) */
+export const TF_HOLD_RANGE: Record<Timeframe, { min: number; max: number }> = {
+  "5m": { min: 4, max: 288 },    // 20 min – 24 uur
+  "15m": { min: 4, max: 192 },  // 1 uur – 48 uur
+  "1h": { min: 4, max: 192 },   // 4 uur – 8 dagen
+};
 
 export interface StrategyFilters {
   min_volatility_pct?: number;   // 20-candle vol % moet ≥ dit zijn
@@ -56,7 +71,7 @@ export interface StrategySpec {
   exit_conditions: Condition[];   // OR-verbonden (één genoeg), max 3
   stop_loss_pct: number;         // 1–10
   take_profit_pct: number;        // 0,5–15
-  max_hold_bars: number;          // 4–192 (15m-bars)
+  max_hold_bars: number;          // per-timeframe bereik, zie TF_HOLD_RANGE
   risk_pct: number;               // 0,25–1,0 (Fase 1-band, hard)
   filters?: StrategyFilters;
   pairs: string[];                // subset van PAIRS (witte lijst)
@@ -115,7 +130,11 @@ export function validateSpec(input: unknown): SpecValidation {
   if (risk === null || risk < RISK_MIN_PCT || risk > RISK_MAX_PCT) {
     errors.push(`risk_pct ongeldig (${String(o.risk_pct)}) — band ${RISK_MIN_PCT}–${RISK_MAX_PCT}% (hard)`);
   }
-  if (hold === null || hold < 4 || hold > 192) errors.push(`max_hold_bars ongeldig (${String(o.max_hold_bars)}; 4–192)`);
+  const tf = (ALLOWED_TIMEFRAMES.includes(o.timeframe as Timeframe) ? o.timeframe : "15m") as Timeframe;
+  const hr = TF_HOLD_RANGE[tf];
+  if (hold === null || hold < hr.min || hold > hr.max) {
+    errors.push(`max_hold_bars ongeldig (${String(o.max_hold_bars)}; ${hr.min}–${hr.max} voor timeframe ${tf})`);
+  }
   if (eht === null || eht < 15 || eht > 4320) errors.push(`expected_holding_time_min ongeldig (${String(o.expected_holding_time_min)}; ≥15)`);
   // fee-guard (Fase 1): TP moet round-trip-kosten × factor dekken
   if (sl !== null && tp !== null && tp < ROUND_TRIP_COST_PCT * FEE_COVER_FACTOR) {

@@ -35,15 +35,28 @@ export interface Frame {
 
 const WARMUP = 220; // EMA200 + buffer — features geldig pas na warm-up
 
-export function buildFrame(pair: string, c15: Candle[], c1h: Candle[]): Frame {
-  const closes = c15.map((c) => c.c);
-  const vols = c15.map((c) => c.v);
+// ── HORIZON-generalisatie (master-prompt Deel 3): buildFrame werkt voor
+// ELKE executie-timeframe. ctx = context-timeframe (trend-filter), ctxMinutes =
+// context-candle-duur. NO-LOOK-AHEAD blijft identiek: de trend op index i
+// kijkt naar de LAATST GESLOTEN ctx-candle (ctx-close ≤ start van candle i);
+// de 24u-high/low vensters schalen mee met de bar-duur.
+export function buildFrame(
+  pair: string,
+  exec: Candle[],
+  ctx: Candle[],
+  execMinutes: number,
+  ctxMinutes: number,
+): Frame {
+  const closes = exec.map((c) => c.c);
+  const vols = exec.map((c) => c.v);
   const rsi = rsiSeries(closes, 14);
   const ema50 = emaSeries(closes, 50);
   const ema200 = emaSeries(closes, 200);
   const mom8 = momentumSeries(closes, 8);
-  const atr = atrSeries(c15, 14);
-  const ema1h = emaSeries(c1h.map((c) => c.c), 200);
+  const atr = atrSeries(exec, 14);
+  const emaCtx = emaSeries(ctx.map((c) => c.c), 200);
+  // aantal bars per 24 uur op de executie-timeframe (5m→288, 15m→96, 1h→24)
+  const barsPerDay = Math.max(1, Math.round(1440 / execMinutes)); // candles per 24 uur
 
   const vol20: number[] = [];
   const volSma20: number[] = [];
@@ -56,17 +69,18 @@ export function buildFrame(pair: string, c15: Candle[], c1h: Candle[]): Frame {
   const regime: Regime[] = [];
   const trend1h: ("up" | "down" | "flat")[] = [];
 
-  // binaire mapping: laatste GESLOTEN 1h-index per 15m-candle
-  // (1h-candle is gesloten als start+3600 ≤ start van de 15m-candle)
+  // binaire mapping: laatste GESLOTEN ctx-index per exec-candle
+  // (ctx-start + ctxMinutes·60 sec ≤ exec-start; t is in seconden — als v1: +3600)
   let j1h = -1;
-  const lastClosed1h: number[] = new Array(c15.length).fill(-1);
-  for (let i = 0; i < c15.length; i++) {
-    const t = c15[i].t;
-    while (j1h + 1 < c1h.length && (c1h[j1h + 1].t + 3600) <= t) j1h++;
+  const lastClosed1h: number[] = new Array(exec.length).fill(-1);
+  for (let i = 0; i < exec.length; i++) {
+    const t = exec[i].t;
+    const ctxSec = ctxMinutes * 60;
+    while (j1h + 1 < ctx.length && (ctx[j1h + 1].t + ctxSec) <= t) j1h++;
     lastClosed1h[i] = j1h;
   }
 
-  for (let i = 0; i < c15.length; i++) {
+  for (let i = 0; i < exec.length; i++) {
     vol20.push(volatilityAt(closes, i, 20));
     // volume-SMA over vorige 20 candles (excl. huidige — geen zelfreferentie)
     const vs = vols.slice(Math.max(0, i - 20), i);
@@ -76,22 +90,22 @@ export function buildFrame(pair: string, c15: Candle[], c1h: Candle[]): Frame {
       : 1;
     volSma20.push(vAvg || 1);
     volumeZ.push(vStd > 0 ? (vols[i] - vAvg) / vStd : 0);
-    const win = c15.slice(Math.max(0, i - 96), i); // vorige 24 uur, excl. huidige
-    high24h.push(win.length ? Math.max(...win.map((c) => c.h)) : c15[i].h);
-    low24h.push(win.length ? Math.min(...win.map((c) => c.l)) : c15[i].l);
+    const win = exec.slice(Math.max(0, i - barsPerDay), i); // vorige 24 uur, excl. huidige
+    high24h.push(win.length ? Math.max(...win.map((c) => c.h)) : exec[i].h);
+    low24h.push(win.length ? Math.min(...win.map((c) => c.l)) : exec[i].l);
     distEma50Pct.push(ema50[i] > 0 ? ((closes[i] - ema50[i]) / ema50[i]) * 100 : 0);
     distEma200Pct.push(ema200[i] > 0 ? ((closes[i] - ema200[i]) / ema200[i]) * 100 : 0);
-    ret24hPct.push(i >= 96 ? (closes[i] / closes[i - 96] - 1) * 100 : 0);
+    ret24hPct.push(i >= barsPerDay ? (closes[i] / closes[i - barsPerDay] - 1) * 100 : 0);
     const k = lastClosed1h[i];
-    if (k >= 0 && ema1h[k] > 0) {
-      const dist = (c1h[k].c - ema1h[k]) / ema1h[k] * 100;
+    if (k >= 0 && emaCtx[k] > 0) {
+      const dist = (ctx[k].c - emaCtx[k]) / emaCtx[k] * 100;
       trend1h.push(dist > 1 ? "up" : dist < -1 ? "down" : "flat");
     } else trend1h.push("flat");
     regime.push(regimeAt(closes, ema50, ema200, atr, i));
   }
 
   return {
-    pair, candles: c15,
+    pair, candles: exec,
     rsi, ema50, ema200, mom8, vol20, atr14: atr, volSma20, volumeZ,
     high24h, low24h, distEma50Pct, distEma200Pct, ret24hPct, trend1h, regime,
   };

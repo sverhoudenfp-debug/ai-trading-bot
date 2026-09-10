@@ -12,14 +12,14 @@ import { PAIRS } from "@/lib/exchange/pairs";
 import { getDatasets, PairDataset } from "./data";
 import { buildFrame, Frame } from "./frame";
 import { REGIMES } from "./regimes";
-import { StrategySpec, validateSpec } from "./spec";
+import { StrategySpec, validateSpec, Timeframe, TF_MINUTES, TF_HOLD_RANGE, ALLOWED_TIMEFRAMES } from "./spec";
 import { runPairBacktest, computeMetrics, RTrade, Metrics } from "./backtest";
 import { makeSplit, walkForwardEvaluate, WfResult } from "./split";
 import { robustnessTest, perturbationTest, detectOverfitting, OverfitFlags, RobustnessResult } from "./robustness";
 import { evaluateSpec } from "./evaluator";
-import { baselines, newsMomentumNote } from "./baselines";
+import { baselinesAllHorizons, newsMomentumNote } from "./baselines";
 import { generateHypotheses, researchBudgetOk, RESEARCH_MODEL, roundTripCostPct } from "./hypothesis";
-import { RESEARCH_15M_DAYS, MAX_HYPOTHESES_PER_RUN } from "./config";
+import { RESEARCH_15M_DAYS, RESEARCH_5M_DAYS, RESEARCH_1H_DAYS, MAX_HYPOTHESES_PER_RUN } from "./config";
 import { insertCandidate, insertRun, createJob, finishJob } from "./db";
 import { listOrdersSince } from "@/lib/paper/store";
 import { FEE_PCT, SLIPPAGE_PCT } from "@/lib/risk/config";
@@ -230,6 +230,9 @@ async function paperFailureAnalysis(): Promise<Record<string, unknown>> {
   }
 }
 
+/** dataset-diepte per executie-timeframe (identiek aan de echte data-load) */
+const DATASET_DAYS_BY_TF: Record<string, number> = { "5m": RESEARCH_5M_DAYS, "15m": RESEARCH_15M_DAYS, "1h": RESEARCH_1H_DAYS };
+
 /**
  * De volledige research-run. mode="baseline" → alleen baselines;
  * mode="full" → baselines + AI-hypotheses (begrensd door het research-budget).
@@ -244,20 +247,26 @@ export async function runResearchPipeline(opts: {
 
   const job = await createJob(opts.mode === "full" ? "ai-research" : "baseline-research", opts.requestedBy ?? "elara");
 
-  // ── 1. data + frames ──────────────────────────────────────────────────
+  // ── 1. data + frames per horizon (5m/15m/1h; context 1h/4h) ───────────
   const { ok: datasets, failed } = await getDatasets(PAIRS);
   if (failed.length) errors.push(`data onbeschikbaar: ${failed.join("; ")}`);
-  const frames: Frame[] = datasets.map((d: PairDataset) => buildFrame(d.pair, d.c15, d.c1h));
+  const framesByTf: Record<Timeframe, Frame[]> = {
+    "5m": datasets.map((d: PairDataset) => buildFrame(d.pair, d.c5, d.c1h, 5, 60)),
+    "15m": datasets.map((d: PairDataset) => buildFrame(d.pair, d.c15, d.c1h, 15, 60)),
+    "1h": datasets.map((d: PairDataset) => buildFrame(d.pair, d.c1h, d.c4h, 60, 240)),
+  };
+  const frames: Frame[] = framesByTf["15m"]; // compat: markt-samenvatting/pairs op 15m
 
   const market = marketResearchSummary(frames);
   const paper = await paperFailureAnalysis();
 
   // ── 2. baselines (Deel 7 — zelfde data, fees, slippage, executie) ─────
   const baselineResults: SpecResult[] = [];
-  for (const b of baselines()) {
+  for (const b of baselinesAllHorizons()) {
     const v = validateSpec(b);
     if (!v.ok) { errors.push(`baseline ${String((b as { name?: string }).name)} ongeldig: ${v.errors.join(", ")}`); continue; }
-    baselineResults.push(evaluateSpecMulti(v.spec, frames));
+    const tfFrames = framesByTf[v.spec.timeframe] ?? frames;
+    baselineResults.push(evaluateSpecMulti(v.spec, tfFrames));
   }
 
   // ── 3. AI-hypotheses (alleen mode=full, begrensd budget) ──────────────
@@ -278,7 +287,7 @@ export async function runResearchPipeline(opts: {
       const ctx = JSON.stringify({
         note: "Onderzoekssamenvatting. Fees/slippage in backtests: " +
           `fee ${FEE_PCT}% per kant, slippage ${SLIPPAGE_PCT}% per kant, round-trip ≈ ${roundTripCostPct().toFixed(2)}%.`,
-        dataset_days: RESEARCH_15M_DAYS,
+        dataset_days_by_timeframe: DATASET_DAYS_BY_TF,
         market_research: market,
         baselines_is_oos: baselineResults.map((r) => ({
           name: r.name,
@@ -304,7 +313,8 @@ export async function runResearchPipeline(opts: {
             errors.push(`RAW ${nm}: ${h.raw ?? "?"}`);
             continue;
           }
-          const res = evaluateSpecMulti(h.spec as StrategySpec, frames);
+          const hSpec = h.spec as StrategySpec;
+          const res = evaluateSpecMulti(hSpec, framesByTf[hSpec.timeframe] ?? frames);
           res.rationale = h.rationale;
           res.expected_edge = h.expected_edge;
           res.expected_failure = h.expected_failure;
@@ -329,9 +339,9 @@ export async function runResearchPipeline(opts: {
       hypothesis: r.hypothesis,
       specification: r.spec,
       researcher_model: r.origin === "ai-research" ? RESEARCH_MODEL : null,
-      dataset_days: RESEARCH_15M_DAYS,
+      dataset_days: DATASET_DAYS_BY_TF[(r.spec as StrategySpec).timeframe] ?? RESEARCH_15M_DAYS,
       pairs: frames.map((f) => f.pair),
-      timeframe: "15m",
+      timeframe: (r.spec as StrategySpec).timeframe,
       is_metrics: r.is,
       oos_metrics: r.oos,
       walkforward: r.walkforward,
@@ -406,16 +416,24 @@ export async function runResearchPipeline(opts: {
   };
 }
 
-/** Dataset + frames klaarzetten (cache-aware) voor externe evaluatie. */
-export async function prepareDataset(): Promise<{ frames: Frame[]; failed: string[] }> {
+/** Dataset + frames klaarzetten (cache-aware) voor externe evaluatie.
+ *  frames = 15m (compat met bestaande callers); framesByTf bevat alle horizons. */
+export async function prepareDataset(): Promise<{ frames: Frame[]; framesByTf: Record<Timeframe, Frame[]>; failed: string[] }> {
   const { ok: datasets, failed } = await getDatasets(PAIRS);
-  return { frames: datasets.map((d: PairDataset) => buildFrame(d.pair, d.c15, d.c1h)), failed };
+  const framesByTf: Record<Timeframe, Frame[]> = {
+    "5m": datasets.map((d: PairDataset) => buildFrame(d.pair, d.c5, d.c1h, 5, 60)),
+    "15m": datasets.map((d: PairDataset) => buildFrame(d.pair, d.c15, d.c1h, 15, 60)),
+    "1h": datasets.map((d: PairDataset) => buildFrame(d.pair, d.c1h, d.c4h, 60, 240)),
+  };
+  return { frames: framesByTf["15m"], framesByTf, failed };
 }
 
-/** Externe specs (bijv. mutaties) volledig evalueren — zelfde pad als baselines. */
+/** Externe specs (bijv. mutaties) volledig evalueren — zelfde pad als baselines.
+ *  framesByTf beschikbaar → per spec naar zijn eigen horizon; anders 15m-set. */
 export async function evaluateSpecsOnDataset(
   specs: StrategySpec[],
-  frames: Frame[]
+  frames: Frame[],
+  framesByTf?: Record<Timeframe, Frame[]>,
 ): Promise<SpecResult[]> {
-  return specs.map((s) => evaluateSpecMulti(s, frames));
+  return specs.map((s) => evaluateSpecMulti(s, (framesByTf?.[s.timeframe] ?? frames)));
 }

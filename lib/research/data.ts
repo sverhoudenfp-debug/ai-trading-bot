@@ -6,12 +6,17 @@
 // (job/route), nooit bij een dashboard-refresh.
 
 import { fetchCandles, Candle } from "@/lib/exchange/marketdata";
-import { RESEARCH_15M_DAYS, RESEARCH_1H_DAYS, RESEARCH_CACHE_TTL_MIN } from "./config";
+import { RESEARCH_15M_DAYS, RESEARCH_1H_DAYS, RESEARCH_5M_DAYS, RESEARCH_4H_DAYS, RESEARCH_CACHE_TTL_MIN } from "./config";
 
+// ── HORIZON (master-prompt Deel 3): per pair laden we alle executie-
+// timeframes (5m/15m/1h) + context-timeframes (1h/4h) in één gecachte
+// dataset. De bron blijft identiek aan de trading-engine (Bitvavo).
 export interface PairDataset {
   pair: string;
-  c15: Candle[];   // execution timeframe
-  c1h: Candle[];   // context timeframe
+  c5: Candle[];    // execution: scalping
+  c15: Candle[];   // execution: intraday
+  c1h: Candle[];   // execution: swing ÓF context (voor 5m/15m)
+  c4h: Candle[];   // context voor 1h-executie
   fetchedAt: number;
   days: number;
 }
@@ -24,14 +29,15 @@ export async function getDataset(pair: string): Promise<PairDataset> {
   if (hit && Date.now() - hit.fetchedAt < RESEARCH_CACHE_TTL_MIN * 60_000) {
     return hit;
   }
-  const [c15, c1h] = await Promise.all([
+  const [c5, c15, c1h, c4h] = await Promise.all([
+    fetchCandles(pair, 5, RESEARCH_5M_DAYS),
     fetchCandles(pair, 15, RESEARCH_15M_DAYS),
     fetchCandles(pair, 60, RESEARCH_1H_DAYS),
+    fetchCandles(pair, 240, RESEARCH_4H_DAYS),
   ]);
   const ds: PairDataset = {
     pair,
-    c15,
-    c1h,
+    c5, c15, c1h, c4h,
     fetchedAt: Date.now(),
     days: RESEARCH_15M_DAYS,
   };

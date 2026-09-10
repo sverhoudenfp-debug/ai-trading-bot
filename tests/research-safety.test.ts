@@ -53,7 +53,7 @@ let FRAME: Frame;
 beforeAll(() => {
   const c15 = makeCandles(3000, 15, 1_700_000_000, 42);
   const c1h = makeCandles(800, 60, 1_700_000_000, 43);
-  FRAME = buildFrame("TEST-EUR", c15, c1h);
+  FRAME = buildFrame("TEST-EUR", c15, c1h, 15, 60);
 });
 
 // ── 1+2. GEEN LOOK-AHEAD: fill strikt op open van T+1 ───────────────────

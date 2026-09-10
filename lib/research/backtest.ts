@@ -228,8 +228,10 @@ export function runPairBacktest(
   if (pos && equity.length) {
     const lastC = f.candles[to];
     const exitPrice = isLong ? lastC.c * (1 - exitSlip / 100) : lastC.c * (1 + exitSlip / 100);
-    const rawEntry = pos.entryPrice; // einde-gegevens: geen extra exit-slip gemodelleerd
+    const rawEntry = pos.entryPrice;
     const gross = isLong ? (exitPrice - rawEntry) * pos.size : (rawEntry - exitPrice) * pos.size;
+    // exit-slip zit al in exitPrice/net — hier alleen correct gerapporteerd (was hard 0)
+    const slipCost = isLong ? (lastC.c - exitPrice) * pos.size : (exitPrice - lastC.c) * pos.size;
     const exitFee = exitPrice * pos.size * (feePct / 100);
     const entryFee = pos.cost - pos.entryPrice * pos.size;
     const net = gross - exitFee - entryFee;
@@ -239,7 +241,7 @@ export function runPairBacktest(
       entryIdx: pos.entryIdx, exitIdx: to,
       entryTime: f.candles[pos.entryIdx].t, exitTime: lastC.t,
       entryPrice: pos.entryPrice, exitPrice, size: pos.size,
-      grossPnl: r2(gross), fees: r2(exitFee + entryFee), slippage: 0, netPnl: r2(net),
+      grossPnl: r2(gross), fees: r2(exitFee + entryFee), slippage: r2(Math.max(0, slipCost)), netPnl: r2(net),
       reason: "end-of-data",
       holdMin: Math.round((lastC.t - f.candles[pos.entryIdx].t) / 60),
       regime: f.regime[pos.entryIdx],

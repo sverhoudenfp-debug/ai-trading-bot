@@ -70,7 +70,7 @@ export async function evaluateEvolutionForPair(
   const status = states.find((s) => s.pair === pair)?.status ?? "flat";
   if (status !== "flat") return []; // geen dubbelposities op een pair
 
-  const frame = buildFrame(pair, candles15, candles1h);
+  const frame = buildFrame(pair, candles15, candles1h, 15, 60); // 15m-exec, 1h-context
   const idx = frame.candles.length - 2; // laatst gesloten candle (zelfde conventie als legacy-analyse)
   const closes = frame.candles.map((c) => c.c);
   const regime = regimeAt(closes, frame.ema50, frame.ema200, frame.atr14, idx);

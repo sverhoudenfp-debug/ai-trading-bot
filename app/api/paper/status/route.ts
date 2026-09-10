@@ -7,7 +7,7 @@ import { getStates, listOrders, listOrdersSince, supabaseConfigured, POT_PAIR } 
 import { snapshot as blofinSnapshot } from "@/lib/exchange/blofin";
 import { listSignals, latestNewsAlert, aiStats24h, lastAgentRun, listSignalsSince, aiUsageSince, listNewsAlerts } from "@/lib/agents/db";
 import { aiExecuteEnabled } from "@/lib/agents/config";
-import { DAILY_LOSS_LIMIT_PCT } from "@/lib/risk/config";
+import { currentLimitPct } from "@/lib/risk/dailyLimit";
 
 export const dynamic = "force-dynamic";
 
@@ -117,7 +117,7 @@ export async function GET() {
         ? {
             day: potRow.day,
             day_start_equity: potRow.day_start_equity,
-            limit_pct: DAILY_LOSS_LIMIT_PCT,
+            limit_pct: potRow.day ? await currentLimitPct(potRow.day) : 10,
             current_pct: potRow.day_start_equity > 0
               ? Math.round(((potRow.cash + exposureNotional) / potRow.day_start_equity - 1) * 1000) / 10
               : null,

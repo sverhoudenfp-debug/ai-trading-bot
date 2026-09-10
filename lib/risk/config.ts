@@ -41,7 +41,22 @@ export const MAX_ENTRIES_PER_HOUR = num(process.env.MAX_ENTRIES_PER_HOUR, 8);
 export const MAX_ENTRIES_PER_DAY = num(process.env.MAX_ENTRIES_PER_DAY, 20);
 
 // ── Dagverlies + verlies-snelheid (circuit breakers) ────────────────────
-export const DAILY_LOSS_LIMIT_PCT = num(process.env.DAILY_LOSS_LIMIT_PCT, 5);  // −5% op de pot → halt
+// ADAPTIEF daglimiet (master-prompt): een circuit breaker, géén risico-knop.
+// Limiet beweegt maximaal 1pp per afgesloten Amsterdamse handelsdag binnen
+// de band [MIN, MAX]. Verhoogt NOOIT risk-per-trade / notional / exposure —
+// die limits staan hierboven en worden door niets automatisch aangepast.
+export const DAILY_LOSS_LIMIT_MIN_PCT = num(process.env.DAILY_LOSS_LIMIT_MIN_PCT, 5);    // hardere grens (−5%)
+export const DAILY_LOSS_LIMIT_MAX_PCT = num(process.env.DAILY_LOSS_LIMIT_MAX_PCT, 15);   // ruimste grens (−15%)
+export const DAILY_LOSS_LIMIT_DEFAULT_PCT = num(process.env.DAILY_LOSS_LIMIT_DEFAULT_PCT, 10); // start/-fallback (−10%)
+export const DAILY_LOSS_MAX_ADJ_PP = num(process.env.DAILY_LOSS_MAX_ADJ_PP, 1);          // max |Δ| per dag, in percentagepunten
+// Beslisdrempels (gekoppeld aan de bestaande risk-architectuur): de pot riskeert
+// 0,25–1,0% per trade; een dagrendement ver buiten de ruis van één trade
+// (±1%+) én met voldoende gesloten trades telt als "duidelijk". Extreem
+// (>8%: verdacht — het daglimiet zelf haalt −10%) blokkeert verruiming.
+export const DAILY_LOSS_POS_RETURN_PCT = num(process.env.DAILY_LOSS_POS_RETURN_PCT, 1.0);
+export const DAILY_LOSS_NEG_RETURN_PCT = numSigned(process.env.DAILY_LOSS_NEG_RETURN_PCT, -2.0);
+export const DAILY_LOSS_MIN_TRADES = num(process.env.DAILY_LOSS_MIN_TRADES, 5);
+export const DAILY_LOSS_EXTREME_RETURN_PCT = num(process.env.DAILY_LOSS_EXTREME_RETURN_PCT, 8);
 export const LOSS_VELOCITY_COUNT = num(process.env.LOSS_VELOCITY_COUNT, 3);    // ≥3 verliezen …
 export const LOSS_VELOCITY_WINDOW_MIN = num(process.env.LOSS_VELOCITY_WINDOW_MIN, 60); // … binnen 60 min
 export const LOSS_VELOCITY_PAUSE_MIN = num(process.env.LOSS_VELOCITY_PAUSE_MIN, 60);  // → 60 min géén entries
@@ -69,4 +84,8 @@ export const NEWS_STALE_GRACE_MIN = num(process.env.NEWS_STALE_GRACE_MIN, 10);
 function num(v: string | undefined, d: number): number {
   const n = Number(v);
   return Number.isFinite(n) && n > 0 ? n : d;
+}
+function numSigned(v: string | undefined, d: number): number {
+  const n = Number(v);
+  return Number.isFinite(n) && n !== 0 ? n : d;
 }

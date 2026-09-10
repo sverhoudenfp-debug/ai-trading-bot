@@ -8,6 +8,12 @@
 import { useStatus } from "../status-store";
 import { Panel, Badge, Meter, eur, pct, dt, Loading, EmptyState, useJson } from "../ui";
 
+interface DailyLimitRow {
+  trading_date: string; previous_limit_pct: number; new_limit_pct: number; adjustment_pp: number;
+  realized_return_pct: number | null; closed_trades: number | null; winrate_pct: number | null;
+  daily_pnl_eur: number | null; performance_metric: string | null; adjustment_reason: string;
+}
+
 interface RiskCfg {
   risk_per_trade_pct: { min: number; max: number; default: number };
   notional: { max_per_trade_pct: number; max_total_exposure_pct: number; max_open_positions: number };
@@ -15,6 +21,8 @@ interface RiskCfg {
   timing: { min_hold_min: number; cooldown_min: number };
   frequency: { per_pair_per_hour: number; per_pair_per_day: number; per_hour: number; per_day: number };
   daily_loss_limit_pct: number;
+  daily_loss_limit: { min_pct: number; max_pct: number; default_pct: number; adaptive: boolean; note: string };
+  daily_limit_history: DailyLimitRow[];
   loss_velocity: { window_min: number; pause_min: number };
   ai: { max_proposals_per_run: number; sl_min_pct: number; sl_max_pct: number; tp_min_pct: number; tp_max_pct: number; max_calls_per_hour: number; max_calls_per_day: number; max_cost_usd_per_day: number };
   evolution: { canary_risk_cap_pct: number };
@@ -42,6 +50,7 @@ export default function RiskPage() {
   const equity = pot ? pot.cash + exposure : null;
   const exposurePct = equity && equity > 0 ? (exposure / equity) * 100 : 0;
   const dayLoss = mon.daily_loss;
+  const limitNow = dayLoss?.limit_pct ?? cfg.daily_loss_limit?.default_pct ?? cfg.daily_loss_limit_pct;
   const dayPct = dayLoss?.current_pct ?? 0;
   const halted = pot?.halted ?? false;
   const ai = mon.ai_24h ?? { calls: 0, costUsd: 0, errors: 0 };
@@ -52,7 +61,7 @@ export default function RiskPage() {
         <div className="halt-banner">
           <span className="halt-title">TRADING HALTED</span>
           <span className="dim">
-            Daglimiet −{cfg.daily_loss_limit_pct}% bereikt{dayLoss?.day ? ` (handelsdag ${dayLoss.day})` : ""} · huidig {pct(dayPct)} ·
+            Daglimiet −{limitNow}% bereikt{dayLoss?.day ? ` (handelsdag ${dayLoss.day})` : ""} · huidig {pct(dayPct)} ·
             dagstart {eur(pot?.day_start_equity)} · huidige equity {eur(equity)}. De bot hervat automatisch na middernacht (Europe/Amsterdam).
           </span>
         </div>
@@ -62,8 +71,8 @@ export default function RiskPage() {
         <div className="kpi">
           <span className="kpi-label">Dagverlies</span>
           <span className={"kpi-value " + (dayPct < 0 ? "neg" : "")}>{pct(dayPct)}</span>
-          <Meter ratio={dayPct < 0 ? Math.abs(dayPct) / cfg.daily_loss_limit_pct : 0} />
-          <span className="kpi-sub">limiet −{cfg.daily_loss_limit_pct}% {dayPct < 0 ? `(${Math.min(100, Math.round((Math.abs(dayPct) / cfg.daily_loss_limit_pct) * 100))}% verbruikt)` : "(0% verbruikt)"}</span>
+          <Meter ratio={dayPct < 0 ? Math.abs(dayPct) / limitNow : 0} />
+          <span className="kpi-sub">limiet −{limitNow}% (adaptief, band −{cfg.daily_loss_limit?.min_pct}%…−{cfg.daily_loss_limit?.max_pct}%) {dayPct < 0 ? `(${Math.min(100, Math.round((Math.abs(dayPct) / limitNow) * 100))}% verbruikt)` : "(0% verbruikt)"}</span>
         </div>
         <div className="kpi">
           <span className="kpi-label">Exposure</span>
@@ -120,7 +129,7 @@ export default function RiskPage() {
             <dt>Per pair / dag</dt><dd>{cfg.frequency.per_pair_per_day}</dd>
             <dt>Totaal / uur</dt><dd>{cfg.frequency.per_hour}</dd>
             <dt>Totaal / dag</dt><dd>{cfg.frequency.per_day}</dd>
-            <dt>Dagverlieslimiet</dt><dd>−{cfg.daily_loss_limit_pct}% op de pot → halt</dd>
+            <dt>Dagverlieslimiet</dt><dd>−{limitNow}% op de pot → halt (adaptief: band −{cfg.daily_loss_limit?.min_pct}%…−{cfg.daily_loss_limit?.max_pct}%, max ±1pp/dag)</dd>
             <dt>Verlies-streak</dt><dd>{`3 verliezen binnen ${cfg.loss_velocity.window_min} min → ${cfg.loss_velocity.pause_min} min geen entries`}</dd>
           </dl>
         </Panel>
@@ -136,6 +145,34 @@ export default function RiskPage() {
           </dl>
         </Panel>
       </div>
+
+        <Panel title="Adaptief daglimiet — beslishistorie" note="circuit breaker; verhoogt nooit trade-risico">
+          {(cfg.daily_limit_history ?? []).length === 0 ? (
+            <p className="faint" style={{ fontSize: 12, margin: 0 }}>
+              Nog geen beslissingen opgeslagen (nieuwe tabel daily_limit_adjustments). Na de eerste handelsdag verschijnt hier per dag:
+              vorig limiet → nieuw limiet, aanpassing, dagrendement en de exacte reden.
+            </p>
+          ) : (
+            <table className="tbl" style={{ fontSize: 12 }}>
+              <thead>
+                <tr><th>Dag</th><th>Vorig</th><th>Nieuw</th><th>Δpp</th><th>Dagrend.</th><th>Trades</th><th>Reden</th></tr>
+              </thead>
+              <tbody>
+                {(cfg.daily_limit_history ?? []).map((r) => (
+                  <tr key={r.trading_date}>
+                    <td>{r.trading_date}</td>
+                    <td>−{Number(r.previous_limit_pct)}%</td>
+                    <td>−{Number(r.new_limit_pct)}%</td>
+                    <td>{Number(r.adjustment_pp) > 0 ? "+" : ""}{Number(r.adjustment_pp)}</td>
+                    <td>{r.realized_return_pct === null ? "—" : `${Number(r.realized_return_pct) > 0 ? "+" : ""}${Number(r.realized_return_pct).toFixed(2)}%`}</td>
+                    <td>{r.closed_trades ?? "—"}</td>
+                    <td className="dim" style={{ maxWidth: 340 }}>{r.adjustment_reason}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </Panel>
 
       <p className="faint" style={{ fontSize: 12 }}>
         {cfg.live_trading} · Alle waarden komen rechtstreeks uit de actuele configuratie (env-tunable) — niet uit de UI. Via dit dashboard kan niets worden gewijzigd.

@@ -32,12 +32,22 @@ SCIENTIFIC MINDSET — this is research, not a return contest:
 - Consider WHY an edge might exist (behavioural, structural, volatility dynamics) — not just which parameters fit history.
 - You may also propose REFINEMENTS of failing baselines (e.g. "pullback only when 1h trend and 15m setup align").
 
+TRADING HORIZONS — the engine is NOT pre-committed to scalping, intraday or swing:
+- Execution timeframes: "5m" (scalping), "15m" (short-term intraday), "1h" (intraday/swing).
+- The SAME strategy on different horizons can behave totally differently — horizon is part of the hypothesis. You may test a concept on a different timeframe than the baseline uses.
+- Context trend: 5m/15m execution get a 1h-trend filter (trend1h); 1h execution gets a 4h-trend context (same "trend1h" field, maps to 4h there).
+- Multi-timeframe ideas are expressible: e.g. 15m execution + trend1h filter, or 1h execution aligned with a longer context.
+
+STRATEGY CONCEPTS you may draw from (as INSPIRATION, never as proof):
+- trend following, momentum, mean reversion, breakout, pullback, volatility breakout, RSI reversion, moving-average strategies, volume confirmation, support/resistance (via dist_ema/breakout conditions), regime-based (via filters), multi-timeframe alignment.
+- External/known market knowledge may INSPIRE a hypothesis, but "the internet says this works" is NOT evidence — every hypothesis is still backtested IS/OOS, walk-forward and robustness-checked before it can ever become a candidate.
+
 HARD CONSTRAINTS on each hypothesis:
-- timeframe: "15m" (execution happens on 15m candles)
+- timeframe: "5m", "15m" or "1h"
 - direction: "long" or "short"
 - risk_pct: ${RISK_MIN_PCT}-${RISK_MAX_PCT} (percent of equity risked at stop-loss)
 - stop_loss_pct 1-10, take_profit_pct 0.5-15 AND at least ${rtp()}% (fee-guard: TP must cover round-trip costs ×${FEE_COVER_FACTOR})
-- max_hold_bars: 4-192 (15m bars); expected_holding_time_min ≥ 15
+- max_hold_bars per timeframe: 5m → 4-288, 15m → 4-192, 1h → 4-192; expected_holding_time_min ≥ 15
 - pairs: subset of [${PAIRS.join(", ")}]
 - ALL text fields are SHORT: description ≤ 280 chars, expected_regime ≤ 100 chars (e.g. "downtrend" or "high-volatility, weak-uptrend"), failure_conditions and falsification ≤ 280 chars, name ≤ 40 chars.
 - Conditions MUST be JSON OBJECTS, never strings: {"kind":"rsi_lt","value":35} — NOT "rsi_lt 35".

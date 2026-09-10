@@ -11,6 +11,8 @@ export const RESEARCH_MAX_TOKENS_PER_RUN = num("RESEARCH_MAX_TOKENS_PER_RUN", 25
 // ── Dataset-diepte (zelfde bron als de trading-engine: Bitvavo) ─────────
 export const RESEARCH_15M_DAYS = num("RESEARCH_15M_DAYS", 180);
 export const RESEARCH_1H_DAYS = num("RESEARCH_1H_DAYS", 180);
+export const RESEARCH_5M_DAYS = num("RESEARCH_5M_DAYS", 60);   // 5m: 60d = 17.280 candles (zelfde orde als 15m/180d)
+export const RESEARCH_4H_DAYS = num("RESEARCH_4H_DAYS", 180);  // context voor 1h-executie (swing)
 export const RESEARCH_CACHE_TTL_MIN = num("RESEARCH_CACHE_TTL_MIN", 240);
 
 // ── Sample-eisen ────────────────────────────────────────────────────────

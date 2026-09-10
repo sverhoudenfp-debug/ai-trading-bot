@@ -55,7 +55,7 @@ export default function ResearchPage() {
           <div className="tbl-wrap">
             <table className="tbl">
               <thead><tr>
-                <th>Strategie</th><th>Herkomst</th><th>Verdict</th><th className="num">Score</th>
+                <th>Strategie</th><th>TF</th><th>Herkomst</th><th>Verdict</th><th className="num">Score</th>
                 <th className="num">Sample</th><th className="num">OOS trades</th><th className="num">OOS netto</th>
                 <th className="num">OOS exp</th><th className="num">OOS wr</th><th className="num">OOS PF</th>
                 <th className="num">OOS DD</th><th>Afwijsreden</th><th>Exploratie</th>
@@ -66,6 +66,7 @@ export default function ResearchPage() {
                   return (
                     <tr key={c.id}>
                       <td className="mono">{c.name}</td>
+                      <td className="mono dim">{c.timeframe ?? "15m"}</td>
                       <td className="dim">{c.origin === "ai" ? "AI-hypothese" : c.origin === "baseline" ? "baseline" : c.origin}</td>
                       <td><Badge tone={v.tone} dot={false}>{v.label}</Badge></td>
                       <td className="num">{c.score ?? "—"}</td>

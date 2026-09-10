@@ -44,12 +44,13 @@ import {
   frequencyGuard, lossVelocityGuard, pnlBreakdown,
 } from "@/lib/risk/engine";
 import {
-  RISK_MIN_PCT, RISK_MAX_PCT, DAILY_LOSS_LIMIT_PCT, NEWS_FAIL_CLOSED,
+  RISK_MIN_PCT, RISK_MAX_PCT, DAILY_LOSS_LIMIT_DEFAULT_PCT, NEWS_FAIL_CLOSED,
   AI_SL_MIN_PCT, AI_SL_MAX_PCT, AI_TP_MIN_PCT, AI_TP_MAX_PCT,
   FEE_PCT, SLIPPAGE_PCT,
 } from "@/lib/risk/config";
 import { amsterdamDay } from "@/lib/time";
 import { CANARY_RISK_CAP_PCT } from "@/lib/evolution/config";
+import { ensureTodayLimit, shiftDayStatsFrom } from "@/lib/risk/dailyLimit";
 import { evoStrategyStillActive } from "@/lib/evolution/live";
 import { evolutionMonitorTick } from "@/lib/evolution/tick";
 import { validationTick } from "@/lib/validation/tick";
@@ -230,6 +231,20 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
     pot.day_start_equity = totalEquity();
     pot.halted = false;
   }
+
+  // ── ADAPTIEF DAGLIMIET (circuit breaker; max ±1pp/dag, band −5…−15%) ──
+  // Eén beslissing per handelsdag, persistent + audit in de DB; restart-safe.
+  // Fail-closed: DB onbereikbaar → default (−10%) — de breaker valt nooit uit.
+  // NOOIT: aanpassing van risk-per-trade / notional / exposure — dat is hier
+  // bewust afwezig; dit is géén risicoknop maar een pauze-grens.
+  let yesterdayStats: { closedTrades: number; netPnlEur: number; winratePct: number } | null = null;
+  try {
+    const yesterday = amsterdamDay(new Date(Date.now() - 24 * 3600_000));
+    const orders48h = dry ? [] : await listOrdersSince(new Date(Date.now() - 48 * 3600_000).toISOString()).catch(() => [] as PaperOrderExt[]);
+    yesterdayStats = shiftDayStatsFrom(orders48h, yesterday);
+  } catch { /* stats optioneel — beslislogica heeft een null-pad */ }
+  const dailyLimit = await ensureTodayLimit(today, pot.day_start_equity, yesterdayStats).catch(() => null);
+  const DAILY_LOSS_LIMIT_PCT = dailyLimit?.limitPct ?? DAILY_LOSS_LIMIT_DEFAULT_PCT;
 
   // ── recente orders voor de guards (geen stille afkap — paginering) ────
   const orders24h = dry ? [] : await listOrdersSince(new Date(Date.now() - 24 * 3600_000).toISOString()).catch(() => []);
