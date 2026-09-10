@@ -102,6 +102,7 @@ function evaluateSpecMulti(
   const wfWindows: WfResult["windows"] = [];
   let robPassSum = 0, robN = 0;
   let pertWorst = 1;
+  const robScenarios = new Map<string, { label: string; netPnl: number; trades: number }>();
 
   for (const f of frames) {
     const sp = splitOf(f);
@@ -123,6 +124,12 @@ function evaluateSpecMulti(
     const rob = robustnessTest(f, spec);
     robPassSum += rob.passRatio;
     robN += 1;
+    for (const sc of rob.scenarios) {
+      const agg = robScenarios.get(sc.label) ?? { label: sc.label, netPnl: 0, trades: 0 };
+      agg.netPnl += sc.netPnl;
+      agg.trades += sc.trades;
+      robScenarios.set(sc.label, agg);
+    }
     const pert = perturbationTest(f, spec);
     pertWorst = Math.min(pertWorst, pert.worstRatio);
   }
@@ -131,7 +138,7 @@ function evaluateSpecMulti(
   const oos = aggregateMetrics(oosTradesAll).metrics;
   const wf: WfResult = { windows: wfWindows, positiveWindows: wfPos, totalWindows: wfTotal, consistencyPct: wfTotal ? Math.round((wfPos / wfTotal) * 100) : 0 };
   const robustness: RobustnessResult = {
-    scenarios: [],
+    scenarios: [...robScenarios.values()].map((s) => ({ ...s, netPnl: Math.round(s.netPnl * 100) / 100 })),
     passRatio: robN ? robPassSum / robN : 0,
     ok: robN ? robPassSum / robN >= 0.6 : false,
   };
@@ -397,4 +404,18 @@ export async function runResearchPipeline(opts: {
     errors,
     summary,
   };
+}
+
+/** Dataset + frames klaarzetten (cache-aware) voor externe evaluatie. */
+export async function prepareDataset(): Promise<{ frames: Frame[]; failed: string[] }> {
+  const { ok: datasets, failed } = await getDatasets(PAIRS);
+  return { frames: datasets.map((d: PairDataset) => buildFrame(d.pair, d.c15, d.c1h)), failed };
+}
+
+/** Externe specs (bijv. mutaties) volledig evalueren — zelfde pad als baselines. */
+export async function evaluateSpecsOnDataset(
+  specs: StrategySpec[],
+  frames: Frame[]
+): Promise<SpecResult[]> {
+  return specs.map((s) => evaluateSpecMulti(s, frames));
 }

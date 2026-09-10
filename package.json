@@ -9,7 +9,8 @@
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
     "research": "tsx scripts/research-run.ts",
-    "research:full": "tsx scripts/research-run.ts full"
+    "research:full": "tsx scripts/research-run.ts full",
+    "evolution": "tsx scripts/evolution-run.ts"
   },
   "dependencies": {
     "lightweight-charts": "^5.2.1",

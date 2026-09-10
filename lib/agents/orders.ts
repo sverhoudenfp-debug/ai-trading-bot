@@ -37,7 +37,7 @@ import {
   blofinLive, BLOFIN_INST, setLeverage1x, contractsFor, marketLong, marketShort, closePosition,
 } from "@/lib/exchange/blofin";
 import { runReconciliation } from "@/lib/exchange/reconcile";
-import { freshUnconsumedSignals, markSignal, claimSignal, TradeSignal } from "./db";
+import { freshUnconsumedSignals, markSignal, claimSignal, listSignalsSince, TradeSignal } from "./db";
 import { currentNewsStatus } from "./news";
 import {
   clampRiskPct, feeGuard, sizePosition, minHoldGuard, cooldownGuard,
@@ -49,6 +49,9 @@ import {
   FEE_PCT, SLIPPAGE_PCT,
 } from "@/lib/risk/config";
 import { amsterdamDay } from "@/lib/time";
+import { CANARY_RISK_CAP_PCT } from "@/lib/evolution/config";
+import { evoStrategyStillActive } from "@/lib/evolution/live";
+import { evolutionMonitorTick } from "@/lib/evolution/tick";
 
 const slip = SLIPPAGE_PCT / 100;
 const fee = FEE_PCT / 100;
@@ -139,6 +142,7 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
   actions: string[];
   news: { level: string; reason: string; fresh: boolean; stale?: boolean };
   signalsProcessed: Record<string, unknown>[];
+  evolution?: { checked: number; rollbacks: { strategy: string; triggers: string[] }[]; warnings: { strategy: string; warnings: string[] }[]; errors: string[] } | null;
   learned: string | null;
   reconciliation?: { ok: boolean; mismatches: unknown[]; error?: string } | null;
   guards?: Record<string, unknown>;
@@ -468,20 +472,38 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
       continue;
     }
 
-    // VEILIGHEIDS-LAAG: AI-voorstellen keuren (banden uit risk-config)
+    // VEILIGHEIDS-LAAG: AI- en EVOLUTION-voorstellen keuren (zelfde banden)
     const isAi = (sig.proposed_by ?? "rule") === "ai";
+    const isEvo = (sig.proposed_by ?? "rule") === "evolution";
     let slPct = p.slPct;
     let tpPct = p.tpPct;
     let riskPct = clampRiskPct(p.riskPerTrade);
-    if (isAi) {
+    if (isAi || isEvo) {
+      // FASE 3 — evolution-signaal: nog steeds PAPER_ACTIVE op dit moment?
+      // (tussen signaal en claim kan een rollback hebben plaatsgevonden —
+      //  execution is fail-closed: geen actieve status = geen entry)
+      if (isEvo) {
+        const stillActive = await evoStrategyStillActive(sig.strategy_version);
+        if (!stillActive.ok) {
+          await mark(sig, "blocked_risk", `evolution-strategie niet meer actief (fail-closed): ${stillActive.reason}`);
+          bump("risk_blocks");
+          continue;
+        }
+      }
       const check = validateAiProposal(sig);
       if (!check.ok) {
-        await mark(sig, "blocked_risk", `AI-voorstel afgewezen door risicocheck: ${check.reason}`);
-        feedActions.push(`⛔ ${s.pair}: AI-voorstel afgewezen — ${check.reason}`);
+        await mark(sig, "blocked_risk", `${isEvo ? "evolution" : "AI"}-voorstel afgewezen door risicocheck: ${check.reason}`);
+        feedActions.push(`⛔ ${s.pair}: ${isEvo ? "evolution" : "AI"}-voorstel afgewezen — ${check.reason}`);
         bump("risk_blocks");
         continue;
       }
       slPct = check.sl; tpPct = check.tp; riskPct = check.risk;
+      // CANARY-CAP: evolution-versies zijn in Fase 3 altijd canary —
+      // max 0,25% pot-risico per trade, hard, onoverruleerbaar
+      if (isEvo) {
+        riskPct = Math.min(riskPct, CANARY_RISK_CAP_PCT);
+        riskPct = clampRiskPct(riskPct);
+      }
     }
 
     // FEE-GUARD: verwachte beweging moet de round-trip-kosten ruim dekken
@@ -570,6 +592,26 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
     }
   }
 
+  // ── FASE 3: evolution-monitor-tick (bounded, fail-closed, max 1×/5 min) ──
+  let evolution: { checked: number; rollbacks: { strategy: string; triggers: string[] }[]; warnings: { strategy: string; warnings: string[] }[]; errors: string[] } | null = null;
+  if (!dry) {
+    try {
+      const signals24h = await listSignalsSince(new Date(Date.now() - 86400_000).toISOString(), 5);
+      const tickRes = await evolutionMonitorTick(signals24h);
+      evolution = {
+        checked: tickRes.checked,
+        rollbacks: tickRes.rollbacks,
+        warnings: tickRes.warnings,
+        errors: tickRes.errors,
+      };
+      for (const rb of tickRes.rollbacks) {
+        feedActions.push(`🔴 ROLLBACK ${rb.strategy}: ${rb.triggers.join("; ")}`);
+      }
+    } catch (e) {
+      evolution = { checked: 0, rollbacks: [], warnings: [], errors: [String(e instanceof Error ? e.message : e)] };
+    }
+  }
+
   // ── opslaan: alle positie-rijen + de pot-rij (releases de run-lock) ───
   if (!dry) await Promise.all([...states.map((s) => saveState(s)), saveState(pot)]);
   return {
@@ -581,6 +623,7 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
     signalsProcessed,
     learned,
     reconciliation,
+    evolution,
     guards: {
       ...guardCounts,
       daily_loss_limit_pct: DAILY_LOSS_LIMIT_PCT,

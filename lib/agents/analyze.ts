@@ -21,6 +21,8 @@ import {
 } from "@/lib/strategy";
 import { getStates } from "@/lib/paper/store";
 import { insertSignal, recentUnconsumedSignals } from "./db";
+import { evaluateEvolutionForPair } from "@/lib/evolution/live";
+import { activeRowsCached } from "@/lib/evolution/live";
 
 export const STRATEGY_VERSION = "v1.0";
 
@@ -33,6 +35,7 @@ export async function analyzeAgent(): Promise<{
   checked: number;
   newSignals: { pair: string; side: string; kind: string; reason: string }[];
   skipped: string[];
+  evolutionSignals?: number;
 }> {
   const p = DEFAULT_PARAMS;
   const states = await getStates();
@@ -94,5 +97,41 @@ export async function analyzeAgent(): Promise<{
     pending.push({ pair, side, kind } as (typeof pending)[number]); // ook binnen-run dedup
   }
 
-  return { checked: PAIRS.length, newSignals, skipped };
+  // ── FASE 3: PAPER_ACTIVE evolution-versies meenemen (fail-closed) ──────
+  // Geen actieve versies → nul extra werk. Wél actief → zelfde candles-conventie,
+  // zelfde interpreter als de backtest, zelfde dedup + risk-engine later.
+  let evoCount = 0;
+  try {
+    const activeRows = await activeRowsCached();
+    if (activeRows.length > 0) {
+      for (const pair of PAIRS) {
+        const [c15, c1h] = await Promise.all([
+          fetchCandles(pair, 15, 300),
+          fetchCandles(pair, 60, 300),
+        ]);
+        const proposals = await evaluateEvolutionForPair(pair, c15, c1h, () => null);
+        for (const p of proposals) {
+          const dupe = pending.some((s) => s.pair === pair && s.kind === "entry" && s.side === p.side);
+          if (dupe) { skipped.push(`${pair}: evolution-entry stond al klaar (dedup)`); continue; }
+          await insertSignal({
+            pair, side: p.side, kind: "entry",
+            reason: p.reason,
+            strategy_version: p.strategyKey,
+            proposed_by: "evolution",
+            timeframe: "15m",
+            sl_pct: p.slPct, tp_pct: p.tpPct, risk_pct: p.riskPct,
+            confidence: "high",
+          });
+          newSignals.push({ pair, side: p.side, kind: "entry", reason: p.reason });
+          pending.push({ pair, kind: "entry", side: p.side } as (typeof pending)[number]);
+          evoCount += 1;
+        }
+      }
+    }
+  } catch (e) {
+    // FAIL-CLOSED: evolution-evaluatie mag de legacy-flow nooit breken
+    skipped.push(`evolution-evaluatie overgeslagen (fail-closed): ${String(e instanceof Error ? e.message : e)}`);
+  }
+
+  return { checked: PAIRS.length, newSignals, skipped, evolutionSignals: evoCount };
 }

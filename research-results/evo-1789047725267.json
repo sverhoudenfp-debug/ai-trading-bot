@@ -1,0 +1,60 @@
+{
+  "run_id": "evo-1789047725267",
+  "started_at": "2026-09-10T13:42:05.267Z",
+  "ended_at": "2026-09-10T13:42:33.478Z",
+  "parent": {
+    "name": "baseline-rsi-dip",
+    "family": "RSI-MEAN-REVERSION"
+  },
+  "mutations_proposed": 3,
+  "mutations_invalid": 3,
+  "mutations_duplicate": 0,
+  "outcomes": [
+    {
+      "name": "rsi-dip-tighter-tp",
+      "parent": "baseline-rsi-dip (rsi-dip v1.0.0)",
+      "changedWhat": "exit_conditions (RSI>50 instead of >60), take_profit_pct (2.5% vs 4%), max_hold_bars (32 vs 64), pairs (removed low-edge coins: SOL, XRP, ALGO, ICP), expected_holding_time_min (120 vs 240).",
+      "why": "Parent is fee-fragile: 0.60% round-trip kills thin edges. Tighter TP (2.5%) aligns with realistic 15m reversals and cuts hold time by 50%, reducing fee drag. Pair culling removes BTC (−2.73 OOS), ALGO (−0.16), ICP (−1.36) — focus on WLD/NEAR winners. Faster exit at RSI 50 captures the core dip-recovery without waiting for full trend confirmation.",
+      "expectedImprovement": "OOS winrate should stabilize >50% (fewer false holds); net-PnL per trade improves via lower fee pressure; robustness ratio >0.65 by reducing parameter sensitivity.",
+      "failureCriteria": "OOS winrate remains <42% OR OOS net-PnL stays negative OR max_drawdown exceeds 1.5%.",
+      "valid": false,
+      "validationErrors": [
+        "origin ongeldig: \"mutation\""
+      ]
+    },
+    {
+      "name": "rsi-dip-vol-filter",
+      "parent": "baseline-rsi-dip (rsi-dip v1.0.0)",
+      "changedWhat": "entry_conditions (added atr_gt filter), pairs (removed low-edge coins).",
+      "why": "Parent's regimePerformance shows low-volatility regime lost −1.01 PnL on 1 trade. ATR>0.8% gate ensures only trades with sufficient expected move (>0.8% volatility) are taken, filtering out noise trades that lose to fees. Pair culling removes BTC/ALGO/ICP losers. Keeps original TP/SL to preserve edge on high-vol entries.",
+      "expectedImprovement": "OOS winrate >50% by eliminating low-vol false signals; robustness >0.65 by regime-filtering; fee fragility reduced via entry selectivity.",
+      "failureCriteria": "OOS trades drop below 5 (filter too strict) OR OOS winrate <45% (filter ineffective) OR net-PnL remains negative.",
+      "valid": false,
+      "validationErrors": [
+        "origin ongeldig: \"mutation\"",
+        "entry_conditions[2].kind ongeldig: \"atr_gt\""
+      ]
+    },
+    {
+      "name": "rsi-dip-ema-confirm",
+      "parent": "baseline-rsi-dip (rsi-dip v1.0.0)",
+      "changedWhat": "entry_conditions (added price_within_pct_of_ema filter), pairs (removed low-edge coins).",
+      "why": "Parent's parameter-cliff flag suggests RSI 30 alone is unstable. EMA-proximity filter adds structural confirmation: only shallow dips (within 1.5% of trend) are traded, avoiding deep reversals that require outsized moves to recover. This reduces false-signal entries and improves mean-reversion reliability. Pair culling removes BTC/ALGO/ICP losers.",
+      "expectedImprovement": "OOS winrate >50% via higher-quality entry confirmation; robustness >0.65 by reducing parameter sensitivity; fee fragility reduced via entry selectivity.",
+      "failureCriteria": "OOS trades drop below 8 (filter too strict) OR OOS winrate <45% (filter ineffective) OR net-PnL remains negative.",
+      "valid": false,
+      "validationErrors": [
+        "origin ongeldig: \"mutation\"",
+        "entry_conditions[2]: onbekend veld \"pct\"",
+        "entry_conditions[2].kind ongeldig: \"price_within_pct_of_ema\""
+      ]
+    }
+  ],
+  "candidate_found": false,
+  "gate_blockers": [],
+  "ai": {
+    "calls": 1,
+    "cost_usd": 0.013692000000000001
+  },
+  "summary": "3 mutaties onderzocht, géén kandidaat door de gate — NO VALID CANDIDATE (eerlijk resultaat)"
+}
