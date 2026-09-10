@@ -13,6 +13,12 @@ export const pct = (v: number | null | undefined, dp = 1) =>
   v === null || v === undefined ? "—" : `${v >= 0 ? "" : "−"}${Math.abs(v).toFixed(dp)}%`;
 export const signed = (v: number | null | undefined, suffix = "", dp = 2) =>
   v === null || v === undefined ? "—" : `${v >= 0 ? "+" : "−"}${Math.abs(v).toFixed(dp)}${suffix}`;
+/** koers-notatie: >=1000 → 0 dp, >=10 → 2 dp, >=1 → 3 dp, anders 4 dp */
+export const price = (v: number | null | undefined) => {
+  if (v === null || v === undefined) return "—";
+  const dp = v >= 1000 ? 0 : v >= 10 ? 2 : v >= 1 ? 3 : 4;
+  return v.toLocaleString("nl-NL", { minimumFractionDigits: dp === 0 ? 0 : dp, maximumFractionDigits: dp });
+};
 export const dur = (min: number | null | undefined) => {
   if (min === null || min === undefined) return "—";
   if (min < 60) return `${Math.round(min)}m`;

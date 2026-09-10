@@ -4,7 +4,7 @@
 // Data: GET /api/paper/trades (read-only). Geen trading-acties.
 
 import { Fragment, useMemo, useState } from "react";
-import { Panel, Badge, pnlClass, eur, pct, dur, dt, Loading, ErrorState, EmptyState, useJson } from "../ui";
+import { Panel, Badge, pnlClass, eur, pct, dur, dt, price, Loading, ErrorState, EmptyState, useJson } from "../ui";
 
 interface TradeRow {
   id: number; created_at: string | null; pair: string; side: string; price: number;
@@ -126,7 +126,7 @@ export default function TradesPage() {
                           <td className="mono">{t.pair.replace("-EUR", "")}</td>
                           <td>{isExit ? <Badge tone="neutral" dot={false}>EXIT</Badge> : <Badge tone="green" dot={false}>LONG</Badge>}</td>
                           <td className="dim">{t.strategy ?? "—"}</td>
-                          <td className="num">{eur(t.price, t.price > 500 ? 0 : 4)}</td>
+                          <td className="num">{price(t.price)}</td>
                           <td className={`num ${pnlClass(t.pnl_eur)}`}>{isExit ? eur(t.pnl_eur) : "—"}</td>
                           <td className={`num ${pnlClass(t.pnl_pct)}`}>{isExit ? pct(t.pnl_pct) : "—"}</td>
                           <td className="num dim">{t.context?.hold_min !== undefined ? dur(t.context.hold_min) : "—"}</td>
@@ -140,7 +140,7 @@ export default function TradesPage() {
                                 <dt>Type</dt><dd>{isExit ? "exit (sell)" : "entry (long)"}</dd>
                                 <dt>Tijdstip</dt><dd>{dt(t.created_at)}</dd>
                                 <dt>Pair</dt><dd>{t.pair}</dd>
-                                <dt>Koers</dt><dd>{eur(t.price, t.price > 500 ? 2 : 4)}</dd>
+                                <dt>Koers</dt><dd>€{price(t.price)}</dd>
                                 <dt>Size</dt><dd>{t.size}</dd>
                                 <dt>Notional</dt><dd>{eur(t.price * t.size)}</dd>
                                 <dt>Equity na</dt><dd>{eur(t.equity_after)}</dd>

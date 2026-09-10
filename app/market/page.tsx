@@ -5,7 +5,7 @@
 // en /api/paper/status (newsList). Read-only publiek — geen websocket-infra.
 
 import { useStatus } from "../status-store";
-import { Panel, Badge, Sparkline, pct, ago, dt, Loading, ErrorState, EmptyState, useJson } from "../ui";
+import { Panel, Badge, Sparkline, pct, ago, dt, price, Loading, ErrorState, EmptyState, useJson } from "../ui";
 
 interface MarketCoin {
   pair: string; name: string; price: number; change_24h_pct: number | null;
@@ -39,7 +39,7 @@ export default function MarketPage() {
         ) : (
           <Panel key={c.pair} title={`${c.name} · ${c.pair}`} note={`upd ${ago(c.updated_at)} geleden`}>
             <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 10 }}>
-              <span className="kpi-value mono" style={{ fontSize: 20 }}>€{c.price.toLocaleString("nl-NL", { maximumFractionDigits: c.price > 500 ? 0 : 4 })}</span>
+              <span className="kpi-value mono" style={{ fontSize: 20 }}>€{price(c.price)}</span>
               <span className={(c.change_24h_pct ?? 0) >= 0 ? "pos mono" : "neg mono"} style={{ fontSize: 14 }}>{pct(c.change_24h_pct)} 24u</span>
               <div style={{ marginLeft: "auto" }}>
                 <Sparkline values={c.sparkline} w={140} h={36} />
@@ -47,8 +47,8 @@ export default function MarketPage() {
             </div>
             <dl className="kv" style={{ gridTemplateColumns: "auto auto auto auto", gap: "3px 34px", fontSize: 12.5 }}>
               <dt>RSI 15m</dt><dd className={rsiTone(c.rsi14)}>{c.rsi14}</dd>
-              <dt>EMA 50</dt><dd>€{c.ema50.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}</dd>
-              <dt>EMA 200</dt><dd>€{c.ema200.toLocaleString("nl-NL", { maximumFractionDigits: 0 })}</dd>
+              <dt>EMA 50</dt><dd>€{price(c.ema50)}</dd>
+              <dt>EMA 200</dt><dd>€{price(c.ema200)}</dd>
               <dt>Boven EMA200</dt><dd>{c.above_ema200 ? "ja" : "nee"}</dd>
               <dt>Momentum 8</dt><dd className={c.momentum_8 >= 0 ? "pos" : "neg"}>{c.momentum_8 >= 0 ? "+" : ""}{c.momentum_8}%</dd>
               <dt>Volatiliteit 20</dt><dd>{c.volatility_pct}%</dd>
