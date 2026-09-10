@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 // ── AI-ZOECHTTOCHT — wat de AI-agent elke minuut ziet en doet ────────────
 // Per scan (Claude Haiku): de nieuwsbeoordeling + alle voorstellen met
 // onderbouwing, strategie en uitkomst. Plus strategie-prestaties (7 dagen)

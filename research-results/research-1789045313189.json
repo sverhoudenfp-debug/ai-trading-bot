@@ -1,0 +1,6201 @@
+{
+ "run_id": "research-1789045313189",
+ "type": "full",
+ "started_at": "2026-09-10T13:01:53.189Z",
+ "ended_at": "2026-09-10T13:02:49.950Z",
+ "dataset_days": 180,
+ "pairs": [
+  "BTC-EUR",
+  "ETH-EUR",
+  "SOL-EUR",
+  "XRP-EUR",
+  "WLD-EUR",
+  "NEAR-EUR",
+  "ALGO-EUR",
+  "ICP-EUR"
+ ],
+ "pairs_failed": [],
+ "market_research": {
+  "BTC-EUR": {
+   "candles_15m": 17234,
+   "price_change_pct": 7.1,
+   "avg_volatility_pct_20": 0.17,
+   "regime_distribution": {
+    "strong-uptrend": 695,
+    "weak-uptrend": 2992,
+    "sideways": 6645,
+    "low-volatility": 1567,
+    "downtrend": 3629,
+    "high-volatility": 1486
+   },
+   "high24h_last": 68404,
+   "low24h_last": 66061
+  },
+  "ETH-EUR": {
+   "candles_15m": 17234,
+   "price_change_pct": 14.5,
+   "avg_volatility_pct_20": 0.23,
+   "regime_distribution": {
+    "strong-uptrend": 944,
+    "weak-uptrend": 2826,
+    "sideways": 6408,
+    "low-volatility": 1688,
+    "downtrend": 4017,
+    "high-volatility": 1131
+   },
+   "high24h_last": 2164.34,
+   "low24h_last": 2076
+  },
+  "SOL-EUR": {
+   "candles_15m": 17234,
+   "price_change_pct": 12.1,
+   "avg_volatility_pct_20": 0.26,
+   "regime_distribution": {
+    "strong-uptrend": 769,
+    "weak-uptrend": 3430,
+    "sideways": 6620,
+    "low-volatility": 956,
+    "downtrend": 4371,
+    "high-volatility": 868
+   },
+   "high24h_last": 89.888,
+   "low24h_last": 84.826
+  },
+  "XRP-EUR": {
+   "candles_15m": 17234,
+   "price_change_pct": -3.8,
+   "avg_volatility_pct_20": 0.24,
+   "regime_distribution": {
+    "strong-uptrend": 758,
+    "weak-uptrend": 1993,
+    "sideways": 7302,
+    "low-volatility": 1267,
+    "downtrend": 4791,
+    "high-volatility": 903
+   },
+   "high24h_last": 1.23546,
+   "low24h_last": 1.15458
+  },
+  "WLD-EUR": {
+   "candles_15m": 16999,
+   "price_change_pct": 12.8,
+   "avg_volatility_pct_20": 0.58,
+   "regime_distribution": {
+    "strong-uptrend": 1125,
+    "weak-uptrend": 3801,
+    "sideways": 5453,
+    "low-volatility": 371,
+    "downtrend": 5685,
+    "high-volatility": 344
+   },
+   "high24h_last": 0.39108,
+   "low24h_last": 0.34219
+  },
+  "NEAR-EUR": {
+   "candles_15m": 16755,
+   "price_change_pct": 81.5,
+   "avg_volatility_pct_20": 0.47,
+   "regime_distribution": {
+    "strong-uptrend": 966,
+    "weak-uptrend": 3740,
+    "sideways": 5610,
+    "low-volatility": 494,
+    "downtrend": 5043,
+    "high-volatility": 682
+   },
+   "high24h_last": 2.2756,
+   "low24h_last": 2.0369
+  },
+  "ALGO-EUR": {
+   "candles_15m": 14875,
+   "price_change_pct": 4.7,
+   "avg_volatility_pct_20": 0.43,
+   "regime_distribution": {
+    "sideways": 4657,
+    "weak-uptrend": 2706,
+    "downtrend": 5362,
+    "high-volatility": 321,
+    "low-volatility": 502,
+    "strong-uptrend": 1107
+   },
+   "high24h_last": 0.087776,
+   "low24h_last": 0.082686
+  },
+  "ICP-EUR": {
+   "candles_15m": 15103,
+   "price_change_pct": 1.3,
+   "avg_volatility_pct_20": 0.43,
+   "regime_distribution": {
+    "weak-uptrend": 2406,
+    "sideways": 5462,
+    "low-volatility": 699,
+    "downtrend": 4725,
+    "high-volatility": 398,
+    "strong-uptrend": 1193
+   },
+   "high24h_last": 2.4864,
+   "low24h_last": 2.3199
+  }
+ },
+ "paper_failure_analysis": {
+  "pullback": {
+   "trades": 51,
+   "winrate_pct": 3.9,
+   "net_eur": -197.77,
+   "avg_hold_min": 0,
+   "exit_reasons": {
+    "signaal": 51
+   }
+  },
+  "rsi-fade-short": {
+   "trades": 1,
+   "winrate_pct": 0,
+   "net_eur": -1.55,
+   "avg_hold_min": 0,
+   "exit_reasons": {
+    "signaal": 1
+   }
+  },
+  "breakout": {
+   "trades": 1,
+   "winrate_pct": 0,
+   "net_eur": -9.92,
+   "avg_hold_min": 0,
+   "exit_reasons": {
+    "signaal": 1
+   }
+  },
+  "rsi-dip": {
+   "trades": 8,
+   "winrate_pct": 12.5,
+   "net_eur": -25.68,
+   "avg_hold_min": 0,
+   "exit_reasons": {
+    "signaal": 8
+   }
+  },
+  "_note": "paper-trading foutanalyse laatste 14 dagen (échte paper-trades, incl. fees)"
+ },
+ "baseline_results": [
+  {
+   "name": "baseline-rsi-dip",
+   "origin": "baseline",
+   "hypothesis": "In een uptrend verkopen panieke short-term-houders bij RSI<30; de gemiddelde koers keert terug richting trend.",
+   "status": "REJECTED",
+   "score": 60,
+   "is": {
+    "trades": 38,
+    "wins": 24,
+    "winratePct": 63.2,
+    "grossPnl": 59.24,
+    "fees": 31.8,
+    "slippage": 6.42,
+    "netPnl": 21.08,
+    "netReturnPct": 2.11,
+    "expectancyEur": 0.55,
+    "profitFactor": 1.62,
+    "avgWin": 2.29,
+    "avgLoss": 2.42,
+    "maxDrawdownPct": 1.3,
+    "avgHoldMin": 539,
+    "maxWinStreak": 5,
+    "maxLossStreak": 3,
+    "exitReasons": {
+     "signaal": 27,
+     "max-hold": 8,
+     "take-profit": 2,
+     "stop-loss": 1
+    }
+   },
+   "oos": {
+    "trades": 14,
+    "wins": 6,
+    "winratePct": 42.9,
+    "grossPnl": 22.39,
+    "fees": 11.72,
+    "slippage": 2.38,
+    "netPnl": 8.32,
+    "netReturnPct": 0.83,
+    "expectancyEur": 0.59,
+    "profitFactor": 2.56,
+    "avgWin": 2.28,
+    "avgLoss": 0.67,
+    "maxDrawdownPct": 0.35,
+    "avgHoldMin": 611,
+    "maxWinStreak": 4,
+    "maxLossStreak": 4,
+    "exitReasons": {
+     "signaal": 13,
+     "max-hold": 1
+    }
+   },
+   "walkforward": {
+    "windows": [
+     {
+      "label": "BTC:wf1",
+      "metrics": {
+       "trades": 2,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -1.99,
+       "fees": 1.66,
+       "slippage": 0.34,
+       "netPnl": -3.98,
+       "netReturnPct": -0.4,
+       "expectancyEur": -1.99,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.99,
+       "maxDrawdownPct": 0.4,
+       "avgHoldMin": 788,
+       "maxWinStreak": 0,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 1,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "BTC:wf2",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 1.56,
+       "fees": 0.84,
+       "slippage": 0.17,
+       "netPnl": 0.55,
+       "netReturnPct": 0.06,
+       "expectancyEur": 0.55,
+       "profitFactor": 99,
+       "avgWin": 0.55,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.11,
+       "avgHoldMin": 570,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "BTC:wf3",
+      "metrics": {
+       "trades": 4,
+       "wins": 3,
+       "winratePct": 75,
+       "grossPnl": 4.74,
+       "fees": 3.36,
+       "slippage": 0.68,
+       "netPnl": 0.72,
+       "netReturnPct": 0.07,
+       "expectancyEur": 0.18,
+       "profitFactor": 11.29,
+       "avgWin": 0.26,
+       "avgLoss": 0.07,
+       "maxDrawdownPct": 0.18,
+       "avgHoldMin": 435,
+       "maxWinStreak": 2,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 4
+       }
+      }
+     },
+     {
+      "label": "BTC:wf4",
+      "metrics": {
+       "trades": 4,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 1.22,
+       "fees": 3.32,
+       "slippage": 0.68,
+       "netPnl": -2.78,
+       "netReturnPct": -0.28,
+       "expectancyEur": -0.69,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.7,
+       "maxDrawdownPct": 0.36,
+       "avgHoldMin": 713,
+       "maxWinStreak": 0,
+       "maxLossStreak": 4,
+       "exitReasons": {
+        "signaal": 3,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "ETH:wf1",
+      "metrics": {
+       "trades": 3,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -6.21,
+       "fees": 2.47,
+       "slippage": 0.49,
+       "netPnl": -9.18,
+       "netReturnPct": -0.92,
+       "expectancyEur": -3.06,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 3.06,
+       "maxDrawdownPct": 1.19,
+       "avgHoldMin": 960,
+       "maxWinStreak": 0,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "max-hold": 3
+       }
+      }
+     },
+     {
+      "label": "ETH:wf2",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 1.65,
+       "fees": 0.84,
+       "slippage": 0.17,
+       "netPnl": 0.65,
+       "netReturnPct": 0.07,
+       "expectancyEur": 0.65,
+       "profitFactor": 99,
+       "avgWin": 0.65,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.05,
+       "avgHoldMin": 240,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "ETH:wf3",
+      "metrics": {
+       "trades": 3,
+       "wins": 3,
+       "winratePct": 100,
+       "grossPnl": 3.44,
+       "fees": 2.52,
+       "slippage": 0.51,
+       "netPnl": 0.43,
+       "netReturnPct": 0.04,
+       "expectancyEur": 0.14,
+       "profitFactor": 99,
+       "avgWin": 0.14,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.19,
+       "avgHoldMin": 680,
+       "maxWinStreak": 3,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 3
+       }
+      }
+     },
+     {
+      "label": "ETH:wf4",
+      "metrics": {
+       "trades": 1,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.03,
+       "fees": 0.83,
+       "slippage": 0.17,
+       "netPnl": -0.97,
+       "netReturnPct": -0.1,
+       "expectancyEur": -0.97,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.97,
+       "maxDrawdownPct": 0.3,
+       "avgHoldMin": 870,
+       "maxWinStreak": 0,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "SOL:wf1",
+      "metrics": {
+       "trades": 1,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.45,
+       "fees": 0.83,
+       "slippage": 0.17,
+       "netPnl": -0.55,
+       "netReturnPct": -0.05,
+       "expectancyEur": -0.55,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.55,
+       "maxDrawdownPct": 0.31,
+       "avgHoldMin": 465,
+       "maxWinStreak": 0,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "SOL:wf2",
+      "metrics": {
+       "trades": 2,
+       "wins": 2,
+       "winratePct": 100,
+       "grossPnl": 3.8,
+       "fees": 1.68,
+       "slippage": 0.34,
+       "netPnl": 1.79,
+       "netReturnPct": 0.18,
+       "expectancyEur": 0.9,
+       "profitFactor": 99,
+       "avgWin": 0.9,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.09,
+       "avgHoldMin": 315,
+       "maxWinStreak": 2,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "SOL:wf3",
+      "metrics": {
+       "trades": 4,
+       "wins": 3,
+       "winratePct": 75,
+       "grossPnl": 10.5,
+       "fees": 3.37,
+       "slippage": 0.68,
+       "netPnl": 6.45,
+       "netReturnPct": 0.64,
+       "expectancyEur": 1.61,
+       "profitFactor": 6.56,
+       "avgWin": 2.54,
+       "avgLoss": 1.16,
+       "maxDrawdownPct": 0.3,
+       "avgHoldMin": 510,
+       "maxWinStreak": 3,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 4
+       }
+      }
+     },
+     {
+      "label": "SOL:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "XRP:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "XRP:wf2",
+      "metrics": {
+       "trades": 2,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -5.11,
+       "fees": 1.65,
+       "slippage": 0.33,
+       "netPnl": -7.09,
+       "netReturnPct": -0.71,
+       "expectancyEur": -3.54,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 3.55,
+       "maxDrawdownPct": 0.77,
+       "avgHoldMin": 960,
+       "maxWinStreak": 0,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "max-hold": 2
+       }
+      }
+     },
+     {
+      "label": "XRP:wf3",
+      "metrics": {
+       "trades": 3,
+       "wins": 2,
+       "winratePct": 66.7,
+       "grossPnl": 0.76,
+       "fees": 2.5,
+       "slippage": 0.51,
+       "netPnl": -2.24,
+       "netReturnPct": -0.22,
+       "expectancyEur": -0.75,
+       "profitFactor": 0.26,
+       "avgWin": 0.4,
+       "avgLoss": 3.04,
+       "maxDrawdownPct": 0.42,
+       "avgHoldMin": 610,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "XRP:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "WLD:wf1",
+      "metrics": {
+       "trades": 2,
+       "wins": 2,
+       "winratePct": 100,
+       "grossPnl": 8.33,
+       "fees": 1.69,
+       "slippage": 0.34,
+       "netPnl": 6.3,
+       "netReturnPct": 0.63,
+       "expectancyEur": 3.15,
+       "profitFactor": 99,
+       "avgWin": 3.15,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.43,
+       "avgHoldMin": 600,
+       "maxWinStreak": 2,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "WLD:wf2",
+      "metrics": {
+       "trades": 3,
+       "wins": 2,
+       "winratePct": 66.7,
+       "grossPnl": 8.57,
+       "fees": 2.53,
+       "slippage": 0.51,
+       "netPnl": 5.52,
+       "netReturnPct": 0.55,
+       "expectancyEur": 1.84,
+       "profitFactor": 1.92,
+       "avgWin": 5.75,
+       "avgLoss": 5.97,
+       "maxDrawdownPct": 1.03,
+       "avgHoldMin": 235,
+       "maxWinStreak": 2,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "take-profit": 2,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf3",
+      "metrics": {
+       "trades": 2,
+       "wins": 2,
+       "winratePct": 100,
+       "grossPnl": 10.08,
+       "fees": 1.7,
+       "slippage": 0.34,
+       "netPnl": 8.04,
+       "netReturnPct": 0.8,
+       "expectancyEur": 4.02,
+       "profitFactor": 99,
+       "avgWin": 4.02,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.22,
+       "avgHoldMin": 480,
+       "maxWinStreak": 2,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "WLD:wf4",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 6.63,
+       "fees": 0.85,
+       "slippage": 0.17,
+       "netPnl": 5.61,
+       "netReturnPct": 0.56,
+       "expectancyEur": 5.61,
+       "profitFactor": 99,
+       "avgWin": 5.61,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.09,
+       "avgHoldMin": 150,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf1",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 2.37,
+       "fees": 0.84,
+       "slippage": 0.17,
+       "netPnl": 1.36,
+       "netReturnPct": 0.14,
+       "expectancyEur": 1.36,
+       "profitFactor": 99,
+       "avgWin": 1.36,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.14,
+       "avgHoldMin": 450,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf2",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": 4.03,
+       "fees": 1.68,
+       "slippage": 0.34,
+       "netPnl": 2.02,
+       "netReturnPct": 0.2,
+       "expectancyEur": 1.01,
+       "profitFactor": 6.05,
+       "avgWin": 2.42,
+       "avgLoss": 0.4,
+       "maxDrawdownPct": 0.78,
+       "avgHoldMin": 638,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf3",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 4.04,
+       "fees": 0.84,
+       "slippage": 0.17,
+       "netPnl": 3.03,
+       "netReturnPct": 0.3,
+       "expectancyEur": 3.03,
+       "profitFactor": 99,
+       "avgWin": 3.03,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.45,
+       "avgHoldMin": 435,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf4",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 5.07,
+       "fees": 0.85,
+       "slippage": 0.17,
+       "netPnl": 4.06,
+       "netReturnPct": 0.41,
+       "expectancyEur": 4.06,
+       "profitFactor": 99,
+       "avgWin": 4.06,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.34,
+       "avgHoldMin": 360,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ALGO:wf2",
+      "metrics": {
+       "trades": 2,
+       "wins": 2,
+       "winratePct": 100,
+       "grossPnl": 9.71,
+       "fees": 1.69,
+       "slippage": 0.34,
+       "netPnl": 7.68,
+       "netReturnPct": 0.77,
+       "expectancyEur": 3.84,
+       "profitFactor": 99,
+       "avgWin": 3.84,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.32,
+       "avgHoldMin": 195,
+       "maxWinStreak": 2,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ALGO:wf4",
+      "metrics": {
+       "trades": 1,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.85,
+       "fees": 0.84,
+       "slippage": 0.17,
+       "netPnl": -0.16,
+       "netReturnPct": -0.02,
+       "expectancyEur": -0.16,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.16,
+       "maxDrawdownPct": 0.45,
+       "avgHoldMin": 870,
+       "maxWinStreak": 0,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf1",
+      "metrics": {
+       "trades": 3,
+       "wins": 1,
+       "winratePct": 33.3,
+       "grossPnl": 4.13,
+       "fees": 2.5,
+       "slippage": 0.51,
+       "netPnl": 1.12,
+       "netReturnPct": 0.11,
+       "expectancyEur": 0.37,
+       "profitFactor": 1.45,
+       "avgWin": 3.63,
+       "avgLoss": 1.26,
+       "maxDrawdownPct": 0.67,
+       "avgHoldMin": 515,
+       "maxWinStreak": 1,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 3
+       }
+      }
+     },
+     {
+      "label": "ICP:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ICP:wf3",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 3.24,
+       "fees": 0.84,
+       "slippage": 0.17,
+       "netPnl": 2.24,
+       "netReturnPct": 0.22,
+       "expectancyEur": 2.24,
+       "profitFactor": 99,
+       "avgWin": 2.24,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.32,
+       "avgHoldMin": 390,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf4",
+      "metrics": {
+       "trades": 1,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -0.36,
+       "fees": 0.83,
+       "slippage": 0.17,
+       "netPnl": -1.36,
+       "netReturnPct": -0.14,
+       "expectancyEur": -1.36,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.36,
+       "maxDrawdownPct": 0.36,
+       "avgHoldMin": 645,
+       "maxWinStreak": 0,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     }
+    ],
+    "positiveWindows": 17,
+    "totalWindows": 32,
+    "consistencyPct": 53
+   },
+   "robustness": {
+    "scenarios": [],
+    "passRatio": 0.575,
+    "ok": false
+   },
+   "overfitting": {
+    "flags": {
+     "oos_negative_while_is_positive": false,
+     "walkforward_inconsistent": false,
+     "single_coin_dominance": false,
+     "sample_too_small": false,
+     "extreme_drawdown": false,
+     "fee_fragile": true,
+     "parameter_cliff": true
+    },
+    "warnings": [
+     "fragiel t.o.v. fees/slippage — de edge zit te dicht tegen de kosten",
+     "parameter-klif: kleine drempelwijzigingen (-10%) laten de strategie instorten"
+    ]
+   },
+   "rejectionReasons": [
+    "fee-fragiel: slechts 57% robustness-scenario's positief"
+   ],
+   "perPair": [
+    {
+     "pair": "BTC-EUR",
+     "netPnl": -2.73,
+     "trades": 6,
+     "winratePct": 16.7
+    },
+    {
+     "pair": "ETH-EUR",
+     "netPnl": -0.74,
+     "trades": 2,
+     "winratePct": 50
+    },
+    {
+     "pair": "SOL-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "XRP-EUR",
+     "netPnl": 0.3,
+     "trades": 1,
+     "winratePct": 100
+    },
+    {
+     "pair": "WLD-EUR",
+     "netPnl": 8.95,
+     "trades": 2,
+     "winratePct": 100
+    },
+    {
+     "pair": "NEAR-EUR",
+     "netPnl": 4.06,
+     "trades": 1,
+     "winratePct": 100
+    },
+    {
+     "pair": "ALGO-EUR",
+     "netPnl": -0.16,
+     "trades": 1,
+     "winratePct": 0
+    },
+    {
+     "pair": "ICP-EUR",
+     "netPnl": -1.36,
+     "trades": 1,
+     "winratePct": 0
+    }
+   ],
+   "regimePerformance": {
+    "strong-uptrend": {
+     "trades": 9,
+     "netPnl": 9.59,
+     "winratePct": 55.6
+    },
+    "weak-uptrend": {
+     "trades": 25,
+     "netPnl": 10.47,
+     "winratePct": 60
+    },
+    "sideways": {
+     "trades": 14,
+     "netPnl": 10.89,
+     "winratePct": 64.3
+    },
+    "high-volatility": {
+     "trades": 3,
+     "netPnl": -0.54,
+     "winratePct": 33.3
+    },
+    "low-volatility": {
+     "trades": 1,
+     "netPnl": -1.01,
+     "winratePct": 0
+    },
+    "downtrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    }
+   },
+   "multiMarket": "market-specific",
+   "marketScope": "WLD-EUR",
+   "spec": {
+    "name": "baseline-rsi-dip",
+    "description": "Productie-strategie v1.0: RSI kruist onder 30 in een uptrend (boven EMA200) — koop de verse dip.",
+    "hypothesis": "In een uptrend verkopen panieke short-term-houders bij RSI<30; de gemiddelde koers keert terug richting trend.",
+    "expected_regime": "weak-uptrend / strong-uptrend",
+    "failure_conditions": "Zijwaartse of dalende markt; lage volatiliteit (beweging dekt de round-trip-kosten niet).",
+    "falsification": "OOS net-negatief óf winrate < 45% na kosten.",
+    "timeframe": "15m",
+    "direction": "long",
+    "entry_conditions": [
+     {
+      "kind": "rsi_cross_under",
+      "value": 30
+     },
+     {
+      "kind": "price_above_ema",
+      "period": 200
+     }
+    ],
+    "exit_conditions": [
+     {
+      "kind": "rsi_gt",
+      "value": 60
+     }
+    ],
+    "stop_loss_pct": 3,
+    "take_profit_pct": 4,
+    "max_hold_bars": 64,
+    "risk_pct": 0.5,
+    "pairs": [
+     "BTC-EUR",
+     "ETH-EUR",
+     "SOL-EUR",
+     "XRP-EUR",
+     "WLD-EUR",
+     "NEAR-EUR",
+     "ALGO-EUR",
+     "ICP-EUR"
+    ],
+    "expected_holding_time_min": 240,
+    "origin": "baseline"
+   }
+  },
+  {
+   "name": "baseline-pullback",
+   "origin": "baseline",
+   "hypothesis": "Trendvolgers kopen de eerste pullback naar het gemiddelde; vervolg van de trend is waarschijnlijker dan omkeer.",
+   "status": "REJECTED",
+   "score": 16,
+   "is": {
+    "trades": 930,
+    "wins": 369,
+    "winratePct": 39.7,
+    "grossPnl": 137.89,
+    "fees": 728.33,
+    "slippage": 145.56,
+    "netPnl": -735.72,
+    "netReturnPct": -73.57,
+    "expectancyEur": -0.79,
+    "profitFactor": 0.51,
+    "avgWin": 2.1,
+    "avgLoss": 2.69,
+    "maxDrawdownPct": 74.37,
+    "avgHoldMin": 454,
+    "maxWinStreak": 7,
+    "maxLossStreak": 27,
+    "exitReasons": {
+     "signaal": 539,
+     "max-hold": 155,
+     "stop-loss": 179,
+     "take-profit": 55,
+     "end-of-data": 2
+    }
+   },
+   "oos": {
+    "trades": 565,
+    "wins": 199,
+    "winratePct": 35.2,
+    "grossPnl": 22.21,
+    "fees": 454.46,
+    "slippage": 90.74,
+    "netPnl": -522.97,
+    "netReturnPct": -52.3,
+    "expectancyEur": -0.93,
+    "profitFactor": 0.4,
+    "avgWin": 1.77,
+    "avgLoss": 2.39,
+    "maxDrawdownPct": 52.3,
+    "avgHoldMin": 501,
+    "maxWinStreak": 8,
+    "maxLossStreak": 28,
+    "exitReasons": {
+     "max-hold": 109,
+     "signaal": 357,
+     "stop-loss": 89,
+     "take-profit": 9,
+     "end-of-data": 1
+    }
+   },
+   "walkforward": {
+    "windows": [
+     {
+      "label": "BTC:wf1",
+      "metrics": {
+       "trades": 66,
+       "wins": 17,
+       "winratePct": 25.8,
+       "grossPnl": -3.67,
+       "fees": 53.18,
+       "slippage": 10.61,
+       "netPnl": -67.5,
+       "netReturnPct": -6.75,
+       "expectancyEur": -1.02,
+       "profitFactor": 0.11,
+       "avgWin": 0.5,
+       "avgLoss": 1.55,
+       "maxDrawdownPct": 6.79,
+       "avgHoldMin": 477,
+       "maxWinStreak": 3,
+       "maxLossStreak": 9,
+       "exitReasons": {
+        "signaal": 46,
+        "max-hold": 17,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "BTC:wf2",
+      "metrics": {
+       "trades": 72,
+       "wins": 9,
+       "winratePct": 12.5,
+       "grossPnl": 4.55,
+       "fees": 58.12,
+       "slippage": 11.53,
+       "netPnl": -65.11,
+       "netReturnPct": -6.51,
+       "expectancyEur": -0.9,
+       "profitFactor": 0.11,
+       "avgWin": 0.88,
+       "avgLoss": 1.16,
+       "maxDrawdownPct": 6.53,
+       "avgHoldMin": 374,
+       "maxWinStreak": 3,
+       "maxLossStreak": 27,
+       "exitReasons": {
+        "signaal": 54,
+        "max-hold": 16,
+        "stop-loss": 1,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "BTC:wf3",
+      "metrics": {
+       "trades": 74,
+       "wins": 17,
+       "winratePct": 23,
+       "grossPnl": -3.8,
+       "fees": 59.4,
+       "slippage": 11.96,
+       "netPnl": -75.17,
+       "netReturnPct": -7.52,
+       "expectancyEur": -1.02,
+       "profitFactor": 0.08,
+       "avgWin": 0.41,
+       "avgLoss": 1.44,
+       "maxDrawdownPct": 7.51,
+       "avgHoldMin": 409,
+       "maxWinStreak": 3,
+       "maxLossStreak": 12,
+       "exitReasons": {
+        "signaal": 56,
+        "max-hold": 13,
+        "stop-loss": 5
+       }
+      }
+     },
+     {
+      "label": "BTC:wf4",
+      "metrics": {
+       "trades": 68,
+       "wins": 10,
+       "winratePct": 14.7,
+       "grossPnl": -3.9,
+       "fees": 54.67,
+       "slippage": 10.91,
+       "netPnl": -69.58,
+       "netReturnPct": -6.96,
+       "expectancyEur": -1.02,
+       "profitFactor": 0.1,
+       "avgWin": 0.82,
+       "avgLoss": 1.34,
+       "maxDrawdownPct": 7.01,
+       "avgHoldMin": 469,
+       "maxWinStreak": 3,
+       "maxLossStreak": 28,
+       "exitReasons": {
+        "max-hold": 17,
+        "signaal": 48,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "ETH:wf1",
+      "metrics": {
+       "trades": 51,
+       "wins": 20,
+       "winratePct": 39.2,
+       "grossPnl": -14.59,
+       "fees": 41.14,
+       "slippage": 8.24,
+       "netPnl": -64.03,
+       "netReturnPct": -6.4,
+       "expectancyEur": -1.26,
+       "profitFactor": 0.25,
+       "avgWin": 1.09,
+       "avgLoss": 2.77,
+       "maxDrawdownPct": 6.58,
+       "avgHoldMin": 470,
+       "maxWinStreak": 3,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "max-hold": 10,
+        "stop-loss": 9,
+        "signaal": 32
+       }
+      }
+     },
+     {
+      "label": "ETH:wf2",
+      "metrics": {
+       "trades": 53,
+       "wins": 14,
+       "winratePct": 26.4,
+       "grossPnl": 5.24,
+       "fees": 43.23,
+       "slippage": 8.54,
+       "netPnl": -46.46,
+       "netReturnPct": -4.65,
+       "expectancyEur": -0.88,
+       "profitFactor": 0.26,
+       "avgWin": 1.15,
+       "avgLoss": 1.6,
+       "maxDrawdownPct": 4.7,
+       "avgHoldMin": 451,
+       "maxWinStreak": 3,
+       "maxLossStreak": 12,
+       "exitReasons": {
+        "signaal": 37,
+        "max-hold": 12,
+        "stop-loss": 2,
+        "take-profit": 1,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "ETH:wf3",
+      "metrics": {
+       "trades": 66,
+       "wins": 27,
+       "winratePct": 40.9,
+       "grossPnl": 9.62,
+       "fees": 53.69,
+       "slippage": 10.72,
+       "netPnl": -54.83,
+       "netReturnPct": -5.48,
+       "expectancyEur": -0.83,
+       "profitFactor": 0.3,
+       "avgWin": 0.89,
+       "avgLoss": 2.02,
+       "maxDrawdownPct": 5.55,
+       "avgHoldMin": 452,
+       "maxWinStreak": 7,
+       "maxLossStreak": 10,
+       "exitReasons": {
+        "signaal": 47,
+        "max-hold": 12,
+        "stop-loss": 7
+       }
+      }
+     },
+     {
+      "label": "ETH:wf4",
+      "metrics": {
+       "trades": 69,
+       "wins": 16,
+       "winratePct": 23.2,
+       "grossPnl": 14.26,
+       "fees": 56.05,
+       "slippage": 11.14,
+       "netPnl": -53.06,
+       "netReturnPct": -5.31,
+       "expectancyEur": -0.77,
+       "profitFactor": 0.23,
+       "avgWin": 1.01,
+       "avgLoss": 1.31,
+       "maxDrawdownPct": 5.35,
+       "avgHoldMin": 452,
+       "maxWinStreak": 4,
+       "maxLossStreak": 19,
+       "exitReasons": {
+        "max-hold": 14,
+        "signaal": 52,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "SOL:wf1",
+      "metrics": {
+       "trades": 50,
+       "wins": 17,
+       "winratePct": 34,
+       "grossPnl": -29.57,
+       "fees": 39.82,
+       "slippage": 8.02,
+       "netPnl": -77.34,
+       "netReturnPct": -7.73,
+       "expectancyEur": -1.55,
+       "profitFactor": 0.13,
+       "avgWin": 0.68,
+       "avgLoss": 2.69,
+       "maxDrawdownPct": 7.73,
+       "avgHoldMin": 489,
+       "maxWinStreak": 3,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "signaal": 31,
+        "stop-loss": 9,
+        "max-hold": 10
+       }
+      }
+     },
+     {
+      "label": "SOL:wf2",
+      "metrics": {
+       "trades": 51,
+       "wins": 18,
+       "winratePct": 35.3,
+       "grossPnl": 11.56,
+       "fees": 41.69,
+       "slippage": 8.22,
+       "netPnl": -38.29,
+       "netReturnPct": -3.83,
+       "expectancyEur": -0.75,
+       "profitFactor": 0.37,
+       "avgWin": 1.27,
+       "avgLoss": 1.85,
+       "maxDrawdownPct": 4.36,
+       "avgHoldMin": 479,
+       "maxWinStreak": 4,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "signaal": 35,
+        "max-hold": 8,
+        "stop-loss": 6,
+        "take-profit": 1,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "SOL:wf3",
+      "metrics": {
+       "trades": 58,
+       "wins": 33,
+       "winratePct": 56.9,
+       "grossPnl": 38.11,
+       "fees": 48.12,
+       "slippage": 9.69,
+       "netPnl": -19.67,
+       "netReturnPct": -1.97,
+       "expectancyEur": -0.34,
+       "profitFactor": 0.68,
+       "avgWin": 1.28,
+       "avgLoss": 2.47,
+       "maxDrawdownPct": 2.48,
+       "avgHoldMin": 479,
+       "maxWinStreak": 5,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 42,
+        "max-hold": 10,
+        "stop-loss": 5,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "SOL:wf4",
+      "metrics": {
+       "trades": 62,
+       "wins": 18,
+       "winratePct": 29,
+       "grossPnl": 0.52,
+       "fees": 50.33,
+       "slippage": 10,
+       "netPnl": -59.88,
+       "netReturnPct": -5.99,
+       "expectancyEur": -0.97,
+       "profitFactor": 0.31,
+       "avgWin": 1.48,
+       "avgLoss": 1.97,
+       "maxDrawdownPct": 5.99,
+       "avgHoldMin": 454,
+       "maxWinStreak": 3,
+       "maxLossStreak": 13,
+       "exitReasons": {
+        "signaal": 41,
+        "max-hold": 11,
+        "stop-loss": 9,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "XRP:wf1",
+      "metrics": {
+       "trades": 39,
+       "wins": 9,
+       "winratePct": 23.1,
+       "grossPnl": -21.47,
+       "fees": 31.31,
+       "slippage": 6.27,
+       "netPnl": -59.04,
+       "netReturnPct": -5.9,
+       "expectancyEur": -1.51,
+       "profitFactor": 0.16,
+       "avgWin": 1.22,
+       "avgLoss": 2.33,
+       "maxDrawdownPct": 5.97,
+       "avgHoldMin": 579,
+       "maxWinStreak": 5,
+       "maxLossStreak": 13,
+       "exitReasons": {
+        "signaal": 21,
+        "stop-loss": 4,
+        "max-hold": 14
+       }
+      }
+     },
+     {
+      "label": "XRP:wf2",
+      "metrics": {
+       "trades": 50,
+       "wins": 9,
+       "winratePct": 18,
+       "grossPnl": 3.34,
+       "fees": 40.75,
+       "slippage": 8.01,
+       "netPnl": -45.41,
+       "netReturnPct": -4.54,
+       "expectancyEur": -0.91,
+       "profitFactor": 0.23,
+       "avgWin": 1.47,
+       "avgLoss": 1.43,
+       "maxDrawdownPct": 4.61,
+       "avgHoldMin": 477,
+       "maxWinStreak": 3,
+       "maxLossStreak": 12,
+       "exitReasons": {
+        "signaal": 36,
+        "max-hold": 10,
+        "stop-loss": 3,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "XRP:wf3",
+      "metrics": {
+       "trades": 46,
+       "wins": 16,
+       "winratePct": 34.8,
+       "grossPnl": -10.6,
+       "fees": 37.25,
+       "slippage": 7.42,
+       "netPnl": -55.22,
+       "netReturnPct": -5.52,
+       "expectancyEur": -1.2,
+       "profitFactor": 0.18,
+       "avgWin": 0.74,
+       "avgLoss": 2.23,
+       "maxDrawdownPct": 5.74,
+       "avgHoldMin": 555,
+       "maxWinStreak": 4,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "max-hold": 12,
+        "signaal": 29,
+        "stop-loss": 5
+       }
+      }
+     },
+     {
+      "label": "XRP:wf4",
+      "metrics": {
+       "trades": 37,
+       "wins": 10,
+       "winratePct": 27,
+       "grossPnl": -18.61,
+       "fees": 29.93,
+       "slippage": 5.97,
+       "netPnl": -54.58,
+       "netReturnPct": -5.46,
+       "expectancyEur": -1.48,
+       "profitFactor": 0.28,
+       "avgWin": 2.13,
+       "avgLoss": 2.81,
+       "maxDrawdownPct": 5.46,
+       "avgHoldMin": 564,
+       "maxWinStreak": 4,
+       "maxLossStreak": 15,
+       "exitReasons": {
+        "max-hold": 10,
+        "signaal": 18,
+        "take-profit": 2,
+        "stop-loss": 7
+       }
+      }
+     },
+     {
+      "label": "WLD:wf1",
+      "metrics": {
+       "trades": 32,
+       "wins": 17,
+       "winratePct": 53.1,
+       "grossPnl": -5.68,
+       "fees": 26.13,
+       "slippage": 5.2,
+       "netPnl": -37.04,
+       "netReturnPct": -3.7,
+       "expectancyEur": -1.16,
+       "profitFactor": 0.51,
+       "avgWin": 2.29,
+       "avgLoss": 5.07,
+       "maxDrawdownPct": 3.96,
+       "avgHoldMin": 404,
+       "maxWinStreak": 4,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 16,
+        "stop-loss": 12,
+        "max-hold": 2,
+        "take-profit": 2
+       }
+      }
+     },
+     {
+      "label": "WLD:wf2",
+      "metrics": {
+       "trades": 67,
+       "wins": 31,
+       "winratePct": 46.3,
+       "grossPnl": 10.83,
+       "fees": 53.97,
+       "slippage": 10.65,
+       "netPnl": -53.77,
+       "netReturnPct": -5.38,
+       "expectancyEur": -0.8,
+       "profitFactor": 0.71,
+       "avgWin": 4.32,
+       "avgLoss": 5.22,
+       "maxDrawdownPct": 7.33,
+       "avgHoldMin": 256,
+       "maxWinStreak": 4,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 13,
+        "max-hold": 4,
+        "stop-loss": 31,
+        "take-profit": 18,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf3",
+      "metrics": {
+       "trades": 29,
+       "wins": 15,
+       "winratePct": 51.7,
+       "grossPnl": 9.45,
+       "fees": 24.17,
+       "slippage": 4.84,
+       "netPnl": -19.57,
+       "netReturnPct": -1.96,
+       "expectancyEur": -0.67,
+       "profitFactor": 0.74,
+       "avgWin": 3.73,
+       "avgLoss": 5.39,
+       "maxDrawdownPct": 3.69,
+       "avgHoldMin": 445,
+       "maxWinStreak": 4,
+       "maxLossStreak": 4,
+       "exitReasons": {
+        "stop-loss": 12,
+        "take-profit": 5,
+        "signaal": 10,
+        "max-hold": 2
+       }
+      }
+     },
+     {
+      "label": "WLD:wf4",
+      "metrics": {
+       "trades": 46,
+       "wins": 27,
+       "winratePct": 58.7,
+       "grossPnl": 31.82,
+       "fees": 37.83,
+       "slippage": 7.59,
+       "netPnl": -13.65,
+       "netReturnPct": -1.37,
+       "expectancyEur": -0.3,
+       "profitFactor": 0.86,
+       "avgWin": 3.07,
+       "avgLoss": 5.09,
+       "maxDrawdownPct": 3.55,
+       "avgHoldMin": 433,
+       "maxWinStreak": 8,
+       "maxLossStreak": 4,
+       "exitReasons": {
+        "signaal": 23,
+        "stop-loss": 14,
+        "max-hold": 5,
+        "take-profit": 4
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf1",
+      "metrics": {
+       "trades": 37,
+       "wins": 16,
+       "winratePct": 43.2,
+       "grossPnl": -10.05,
+       "fees": 29.99,
+       "slippage": 5.95,
+       "netPnl": -46.13,
+       "netReturnPct": -4.61,
+       "expectancyEur": -1.25,
+       "profitFactor": 0.34,
+       "avgWin": 1.5,
+       "avgLoss": 3.34,
+       "maxDrawdownPct": 4.89,
+       "avgHoldMin": 635,
+       "maxWinStreak": 3,
+       "maxLossStreak": 4,
+       "exitReasons": {
+        "max-hold": 12,
+        "stop-loss": 8,
+        "signaal": 17
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf2",
+      "metrics": {
+       "trades": 41,
+       "wins": 22,
+       "winratePct": 53.7,
+       "grossPnl": 28.76,
+       "fees": 34.14,
+       "slippage": 6.84,
+       "netPnl": -12.33,
+       "netReturnPct": -1.23,
+       "expectancyEur": -0.3,
+       "profitFactor": 0.88,
+       "avgWin": 4.08,
+       "avgLoss": 5.37,
+       "maxDrawdownPct": 3.41,
+       "avgHoldMin": 327,
+       "maxWinStreak": 5,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 13,
+        "stop-loss": 16,
+        "max-hold": 2,
+        "take-profit": 10
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf3",
+      "metrics": {
+       "trades": 30,
+       "wins": 14,
+       "winratePct": 46.7,
+       "grossPnl": -10.74,
+       "fees": 24.54,
+       "slippage": 4.88,
+       "netPnl": -40.24,
+       "netReturnPct": -4.02,
+       "expectancyEur": -1.34,
+       "profitFactor": 0.48,
+       "avgWin": 2.66,
+       "avgLoss": 4.84,
+       "maxDrawdownPct": 4.53,
+       "avgHoldMin": 435,
+       "maxWinStreak": 4,
+       "maxLossStreak": 5,
+       "exitReasons": {
+        "signaal": 14,
+        "stop-loss": 12,
+        "max-hold": 3,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf4",
+      "metrics": {
+       "trades": 50,
+       "wins": 25,
+       "winratePct": 50,
+       "grossPnl": -0.77,
+       "fees": 40.71,
+       "slippage": 7.98,
+       "netPnl": -49.49,
+       "netReturnPct": -4.95,
+       "expectancyEur": -0.99,
+       "profitFactor": 0.56,
+       "avgWin": 2.49,
+       "avgLoss": 4.46,
+       "maxDrawdownPct": 5.36,
+       "avgHoldMin": 428,
+       "maxWinStreak": 8,
+       "maxLossStreak": 4,
+       "exitReasons": {
+        "signaal": 23,
+        "max-hold": 8,
+        "stop-loss": 16,
+        "take-profit": 2,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf1",
+      "metrics": {
+       "trades": 31,
+       "wins": 17,
+       "winratePct": 54.8,
+       "grossPnl": 21.49,
+       "fees": 25.61,
+       "slippage": 4.97,
+       "netPnl": -9.06,
+       "netReturnPct": -0.91,
+       "expectancyEur": -0.29,
+       "profitFactor": 0.86,
+       "avgWin": 3.27,
+       "avgLoss": 4.61,
+       "maxDrawdownPct": 2.44,
+       "avgHoldMin": 430,
+       "maxWinStreak": 5,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "max-hold": 2,
+        "stop-loss": 10,
+        "signaal": 15,
+        "take-profit": 3,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf2",
+      "metrics": {
+       "trades": 26,
+       "wins": 17,
+       "winratePct": 65.4,
+       "grossPnl": 36.31,
+       "fees": 21.82,
+       "slippage": 4.39,
+       "netPnl": 10.09,
+       "netReturnPct": 1.01,
+       "expectancyEur": 0.39,
+       "profitFactor": 1.21,
+       "avgWin": 3.47,
+       "avgLoss": 5.43,
+       "maxDrawdownPct": 2.27,
+       "avgHoldMin": 482,
+       "maxWinStreak": 7,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 14,
+        "stop-loss": 8,
+        "max-hold": 1,
+        "take-profit": 3
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf3",
+      "metrics": {
+       "trades": 36,
+       "wins": 19,
+       "winratePct": 52.8,
+       "grossPnl": 21.61,
+       "fees": 30.15,
+       "slippage": 6.08,
+       "netPnl": -14.57,
+       "netReturnPct": -1.46,
+       "expectancyEur": -0.4,
+       "profitFactor": 0.76,
+       "avgWin": 2.37,
+       "avgLoss": 3.5,
+       "maxDrawdownPct": 3.04,
+       "avgHoldMin": 622,
+       "maxWinStreak": 6,
+       "maxLossStreak": 4,
+       "exitReasons": {
+        "signaal": 24,
+        "stop-loss": 8,
+        "take-profit": 2,
+        "max-hold": 2
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf4",
+      "metrics": {
+       "trades": 30,
+       "wins": 17,
+       "winratePct": 56.7,
+       "grossPnl": 4.82,
+       "fees": 24.55,
+       "slippage": 4.88,
+       "netPnl": -24.64,
+       "netReturnPct": -2.46,
+       "expectancyEur": -0.82,
+       "profitFactor": 0.58,
+       "avgWin": 1.99,
+       "avgLoss": 4.5,
+       "maxDrawdownPct": 4.27,
+       "avgHoldMin": 644,
+       "maxWinStreak": 7,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 17,
+        "max-hold": 5,
+        "stop-loss": 8
+       }
+      }
+     },
+     {
+      "label": "ICP:wf1",
+      "metrics": {
+       "trades": 29,
+       "wins": 15,
+       "winratePct": 51.7,
+       "grossPnl": -10.92,
+       "fees": 23.7,
+       "slippage": 4.72,
+       "netPnl": -39.32,
+       "netReturnPct": -3.93,
+       "expectancyEur": -1.36,
+       "profitFactor": 0.33,
+       "avgWin": 1.3,
+       "avgLoss": 4.2,
+       "maxDrawdownPct": 4.13,
+       "avgHoldMin": 618,
+       "maxWinStreak": 4,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "max-hold": 5,
+        "stop-loss": 7,
+        "signaal": 17
+       }
+      }
+     },
+     {
+      "label": "ICP:wf2",
+      "metrics": {
+       "trades": 27,
+       "wins": 19,
+       "winratePct": 70.4,
+       "grossPnl": 60.85,
+       "fees": 22.89,
+       "slippage": 4.59,
+       "netPnl": 33.34,
+       "netReturnPct": 3.33,
+       "expectancyEur": 1.23,
+       "profitFactor": 1.78,
+       "avgWin": 4.01,
+       "avgLoss": 5.36,
+       "maxDrawdownPct": 2.67,
+       "avgHoldMin": 372,
+       "maxWinStreak": 6,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 11,
+        "take-profit": 7,
+        "stop-loss": 7,
+        "max-hold": 2
+       }
+      }
+     },
+     {
+      "label": "ICP:wf3",
+      "metrics": {
+       "trades": 35,
+       "wins": 19,
+       "winratePct": 54.3,
+       "grossPnl": 2.01,
+       "fees": 28.71,
+       "slippage": 5.67,
+       "netPnl": -32.42,
+       "netReturnPct": -3.24,
+       "expectancyEur": -0.93,
+       "profitFactor": 0.48,
+       "avgWin": 1.6,
+       "avgLoss": 3.93,
+       "maxDrawdownPct": 4.4,
+       "avgHoldMin": 609,
+       "maxWinStreak": 7,
+       "maxLossStreak": 4,
+       "exitReasons": {
+        "signaal": 21,
+        "stop-loss": 6,
+        "max-hold": 8
+       }
+      }
+     },
+     {
+      "label": "ICP:wf4",
+      "metrics": {
+       "trades": 40,
+       "wins": 18,
+       "winratePct": 45,
+       "grossPnl": -3.19,
+       "fees": 32.54,
+       "slippage": 6.47,
+       "netPnl": -42.24,
+       "netReturnPct": -4.22,
+       "expectancyEur": -1.06,
+       "profitFactor": 0.5,
+       "avgWin": 2.32,
+       "avgLoss": 3.82,
+       "maxDrawdownPct": 4.35,
+       "avgHoldMin": 659,
+       "maxWinStreak": 4,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 23,
+        "stop-loss": 12,
+        "max-hold": 5
+       }
+      }
+     }
+    ],
+    "positiveWindows": 2,
+    "totalWindows": 32,
+    "consistencyPct": 6
+   },
+   "robustness": {
+    "scenarios": [],
+    "passRatio": 0,
+    "ok": false
+   },
+   "overfitting": {
+    "flags": {
+     "oos_negative_while_is_positive": false,
+     "walkforward_inconsistent": true,
+     "single_coin_dominance": false,
+     "sample_too_small": false,
+     "extreme_drawdown": true,
+     "fee_fragile": true,
+     "parameter_cliff": false
+    },
+    "warnings": [
+     "walk-forward inconsistent (2/32 vensters positief)",
+     "extreme drawdown OOS (52.3%)",
+     "fragiel t.o.v. fees/slippage — de edge zit te dicht tegen de kosten"
+    ]
+   },
+   "rejectionReasons": [
+    "out-of-sample netto negatief (-522.97 EUR)",
+    "fee-fragiel: slechts 0% robustness-scenario's positief"
+   ],
+   "perPair": [
+    {
+     "pair": "BTC-EUR",
+     "netPnl": -103.42,
+     "trades": 103,
+     "winratePct": 14.6
+    },
+    {
+     "pair": "ETH-EUR",
+     "netPnl": -78.03,
+     "trades": 99,
+     "winratePct": 25.3
+    },
+    {
+     "pair": "SOL-EUR",
+     "netPnl": -71.46,
+     "trades": 86,
+     "winratePct": 36
+    },
+    {
+     "pair": "XRP-EUR",
+     "netPnl": -75.14,
+     "trades": 58,
+     "winratePct": 25.9
+    },
+    {
+     "pair": "WLD-EUR",
+     "netPnl": -32.72,
+     "trades": 60,
+     "winratePct": 56.7
+    },
+    {
+     "pair": "NEAR-EUR",
+     "netPnl": -64.57,
+     "trades": 61,
+     "winratePct": 50.8
+    },
+    {
+     "pair": "ALGO-EUR",
+     "netPnl": -47.43,
+     "trades": 42,
+     "winratePct": 47.6
+    },
+    {
+     "pair": "ICP-EUR",
+     "netPnl": -50.2,
+     "trades": 56,
+     "winratePct": 50
+    }
+   ],
+   "regimePerformance": {
+    "strong-uptrend": {
+     "trades": 126,
+     "netPnl": -122.55,
+     "winratePct": 42.9
+    },
+    "weak-uptrend": {
+     "trades": 564,
+     "netPnl": -397.21,
+     "winratePct": 45.2
+    },
+    "sideways": {
+     "trades": 631,
+     "netPnl": -573.95,
+     "winratePct": 34.7
+    },
+    "high-volatility": {
+     "trades": 86,
+     "netPnl": -80.65,
+     "winratePct": 32.6
+    },
+    "low-volatility": {
+     "trades": 88,
+     "netPnl": -84.33,
+     "winratePct": 13.6
+    },
+    "downtrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    }
+   },
+   "multiMarket": "market-specific",
+   "marketScope": "WLD-EUR",
+   "spec": {
+    "name": "baseline-pullback",
+    "description": "Pullback in een duidelijke uptrend: EMA50 boven EMA200, koers zakt terug naar de EMA50-band.",
+    "hypothesis": "Trendvolgers kopen de eerste pullback naar het gemiddelde; vervolg van de trend is waarschijnlijker dan omkeer.",
+    "expected_regime": "weak-uptrend (rustige, volhardende trend)",
+    "failure_conditions": "Chop zonder trendvel; eerste dip ná een toppositie (trendbreuk).",
+    "falsification": "OOS net-negatief of expectancy < −0,10% per trade na kosten.",
+    "timeframe": "15m",
+    "direction": "long",
+    "entry_conditions": [
+     {
+      "kind": "ema_above_ema",
+      "period": 50,
+      "period2": 200
+     },
+     {
+      "kind": "dist_ema50_between",
+      "value": -1.5
+     },
+     {
+      "kind": "mom_gt",
+      "value": -0.5,
+      "bars": 8
+     }
+    ],
+    "exit_conditions": [
+     {
+      "kind": "rsi_gt",
+      "value": 65
+     }
+    ],
+    "stop_loss_pct": 3,
+    "take_profit_pct": 4,
+    "max_hold_bars": 64,
+    "risk_pct": 0.5,
+    "pairs": [
+     "BTC-EUR",
+     "ETH-EUR",
+     "SOL-EUR",
+     "XRP-EUR",
+     "WLD-EUR",
+     "NEAR-EUR",
+     "ALGO-EUR",
+     "ICP-EUR"
+    ],
+    "expected_holding_time_min": 360,
+    "origin": "baseline"
+   }
+  },
+  {
+   "name": "baseline-breakout",
+   "origin": "baseline",
+   "hypothesis": "Nieuwe hoogtes met volume trekken momentum-handelaren aan; breakout vervolgt intraday.",
+   "status": "REJECTED",
+   "score": 15,
+   "is": {
+    "trades": 577,
+    "wins": 115,
+    "winratePct": 19.9,
+    "grossPnl": -53.1,
+    "fees": 461.47,
+    "slippage": 91.58,
+    "netPnl": -606.36,
+    "netReturnPct": -60.64,
+    "expectancyEur": -1.05,
+    "profitFactor": 0.39,
+    "avgWin": 3.3,
+    "avgLoss": 2.14,
+    "maxDrawdownPct": 60.64,
+    "avgHoldMin": 132,
+    "maxWinStreak": 4,
+    "maxLossStreak": 21,
+    "exitReasons": {
+     "signaal": 505,
+     "max-hold": 2,
+     "end-of-data": 4,
+     "take-profit": 38,
+     "stop-loss": 28
+    }
+   },
+   "oos": {
+    "trades": 348,
+    "wins": 71,
+    "winratePct": 20.4,
+    "grossPnl": 9.8,
+    "fees": 283.75,
+    "slippage": 56.74,
+    "netPnl": -330.69,
+    "netReturnPct": -33.07,
+    "expectancyEur": -0.95,
+    "profitFactor": 0.42,
+    "avgWin": 3.39,
+    "avgLoss": 2.06,
+    "maxDrawdownPct": 33.79,
+    "avgHoldMin": 132,
+    "maxWinStreak": 4,
+    "maxLossStreak": 24,
+    "exitReasons": {
+     "signaal": 308,
+     "take-profit": 23,
+     "stop-loss": 17
+    }
+   },
+   "walkforward": {
+    "windows": [
+     {
+      "label": "BTC:wf1",
+      "metrics": {
+       "trades": 29,
+       "wins": 3,
+       "winratePct": 10.3,
+       "grossPnl": -4.35,
+       "fees": 23.71,
+       "slippage": 4.69,
+       "netPnl": -32.81,
+       "netReturnPct": -3.28,
+       "expectancyEur": -1.13,
+       "profitFactor": 0.06,
+       "avgWin": 0.68,
+       "avgLoss": 1.34,
+       "maxDrawdownPct": 3.25,
+       "avgHoldMin": 131,
+       "maxWinStreak": 1,
+       "maxLossStreak": 10,
+       "exitReasons": {
+        "signaal": 29
+       }
+      }
+     },
+     {
+      "label": "BTC:wf2",
+      "metrics": {
+       "trades": 27,
+       "wins": 3,
+       "winratePct": 11.1,
+       "grossPnl": -1.81,
+       "fees": 22.22,
+       "slippage": 4.44,
+       "netPnl": -28.46,
+       "netReturnPct": -2.85,
+       "expectancyEur": -1.05,
+       "profitFactor": 0.13,
+       "avgWin": 1.45,
+       "avgLoss": 1.37,
+       "maxDrawdownPct": 2.94,
+       "avgHoldMin": 151,
+       "maxWinStreak": 1,
+       "maxLossStreak": 11,
+       "exitReasons": {
+        "signaal": 26,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "BTC:wf3",
+      "metrics": {
+       "trades": 38,
+       "wins": 2,
+       "winratePct": 5.3,
+       "grossPnl": -5.66,
+       "fees": 30.96,
+       "slippage": 6.16,
+       "netPnl": -42.82,
+       "netReturnPct": -4.28,
+       "expectancyEur": -1.13,
+       "profitFactor": 0.06,
+       "avgWin": 1.34,
+       "avgLoss": 1.26,
+       "maxDrawdownPct": 4.28,
+       "avgHoldMin": 137,
+       "maxWinStreak": 1,
+       "maxLossStreak": 13,
+       "exitReasons": {
+        "signaal": 38
+       }
+      }
+     },
+     {
+      "label": "BTC:wf4",
+      "metrics": {
+       "trades": 33,
+       "wins": 6,
+       "winratePct": 18.2,
+       "grossPnl": 9.41,
+       "fees": 27.17,
+       "slippage": 5.4,
+       "netPnl": -23.17,
+       "netReturnPct": -2.32,
+       "expectancyEur": -0.7,
+       "profitFactor": 0.43,
+       "avgWin": 2.89,
+       "avgLoss": 1.5,
+       "maxDrawdownPct": 2.32,
+       "avgHoldMin": 135,
+       "maxWinStreak": 3,
+       "maxLossStreak": 11,
+       "exitReasons": {
+        "signaal": 32,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "ETH:wf1",
+      "metrics": {
+       "trades": 26,
+       "wins": 6,
+       "winratePct": 23.1,
+       "grossPnl": 8.95,
+       "fees": 21.5,
+       "slippage": 4.33,
+       "netPnl": -16.81,
+       "netReturnPct": -1.68,
+       "expectancyEur": -0.65,
+       "profitFactor": 0.4,
+       "avgWin": 1.9,
+       "avgLoss": 1.41,
+       "maxDrawdownPct": 1.75,
+       "avgHoldMin": 156,
+       "maxWinStreak": 2,
+       "maxLossStreak": 9,
+       "exitReasons": {
+        "signaal": 26
+       }
+      }
+     },
+     {
+      "label": "ETH:wf2",
+      "metrics": {
+       "trades": 19,
+       "wins": 2,
+       "winratePct": 10.5,
+       "grossPnl": -3.33,
+       "fees": 15.65,
+       "slippage": 3.12,
+       "netPnl": -22.09,
+       "netReturnPct": -2.21,
+       "expectancyEur": -1.16,
+       "profitFactor": 0.05,
+       "avgWin": 0.62,
+       "avgLoss": 1.37,
+       "maxDrawdownPct": 2.21,
+       "avgHoldMin": 142,
+       "maxWinStreak": 1,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "signaal": 19
+       }
+      }
+     },
+     {
+      "label": "ETH:wf3",
+      "metrics": {
+       "trades": 38,
+       "wins": 6,
+       "winratePct": 15.8,
+       "grossPnl": 3.89,
+       "fees": 31.19,
+       "slippage": 6.22,
+       "netPnl": -33.51,
+       "netReturnPct": -3.35,
+       "expectancyEur": -0.88,
+       "profitFactor": 0.29,
+       "avgWin": 2.28,
+       "avgLoss": 1.47,
+       "maxDrawdownPct": 3.77,
+       "avgHoldMin": 148,
+       "maxWinStreak": 1,
+       "maxLossStreak": 10,
+       "exitReasons": {
+        "signaal": 37,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "ETH:wf4",
+      "metrics": {
+       "trades": 29,
+       "wins": 6,
+       "winratePct": 20.7,
+       "grossPnl": 2.36,
+       "fees": 23.89,
+       "slippage": 4.76,
+       "netPnl": -26.31,
+       "netReturnPct": -2.63,
+       "expectancyEur": -0.91,
+       "profitFactor": 0.46,
+       "avgWin": 3.75,
+       "avgLoss": 2.12,
+       "maxDrawdownPct": 2.63,
+       "avgHoldMin": 123,
+       "maxWinStreak": 2,
+       "maxLossStreak": 8,
+       "exitReasons": {
+        "signaal": 25,
+        "take-profit": 2,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "SOL:wf1",
+      "metrics": {
+       "trades": 27,
+       "wins": 2,
+       "winratePct": 7.4,
+       "grossPnl": -18.19,
+       "fees": 21.92,
+       "slippage": 4.36,
+       "netPnl": -44.53,
+       "netReturnPct": -4.45,
+       "expectancyEur": -1.65,
+       "profitFactor": 0.08,
+       "avgWin": 1.95,
+       "avgLoss": 1.94,
+       "maxDrawdownPct": 4.45,
+       "avgHoldMin": 109,
+       "maxWinStreak": 1,
+       "maxLossStreak": 10,
+       "exitReasons": {
+        "signaal": 27
+       }
+      }
+     },
+     {
+      "label": "SOL:wf2",
+      "metrics": {
+       "trades": 23,
+       "wins": 2,
+       "winratePct": 8.7,
+       "grossPnl": -2.9,
+       "fees": 18.94,
+       "slippage": 3.78,
+       "netPnl": -25.65,
+       "netReturnPct": -2.57,
+       "expectancyEur": -1.12,
+       "profitFactor": 0.16,
+       "avgWin": 2.46,
+       "avgLoss": 1.46,
+       "maxDrawdownPct": 2.67,
+       "avgHoldMin": 152,
+       "maxWinStreak": 1,
+       "maxLossStreak": 11,
+       "exitReasons": {
+        "signaal": 23
+       }
+      }
+     },
+     {
+      "label": "SOL:wf3",
+      "metrics": {
+       "trades": 34,
+       "wins": 6,
+       "winratePct": 17.6,
+       "grossPnl": -6.92,
+       "fees": 27.9,
+       "slippage": 5.57,
+       "netPnl": -40.43,
+       "netReturnPct": -4.04,
+       "expectancyEur": -1.19,
+       "profitFactor": 0.29,
+       "avgWin": 2.7,
+       "avgLoss": 2.02,
+       "maxDrawdownPct": 4.66,
+       "avgHoldMin": 140,
+       "maxWinStreak": 2,
+       "maxLossStreak": 18,
+       "exitReasons": {
+        "signaal": 33,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "SOL:wf4",
+      "metrics": {
+       "trades": 29,
+       "wins": 8,
+       "winratePct": 27.6,
+       "grossPnl": 11.33,
+       "fees": 23.94,
+       "slippage": 4.78,
+       "netPnl": -17.39,
+       "netReturnPct": -1.74,
+       "expectancyEur": -0.6,
+       "profitFactor": 0.52,
+       "avgWin": 2.37,
+       "avgLoss": 1.73,
+       "maxDrawdownPct": 2.12,
+       "avgHoldMin": 143,
+       "maxWinStreak": 3,
+       "maxLossStreak": 5,
+       "exitReasons": {
+        "signaal": 27,
+        "take-profit": 1,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "XRP:wf1",
+      "metrics": {
+       "trades": 26,
+       "wins": 3,
+       "winratePct": 11.5,
+       "grossPnl": -20.27,
+       "fees": 21.07,
+       "slippage": 4.17,
+       "netPnl": -45.58,
+       "netReturnPct": -4.56,
+       "expectancyEur": -1.75,
+       "profitFactor": 0.01,
+       "avgWin": 0.11,
+       "avgLoss": 2,
+       "maxDrawdownPct": 4.56,
+       "avgHoldMin": 120,
+       "maxWinStreak": 2,
+       "maxLossStreak": 10,
+       "exitReasons": {
+        "signaal": 26
+       }
+      }
+     },
+     {
+      "label": "XRP:wf2",
+      "metrics": {
+       "trades": 22,
+       "wins": 5,
+       "winratePct": 22.7,
+       "grossPnl": 6.28,
+       "fees": 18.29,
+       "slippage": 3.72,
+       "netPnl": -15.67,
+       "netReturnPct": -1.57,
+       "expectancyEur": -0.71,
+       "profitFactor": 0.51,
+       "avgWin": 3.24,
+       "avgLoss": 1.88,
+       "maxDrawdownPct": 2.07,
+       "avgHoldMin": 149,
+       "maxWinStreak": 1,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "signaal": 20,
+        "take-profit": 2
+       }
+      }
+     },
+     {
+      "label": "XRP:wf3",
+      "metrics": {
+       "trades": 30,
+       "wins": 8,
+       "winratePct": 26.7,
+       "grossPnl": 1.55,
+       "fees": 24.59,
+       "slippage": 4.87,
+       "netPnl": -28,
+       "netReturnPct": -2.8,
+       "expectancyEur": -0.93,
+       "profitFactor": 0.24,
+       "avgWin": 1.13,
+       "avgLoss": 1.68,
+       "maxDrawdownPct": 3.45,
+       "avgHoldMin": 166,
+       "maxWinStreak": 2,
+       "maxLossStreak": 9,
+       "exitReasons": {
+        "signaal": 29,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "XRP:wf4",
+      "metrics": {
+       "trades": 28,
+       "wins": 10,
+       "winratePct": 35.7,
+       "grossPnl": 27.5,
+       "fees": 23.44,
+       "slippage": 4.76,
+       "netPnl": -0.6,
+       "netReturnPct": -0.06,
+       "expectancyEur": -0.02,
+       "profitFactor": 0.99,
+       "avgWin": 4.98,
+       "avgLoss": 2.8,
+       "maxDrawdownPct": 2.57,
+       "avgHoldMin": 118,
+       "maxWinStreak": 4,
+       "maxLossStreak": 8,
+       "exitReasons": {
+        "signaal": 18,
+        "take-profit": 6,
+        "stop-loss": 4
+       }
+      }
+     },
+     {
+      "label": "WLD:wf1",
+      "metrics": {
+       "trades": 23,
+       "wins": 1,
+       "winratePct": 4.3,
+       "grossPnl": -30.14,
+       "fees": 18.62,
+       "slippage": 3.69,
+       "netPnl": -52.46,
+       "netReturnPct": -5.25,
+       "expectancyEur": -2.28,
+       "profitFactor": 0.12,
+       "avgWin": 7.27,
+       "avgLoss": 2.72,
+       "maxDrawdownPct": 5.25,
+       "avgHoldMin": 110,
+       "maxWinStreak": 1,
+       "maxLossStreak": 17,
+       "exitReasons": {
+        "stop-loss": 2,
+        "signaal": 20,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf2",
+      "metrics": {
+       "trades": 43,
+       "wins": 14,
+       "winratePct": 32.6,
+       "grossPnl": 13.66,
+       "fees": 35.17,
+       "slippage": 7.06,
+       "netPnl": -28.54,
+       "netReturnPct": -2.85,
+       "expectancyEur": -0.66,
+       "profitFactor": 0.73,
+       "avgWin": 5.63,
+       "avgLoss": 3.7,
+       "maxDrawdownPct": 4.73,
+       "avgHoldMin": 97,
+       "maxWinStreak": 2,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 21,
+        "stop-loss": 12,
+        "take-profit": 10
+       }
+      }
+     },
+     {
+      "label": "WLD:wf3",
+      "metrics": {
+       "trades": 22,
+       "wins": 4,
+       "winratePct": 18.2,
+       "grossPnl": -15.49,
+       "fees": 18.07,
+       "slippage": 3.6,
+       "netPnl": -37.16,
+       "netReturnPct": -3.72,
+       "expectancyEur": -1.69,
+       "profitFactor": 0.3,
+       "avgWin": 4,
+       "avgLoss": 2.95,
+       "maxDrawdownPct": 4.94,
+       "avgHoldMin": 113,
+       "maxWinStreak": 2,
+       "maxLossStreak": 11,
+       "exitReasons": {
+        "take-profit": 2,
+        "signaal": 18,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "WLD:wf4",
+      "metrics": {
+       "trades": 35,
+       "wins": 9,
+       "winratePct": 25.7,
+       "grossPnl": -6.4,
+       "fees": 28.54,
+       "slippage": 5.7,
+       "netPnl": -40.69,
+       "netReturnPct": -4.07,
+       "expectancyEur": -1.16,
+       "profitFactor": 0.55,
+       "avgWin": 5.49,
+       "avgLoss": 3.47,
+       "maxDrawdownPct": 5.28,
+       "avgHoldMin": 116,
+       "maxWinStreak": 2,
+       "maxLossStreak": 8,
+       "exitReasons": {
+        "signaal": 24,
+        "take-profit": 6,
+        "stop-loss": 5
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf1",
+      "metrics": {
+       "trades": 24,
+       "wins": 5,
+       "winratePct": 20.8,
+       "grossPnl": -0.19,
+       "fees": 19.8,
+       "slippage": 3.96,
+       "netPnl": -23.97,
+       "netReturnPct": -2.4,
+       "expectancyEur": -1,
+       "profitFactor": 0.29,
+       "avgWin": 1.95,
+       "avgLoss": 1.78,
+       "maxDrawdownPct": 2.44,
+       "avgHoldMin": 163,
+       "maxWinStreak": 2,
+       "maxLossStreak": 11,
+       "exitReasons": {
+        "signaal": 23,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf2",
+      "metrics": {
+       "trades": 49,
+       "wins": 16,
+       "winratePct": 32.7,
+       "grossPnl": 17.54,
+       "fees": 40.36,
+       "slippage": 8.09,
+       "netPnl": -30.91,
+       "netReturnPct": -3.09,
+       "expectancyEur": -0.63,
+       "profitFactor": 0.74,
+       "avgWin": 5.48,
+       "avgLoss": 3.59,
+       "maxDrawdownPct": 4.64,
+       "avgHoldMin": 126,
+       "maxWinStreak": 3,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 33,
+        "take-profit": 10,
+        "stop-loss": 6
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf3",
+      "metrics": {
+       "trades": 23,
+       "wins": 6,
+       "winratePct": 26.1,
+       "grossPnl": 13.37,
+       "fees": 19.12,
+       "slippage": 3.89,
+       "netPnl": -9.55,
+       "netReturnPct": -0.95,
+       "expectancyEur": -0.42,
+       "profitFactor": 0.65,
+       "avgWin": 3.02,
+       "avgLoss": 1.63,
+       "maxDrawdownPct": 1.42,
+       "avgHoldMin": 148,
+       "maxWinStreak": 2,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "signaal": 22,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf4",
+      "metrics": {
+       "trades": 39,
+       "wins": 8,
+       "winratePct": 20.5,
+       "grossPnl": 0.53,
+       "fees": 32,
+       "slippage": 6.39,
+       "netPnl": -37.8,
+       "netReturnPct": -3.78,
+       "expectancyEur": -0.97,
+       "profitFactor": 0.44,
+       "avgWin": 3.78,
+       "avgLoss": 2.2,
+       "maxDrawdownPct": 3.78,
+       "avgHoldMin": 136,
+       "maxWinStreak": 2,
+       "maxLossStreak": 9,
+       "exitReasons": {
+        "signaal": 33,
+        "take-profit": 3,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf1",
+      "metrics": {
+       "trades": 29,
+       "wins": 7,
+       "winratePct": 24.1,
+       "grossPnl": 1.82,
+       "fees": 23.81,
+       "slippage": 4.73,
+       "netPnl": -26.7,
+       "netReturnPct": -2.67,
+       "expectancyEur": -0.92,
+       "profitFactor": 0.53,
+       "avgWin": 4.38,
+       "avgLoss": 2.61,
+       "maxDrawdownPct": 2.69,
+       "avgHoldMin": 137,
+       "maxWinStreak": 2,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 25,
+        "take-profit": 3,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf2",
+      "metrics": {
+       "trades": 19,
+       "wins": 7,
+       "winratePct": 36.8,
+       "grossPnl": 15.58,
+       "fees": 15.84,
+       "slippage": 3.19,
+       "netPnl": -3.48,
+       "netReturnPct": -0.35,
+       "expectancyEur": -0.18,
+       "profitFactor": 0.88,
+       "avgWin": 3.65,
+       "avgLoss": 2.42,
+       "maxDrawdownPct": 2.41,
+       "avgHoldMin": 137,
+       "maxWinStreak": 4,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "signaal": 16,
+        "take-profit": 2,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf3",
+      "metrics": {
+       "trades": 26,
+       "wins": 2,
+       "winratePct": 7.7,
+       "grossPnl": -26.14,
+       "fees": 21.07,
+       "slippage": 4.21,
+       "netPnl": -51.42,
+       "netReturnPct": -5.14,
+       "expectancyEur": -1.98,
+       "profitFactor": 0.07,
+       "avgWin": 1.89,
+       "avgLoss": 2.3,
+       "maxDrawdownPct": 5.44,
+       "avgHoldMin": 104,
+       "maxWinStreak": 1,
+       "maxLossStreak": 16,
+       "exitReasons": {
+        "signaal": 26
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf4",
+      "metrics": {
+       "trades": 32,
+       "wins": 6,
+       "winratePct": 18.8,
+       "grossPnl": -1.78,
+       "fees": 26.29,
+       "slippage": 5.23,
+       "netPnl": -33.36,
+       "netReturnPct": -3.34,
+       "expectancyEur": -1.04,
+       "profitFactor": 0.45,
+       "avgWin": 4.6,
+       "avgLoss": 2.34,
+       "maxDrawdownPct": 3.71,
+       "avgHoldMin": 133,
+       "maxWinStreak": 3,
+       "maxLossStreak": 10,
+       "exitReasons": {
+        "signaal": 28,
+        "take-profit": 3,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf1",
+      "metrics": {
+       "trades": 21,
+       "wins": 4,
+       "winratePct": 19,
+       "grossPnl": -7.09,
+       "fees": 17.26,
+       "slippage": 3.45,
+       "netPnl": -27.77,
+       "netReturnPct": -2.78,
+       "expectancyEur": -1.32,
+       "profitFactor": 0.16,
+       "avgWin": 1.32,
+       "avgLoss": 1.94,
+       "maxDrawdownPct": 2.87,
+       "avgHoldMin": 147,
+       "maxWinStreak": 2,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "signaal": 21
+       }
+      }
+     },
+     {
+      "label": "ICP:wf2",
+      "metrics": {
+       "trades": 27,
+       "wins": 7,
+       "winratePct": 25.9,
+       "grossPnl": -0.47,
+       "fees": 22.35,
+       "slippage": 4.47,
+       "netPnl": -27.29,
+       "netReturnPct": -2.73,
+       "expectancyEur": -1.01,
+       "profitFactor": 0.58,
+       "avgWin": 5.33,
+       "avgLoss": 3.23,
+       "maxDrawdownPct": 3.79,
+       "avgHoldMin": 112,
+       "maxWinStreak": 2,
+       "maxLossStreak": 7,
+       "exitReasons": {
+        "take-profit": 5,
+        "signaal": 19,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "ICP:wf3",
+      "metrics": {
+       "trades": 25,
+       "wins": 3,
+       "winratePct": 12,
+       "grossPnl": -10.71,
+       "fees": 20.43,
+       "slippage": 3.91,
+       "netPnl": -35.04,
+       "netReturnPct": -3.5,
+       "expectancyEur": -1.4,
+       "profitFactor": 0.07,
+       "avgWin": 0.87,
+       "avgLoss": 1.71,
+       "maxDrawdownPct": 3.71,
+       "avgHoldMin": 136,
+       "maxWinStreak": 1,
+       "maxLossStreak": 17,
+       "exitReasons": {
+        "signaal": 24,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf4",
+      "metrics": {
+       "trades": 29,
+       "wins": 7,
+       "winratePct": 24.1,
+       "grossPnl": -14.47,
+       "fees": 23.6,
+       "slippage": 4.73,
+       "netPnl": -42.75,
+       "netReturnPct": -4.28,
+       "expectancyEur": -1.47,
+       "profitFactor": 0.21,
+       "avgWin": 1.66,
+       "avgLoss": 2.47,
+       "maxDrawdownPct": 5.19,
+       "avgHoldMin": 124,
+       "maxWinStreak": 2,
+       "maxLossStreak": 12,
+       "exitReasons": {
+        "signaal": 27,
+        "stop-loss": 1,
+        "take-profit": 1
+       }
+      }
+     }
+    ],
+    "positiveWindows": 0,
+    "totalWindows": 32,
+    "consistencyPct": 0
+   },
+   "robustness": {
+    "scenarios": [],
+    "passRatio": 0,
+    "ok": false
+   },
+   "overfitting": {
+    "flags": {
+     "oos_negative_while_is_positive": false,
+     "walkforward_inconsistent": true,
+     "single_coin_dominance": false,
+     "sample_too_small": false,
+     "extreme_drawdown": true,
+     "fee_fragile": true,
+     "parameter_cliff": false
+    },
+    "warnings": [
+     "walk-forward inconsistent (0/32 vensters positief)",
+     "extreme drawdown OOS (33.79%)",
+     "fragiel t.o.v. fees/slippage — de edge zit te dicht tegen de kosten"
+    ]
+   },
+   "rejectionReasons": [
+    "out-of-sample netto negatief (-330.69 EUR)",
+    "fee-fragiel: slechts 0% robustness-scenario's positief"
+   ],
+   "perPair": [
+    {
+     "pair": "BTC-EUR",
+     "netPnl": -39.73,
+     "trades": 49,
+     "winratePct": 14.3
+    },
+    {
+     "pair": "ETH-EUR",
+     "netPnl": -39.08,
+     "trades": 44,
+     "winratePct": 18.2
+    },
+    {
+     "pair": "SOL-EUR",
+     "netPnl": -41.27,
+     "trades": 42,
+     "winratePct": 19
+    },
+    {
+     "pair": "XRP-EUR",
+     "netPnl": -7.05,
+     "trades": 39,
+     "winratePct": 33.3
+    },
+    {
+     "pair": "WLD-EUR",
+     "netPnl": -59.51,
+     "trades": 45,
+     "winratePct": 22.2
+    },
+    {
+     "pair": "NEAR-EUR",
+     "netPnl": -45.09,
+     "trades": 50,
+     "winratePct": 20
+    },
+    {
+     "pair": "ALGO-EUR",
+     "netPnl": -47.29,
+     "trades": 41,
+     "winratePct": 14.6
+    },
+    {
+     "pair": "ICP-EUR",
+     "netPnl": -51.67,
+     "trades": 38,
+     "winratePct": 23.7
+    }
+   ],
+   "regimePerformance": {
+    "strong-uptrend": {
+     "trades": 184,
+     "netPnl": -207.09,
+     "winratePct": 27.7
+    },
+    "weak-uptrend": {
+     "trades": 314,
+     "netPnl": -321.92,
+     "winratePct": 20.4
+    },
+    "sideways": {
+     "trades": 287,
+     "netPnl": -298.77,
+     "winratePct": 13.6
+    },
+    "high-volatility": {
+     "trades": 108,
+     "netPnl": -79.77,
+     "winratePct": 24.1
+    },
+    "low-volatility": {
+     "trades": 22,
+     "netPnl": -15.35,
+     "winratePct": 18.2
+    },
+    "downtrend": {
+     "trades": 10,
+     "netPnl": -14.15,
+     "winratePct": 20
+    }
+   },
+   "multiMarket": "market-specific",
+   "marketScope": "XRP-EUR",
+   "spec": {
+    "name": "baseline-breakout",
+    "description": "Close boven het 24-uurs hoogste hoog, boven EMA200, met volume > 1,5× gemiddelde.",
+    "hypothesis": "Nieuwe hoogtes met volume trekken momentum-handelaren aan; breakout vervolgt intraday.",
+    "expected_regime": "strong-uptrend / high-volatility",
+    "failure_conditions": "Valse breakout in sideways (stop-hunt boven high); lage volatiliteit.",
+    "falsification": "OOS winrate < 45% of net-negatief; fee-fragiel (TP te klein).",
+    "timeframe": "15m",
+    "direction": "long",
+    "entry_conditions": [
+     {
+      "kind": "breakout_24h"
+     },
+     {
+      "kind": "price_above_ema",
+      "period": 200
+     },
+     {
+      "kind": "volume_gt_sma",
+      "value": 1.5
+     }
+    ],
+    "exit_conditions": [
+     {
+      "kind": "mom_lt",
+      "value": 0,
+      "bars": 8
+     }
+    ],
+    "stop_loss_pct": 3,
+    "take_profit_pct": 5,
+    "max_hold_bars": 32,
+    "risk_pct": 0.5,
+    "pairs": [
+     "BTC-EUR",
+     "ETH-EUR",
+     "SOL-EUR",
+     "XRP-EUR",
+     "WLD-EUR",
+     "NEAR-EUR",
+     "ALGO-EUR",
+     "ICP-EUR"
+    ],
+    "expected_holding_time_min": 180,
+    "origin": "baseline"
+   }
+  },
+  {
+   "name": "baseline-rsi-fade-short",
+   "origin": "baseline",
+   "hypothesis": "In een downtrend zijn overbought-bounces verkoopmomenten; de trend hervat omlaag.",
+   "status": "REJECTED",
+   "score": 24,
+   "is": {
+    "trades": 57,
+    "wins": 26,
+    "winratePct": 45.6,
+    "grossPnl": 16,
+    "fees": 47.43,
+    "slippage": 9.58,
+    "netPnl": -40.82,
+    "netReturnPct": -4.08,
+    "expectancyEur": -0.72,
+    "profitFactor": 0.55,
+    "avgWin": 1.92,
+    "avgLoss": 2.93,
+    "maxDrawdownPct": 4.32,
+    "avgHoldMin": 328,
+    "maxWinStreak": 3,
+    "maxLossStreak": 6,
+    "exitReasons": {
+     "signaal": 40,
+     "max-hold": 2,
+     "stop-loss": 12,
+     "take-profit": 3
+    }
+   },
+   "oos": {
+    "trades": 32,
+    "wins": 8,
+    "winratePct": 25,
+    "grossPnl": -6.94,
+    "fees": 26.67,
+    "slippage": 5.43,
+    "netPnl": -38.9,
+    "netReturnPct": -3.89,
+    "expectancyEur": -1.22,
+    "profitFactor": 0.17,
+    "avgWin": 0.97,
+    "avgLoss": 1.94,
+    "maxDrawdownPct": 4.22,
+    "avgHoldMin": 458,
+    "maxWinStreak": 3,
+    "maxLossStreak": 8,
+    "exitReasons": {
+     "max-hold": 3,
+     "signaal": 26,
+     "stop-loss": 3
+    }
+   },
+   "walkforward": {
+    "windows": [
+     {
+      "label": "BTC:wf1",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": 2.96,
+       "fees": 1.66,
+       "slippage": 0.34,
+       "netPnl": 0.97,
+       "netReturnPct": 0.1,
+       "expectancyEur": 0.49,
+       "profitFactor": 3.2,
+       "avgWin": 1.41,
+       "avgLoss": 0.44,
+       "maxDrawdownPct": 0.1,
+       "avgHoldMin": 270,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "BTC:wf2",
+      "metrics": {
+       "trades": 2,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -2.63,
+       "fees": 1.67,
+       "slippage": 0.34,
+       "netPnl": -4.64,
+       "netReturnPct": -0.46,
+       "expectancyEur": -2.32,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 2.32,
+       "maxDrawdownPct": 0.49,
+       "avgHoldMin": 593,
+       "maxWinStreak": 0,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 1,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "BTC:wf3",
+      "metrics": {
+       "trades": 3,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -1.32,
+       "fees": 2.5,
+       "slippage": 0.51,
+       "netPnl": -4.32,
+       "netReturnPct": -0.43,
+       "expectancyEur": -1.44,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.44,
+       "maxDrawdownPct": 0.47,
+       "avgHoldMin": 750,
+       "maxWinStreak": 0,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "max-hold": 2,
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "BTC:wf4",
+      "metrics": {
+       "trades": 2,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.03,
+       "fees": 1.66,
+       "slippage": 0.34,
+       "netPnl": -1.97,
+       "netReturnPct": -0.2,
+       "expectancyEur": -0.99,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.99,
+       "maxDrawdownPct": 0.2,
+       "avgHoldMin": 435,
+       "maxWinStreak": 0,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "ETH:wf1",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": 1.99,
+       "fees": 1.66,
+       "slippage": 0.34,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": 1,
+       "avgWin": 0.33,
+       "avgLoss": 0.33,
+       "maxDrawdownPct": 0.18,
+       "avgHoldMin": 323,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "ETH:wf2",
+      "metrics": {
+       "trades": 6,
+       "wins": 3,
+       "winratePct": 50,
+       "grossPnl": -5.24,
+       "fees": 5.01,
+       "slippage": 1.02,
+       "netPnl": -11.23,
+       "netReturnPct": -1.12,
+       "expectancyEur": -1.87,
+       "profitFactor": 0.08,
+       "avgWin": 0.32,
+       "avgLoss": 4.06,
+       "maxDrawdownPct": 1.19,
+       "avgHoldMin": 273,
+       "maxWinStreak": 2,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 4,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "ETH:wf3",
+      "metrics": {
+       "trades": 2,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -1.28,
+       "fees": 1.67,
+       "slippage": 0.34,
+       "netPnl": -3.29,
+       "netReturnPct": -0.33,
+       "expectancyEur": -1.64,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.65,
+       "maxDrawdownPct": 0.33,
+       "avgHoldMin": 645,
+       "maxWinStreak": 0,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 1,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "ETH:wf4",
+      "metrics": {
+       "trades": 3,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.48,
+       "fees": 2.5,
+       "slippage": 0.51,
+       "netPnl": -2.52,
+       "netReturnPct": -0.25,
+       "expectancyEur": -0.84,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.84,
+       "maxDrawdownPct": 0.26,
+       "avgHoldMin": 445,
+       "maxWinStreak": 0,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 2,
+        "max-hold": 1
+       }
+      }
+     },
+     {
+      "label": "SOL:wf1",
+      "metrics": {
+       "trades": 3,
+       "wins": 3,
+       "winratePct": 100,
+       "grossPnl": 4.84,
+       "fees": 2.49,
+       "slippage": 0.51,
+       "netPnl": 1.86,
+       "netReturnPct": 0.19,
+       "expectancyEur": 0.62,
+       "profitFactor": 99,
+       "avgWin": 0.62,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.21,
+       "avgHoldMin": 165,
+       "maxWinStreak": 3,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 3
+       }
+      }
+     },
+     {
+      "label": "SOL:wf2",
+      "metrics": {
+       "trades": 3,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -9.05,
+       "fees": 2.52,
+       "slippage": 0.51,
+       "netPnl": -12.06,
+       "netReturnPct": -1.21,
+       "expectancyEur": -4.02,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 4.02,
+       "maxDrawdownPct": 1.21,
+       "avgHoldMin": 360,
+       "maxWinStreak": 0,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "stop-loss": 2,
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "SOL:wf3",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": 2.41,
+       "fees": 1.67,
+       "slippage": 0.34,
+       "netPnl": 0.42,
+       "netReturnPct": 0.04,
+       "expectancyEur": 0.21,
+       "profitFactor": 1.31,
+       "avgWin": 1.78,
+       "avgLoss": 1.36,
+       "maxDrawdownPct": 0.19,
+       "avgHoldMin": 435,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "SOL:wf4",
+      "metrics": {
+       "trades": 3,
+       "wins": 1,
+       "winratePct": 33.3,
+       "grossPnl": 0.52,
+       "fees": 2.5,
+       "slippage": 0.51,
+       "netPnl": -2.47,
+       "netReturnPct": -0.25,
+       "expectancyEur": -0.82,
+       "profitFactor": 0.01,
+       "avgWin": 0.02,
+       "avgLoss": 1.24,
+       "maxDrawdownPct": 0.37,
+       "avgHoldMin": 405,
+       "maxWinStreak": 1,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 3
+       }
+      }
+     },
+     {
+      "label": "XRP:wf1",
+      "metrics": {
+       "trades": 2,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -0.32,
+       "fees": 1.67,
+       "slippage": 0.34,
+       "netPnl": -2.31,
+       "netReturnPct": -0.23,
+       "expectancyEur": -1.15,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.16,
+       "maxDrawdownPct": 0.41,
+       "avgHoldMin": 668,
+       "maxWinStreak": 0,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "XRP:wf2",
+      "metrics": {
+       "trades": 3,
+       "wins": 1,
+       "winratePct": 33.3,
+       "grossPnl": 1.34,
+       "fees": 2.49,
+       "slippage": 0.5,
+       "netPnl": -1.65,
+       "netReturnPct": -0.16,
+       "expectancyEur": -0.55,
+       "profitFactor": 0.57,
+       "avgWin": 2.22,
+       "avgLoss": 1.94,
+       "maxDrawdownPct": 0.61,
+       "avgHoldMin": 510,
+       "maxWinStreak": 1,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 3
+       }
+      }
+     },
+     {
+      "label": "XRP:wf3",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": 1.42,
+       "fees": 1.67,
+       "slippage": 0.34,
+       "netPnl": -0.57,
+       "netReturnPct": -0.06,
+       "expectancyEur": -0.29,
+       "profitFactor": 0.57,
+       "avgWin": 0.76,
+       "avgLoss": 1.33,
+       "maxDrawdownPct": 0.24,
+       "avgHoldMin": 308,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "XRP:wf4",
+      "metrics": {
+       "trades": 5,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -2.96,
+       "fees": 4.17,
+       "slippage": 0.85,
+       "netPnl": -7.95,
+       "netReturnPct": -0.79,
+       "expectancyEur": -1.59,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.59,
+       "maxDrawdownPct": 0.92,
+       "avgHoldMin": 642,
+       "maxWinStreak": 0,
+       "maxLossStreak": 5,
+       "exitReasons": {
+        "signaal": 5
+       }
+      }
+     },
+     {
+      "label": "WLD:wf1",
+      "metrics": {
+       "trades": 7,
+       "wins": 5,
+       "winratePct": 71.4,
+       "grossPnl": 13.53,
+       "fees": 5.83,
+       "slippage": 1.18,
+       "netPnl": 6.55,
+       "netReturnPct": 0.65,
+       "expectancyEur": 0.94,
+       "profitFactor": 2.05,
+       "avgWin": 2.56,
+       "avgLoss": 3.13,
+       "maxDrawdownPct": 0.88,
+       "avgHoldMin": 283,
+       "maxWinStreak": 3,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 6,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf2",
+      "metrics": {
+       "trades": 3,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -14.67,
+       "fees": 2.53,
+       "slippage": 0.51,
+       "netPnl": -17.69,
+       "netReturnPct": -1.77,
+       "expectancyEur": -5.9,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 5.9,
+       "maxDrawdownPct": 1.78,
+       "avgHoldMin": 90,
+       "maxWinStreak": 0,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "WLD:wf3",
+      "metrics": {
+       "trades": 6,
+       "wins": 3,
+       "winratePct": 50,
+       "grossPnl": 3.24,
+       "fees": 5.02,
+       "slippage": 1.01,
+       "netPnl": -2.79,
+       "netReturnPct": -0.28,
+       "expectancyEur": -0.47,
+       "profitFactor": 0.78,
+       "avgWin": 3.35,
+       "avgLoss": 4.28,
+       "maxDrawdownPct": 1.24,
+       "avgHoldMin": 253,
+       "maxWinStreak": 2,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "take-profit": 1,
+        "signaal": 3,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "WLD:wf4",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": -2.07,
+       "fees": 1.67,
+       "slippage": 0.33,
+       "netPnl": -4.07,
+       "netReturnPct": -0.41,
+       "expectancyEur": -2.03,
+       "profitFactor": 0.31,
+       "avgWin": 1.86,
+       "avgLoss": 5.93,
+       "maxDrawdownPct": 0.65,
+       "avgHoldMin": 135,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "stop-loss": 1,
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf1",
+      "metrics": {
+       "trades": 3,
+       "wins": 2,
+       "winratePct": 66.7,
+       "grossPnl": 0.44,
+       "fees": 2.51,
+       "slippage": 0.51,
+       "netPnl": -2.56,
+       "netReturnPct": -0.26,
+       "expectancyEur": -0.85,
+       "profitFactor": 0.57,
+       "avgWin": 1.69,
+       "avgLoss": 5.95,
+       "maxDrawdownPct": 0.59,
+       "avgHoldMin": 350,
+       "maxWinStreak": 2,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf2",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 6.75,
+       "fees": 0.82,
+       "slippage": 0.16,
+       "netPnl": 5.77,
+       "netReturnPct": 0.58,
+       "expectancyEur": 5.77,
+       "profitFactor": 99,
+       "avgWin": 5.77,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.09,
+       "avgHoldMin": 60,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf3",
+      "metrics": {
+       "trades": 1,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.89,
+       "fees": 0.83,
+       "slippage": 0.17,
+       "netPnl": -0.11,
+       "netReturnPct": -0.01,
+       "expectancyEur": -0.11,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.11,
+       "maxDrawdownPct": 0.17,
+       "avgHoldMin": 255,
+       "maxWinStreak": 0,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf4",
+      "metrics": {
+       "trades": 3,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -7.25,
+       "fees": 2.51,
+       "slippage": 0.51,
+       "netPnl": -10.26,
+       "netReturnPct": -1.03,
+       "expectancyEur": -3.42,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 3.42,
+       "maxDrawdownPct": 1.25,
+       "avgHoldMin": 515,
+       "maxWinStreak": 0,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 2,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf1",
+      "metrics": {
+       "trades": 4,
+       "wins": 2,
+       "winratePct": 50,
+       "grossPnl": -1.74,
+       "fees": 3.33,
+       "slippage": 0.67,
+       "netPnl": -5.73,
+       "netReturnPct": -0.57,
+       "expectancyEur": -1.43,
+       "profitFactor": 0.19,
+       "avgWin": 0.68,
+       "avgLoss": 3.55,
+       "maxDrawdownPct": 1.02,
+       "avgHoldMin": 383,
+       "maxWinStreak": 2,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 3,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf2",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 1.88,
+       "fees": 0.83,
+       "slippage": 0.17,
+       "netPnl": 0.89,
+       "netReturnPct": 0.09,
+       "expectancyEur": 0.89,
+       "profitFactor": 99,
+       "avgWin": 0.89,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.11,
+       "avgHoldMin": 315,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf3",
+      "metrics": {
+       "trades": 4,
+       "wins": 2,
+       "winratePct": 50,
+       "grossPnl": 6.24,
+       "fees": 3.32,
+       "slippage": 0.68,
+       "netPnl": 2.25,
+       "netReturnPct": 0.22,
+       "expectancyEur": 0.56,
+       "profitFactor": 4.46,
+       "avgWin": 1.45,
+       "avgLoss": 0.32,
+       "maxDrawdownPct": 0.59,
+       "avgHoldMin": 319,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 4
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf4",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": 2.26,
+       "fees": 1.66,
+       "slippage": 0.34,
+       "netPnl": 0.27,
+       "netReturnPct": 0.03,
+       "expectancyEur": 0.14,
+       "profitFactor": 1.19,
+       "avgWin": 1.7,
+       "avgLoss": 1.43,
+       "maxDrawdownPct": 0.49,
+       "avgHoldMin": 428,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "ICP:wf1",
+      "metrics": {
+       "trades": 2,
+       "wins": 1,
+       "winratePct": 50,
+       "grossPnl": 1.21,
+       "fees": 1.67,
+       "slippage": 0.34,
+       "netPnl": -0.78,
+       "netReturnPct": -0.08,
+       "expectancyEur": -0.39,
+       "profitFactor": 0.44,
+       "avgWin": 0.61,
+       "avgLoss": 1.39,
+       "maxDrawdownPct": 0.35,
+       "avgHoldMin": 540,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "ICP:wf2",
+      "metrics": {
+       "trades": 3,
+       "wins": 1,
+       "winratePct": 33.3,
+       "grossPnl": 2.04,
+       "fees": 2.5,
+       "slippage": 0.5,
+       "netPnl": -0.95,
+       "netReturnPct": -0.1,
+       "expectancyEur": -0.32,
+       "profitFactor": 0.86,
+       "avgWin": 5.77,
+       "avgLoss": 3.36,
+       "maxDrawdownPct": 0.6,
+       "avgHoldMin": 275,
+       "maxWinStreak": 1,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1,
+        "take-profit": 1,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ICP:wf4",
+      "metrics": {
+       "trades": 2,
+       "wins": 2,
+       "winratePct": 100,
+       "grossPnl": 3.4,
+       "fees": 1.66,
+       "slippage": 0.34,
+       "netPnl": 1.41,
+       "netReturnPct": 0.14,
+       "expectancyEur": 0.71,
+       "profitFactor": 99,
+       "avgWin": 0.71,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.12,
+       "avgHoldMin": 225,
+       "maxWinStreak": 2,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     }
+    ],
+    "positiveWindows": 9,
+    "totalWindows": 32,
+    "consistencyPct": 28
+   },
+   "robustness": {
+    "scenarios": [],
+    "passRatio": 0,
+    "ok": false
+   },
+   "overfitting": {
+    "flags": {
+     "oos_negative_while_is_positive": false,
+     "walkforward_inconsistent": true,
+     "single_coin_dominance": false,
+     "sample_too_small": false,
+     "extreme_drawdown": false,
+     "fee_fragile": true,
+     "parameter_cliff": false
+    },
+    "warnings": [
+     "walk-forward inconsistent (9/32 vensters positief)",
+     "fragiel t.o.v. fees/slippage — de edge zit te dicht tegen de kosten"
+    ]
+   },
+   "rejectionReasons": [
+    "out-of-sample netto negatief (-38.9 EUR)",
+    "fee-fragiel: slechts 0% robustness-scenario's positief"
+   ],
+   "perPair": [
+    {
+     "pair": "BTC-EUR",
+     "netPnl": -3.55,
+     "trades": 3,
+     "winratePct": 0
+    },
+    {
+     "pair": "ETH-EUR",
+     "netPnl": -5.42,
+     "trades": 4,
+     "winratePct": 0
+    },
+    {
+     "pair": "SOL-EUR",
+     "netPnl": -3.83,
+     "trades": 4,
+     "winratePct": 25
+    },
+    {
+     "pair": "XRP-EUR",
+     "netPnl": -8.51,
+     "trades": 7,
+     "winratePct": 14.3
+    },
+    {
+     "pair": "WLD-EUR",
+     "netPnl": -10.56,
+     "trades": 5,
+     "winratePct": 40
+    },
+    {
+     "pair": "NEAR-EUR",
+     "netPnl": -10.37,
+     "trades": 4,
+     "winratePct": 0
+    },
+    {
+     "pair": "ALGO-EUR",
+     "netPnl": 1.93,
+     "trades": 3,
+     "winratePct": 66.7
+    },
+    {
+     "pair": "ICP-EUR",
+     "netPnl": 1.41,
+     "trades": 2,
+     "winratePct": 100
+    }
+   ],
+   "regimePerformance": {
+    "strong-uptrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    },
+    "weak-uptrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    },
+    "sideways": {
+     "trades": 18,
+     "netPnl": -11.76,
+     "winratePct": 33.3
+    },
+    "high-volatility": {
+     "trades": 2,
+     "netPnl": -6.36,
+     "winratePct": 0
+    },
+    "low-volatility": {
+     "trades": 9,
+     "netPnl": -18.6,
+     "winratePct": 0
+    },
+    "downtrend": {
+     "trades": 60,
+     "netPnl": -43,
+     "winratePct": 46.7
+    }
+   },
+   "multiMarket": "market-specific",
+   "marketScope": "ALGO-EUR",
+   "spec": {
+    "name": "baseline-rsi-fade-short",
+    "description": "Spiegel van rsi-dip: RSI kruist boven 70 in downtrend — short de oververhitte bounce.",
+    "hypothesis": "In een downtrend zijn overbought-bounces verkoopmomenten; de trend hervat omlaag.",
+    "expected_regime": "downtrend",
+    "failure_conditions": "Uptrend (short tegen de trend in); bull-market squeezes.",
+    "falsification": "OOS net-negatief — eerdere sweeps (9 sep 2026) lieten 40-44% winrate zien; deze run moet dat bevestigen of falsifiëren.",
+    "timeframe": "15m",
+    "direction": "short",
+    "entry_conditions": [
+     {
+      "kind": "rsi_cross_over",
+      "value": 70
+     },
+     {
+      "kind": "price_below_ema",
+      "period": 200
+     }
+    ],
+    "exit_conditions": [
+     {
+      "kind": "rsi_lt",
+      "value": 45
+     }
+    ],
+    "stop_loss_pct": 3,
+    "take_profit_pct": 4,
+    "max_hold_bars": 64,
+    "risk_pct": 0.5,
+    "pairs": [
+     "BTC-EUR",
+     "ETH-EUR",
+     "SOL-EUR",
+     "XRP-EUR",
+     "WLD-EUR",
+     "NEAR-EUR",
+     "ALGO-EUR",
+     "ICP-EUR"
+    ],
+    "expected_holding_time_min": 240,
+    "origin": "baseline"
+   }
+  }
+ ],
+ "hypotheses_generated": 3,
+ "hypotheses_invalid": 1,
+ "hypothesis_results": [
+  {
+   "name": "volatility-mean-revert-short",
+   "origin": "ai-research",
+   "hypothesis": "High-volatility regimes (0.40%+) in sideways/downtrend create mean-reversion shorts. RSI >70 + vol spike = exhaustion; fade into lower vol.",
+   "status": "INSUFFICIENT_DATA",
+   "score": 15,
+   "is": {
+    "trades": 0,
+    "wins": 0,
+    "winratePct": 0,
+    "grossPnl": 0,
+    "fees": 0,
+    "slippage": 0,
+    "netPnl": 0,
+    "netReturnPct": 0,
+    "expectancyEur": 0,
+    "profitFactor": null,
+    "avgWin": 0,
+    "avgLoss": 0,
+    "maxDrawdownPct": 0,
+    "avgHoldMin": 0,
+    "maxWinStreak": 0,
+    "maxLossStreak": 0,
+    "exitReasons": {}
+   },
+   "oos": {
+    "trades": 0,
+    "wins": 0,
+    "winratePct": 0,
+    "grossPnl": 0,
+    "fees": 0,
+    "slippage": 0,
+    "netPnl": 0,
+    "netReturnPct": 0,
+    "expectancyEur": 0,
+    "profitFactor": null,
+    "avgWin": 0,
+    "avgLoss": 0,
+    "maxDrawdownPct": 0,
+    "avgHoldMin": 0,
+    "maxWinStreak": 0,
+    "maxLossStreak": 0,
+    "exitReasons": {}
+   },
+   "walkforward": {
+    "windows": [
+     {
+      "label": "BTC:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "BTC:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "BTC:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "BTC:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ETH:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ETH:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ETH:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ETH:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "SOL:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "SOL:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "SOL:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "SOL:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "XRP:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "XRP:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "XRP:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "XRP:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "WLD:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "WLD:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "WLD:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "WLD:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "NEAR:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "NEAR:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "NEAR:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "NEAR:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ALGO:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ALGO:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ALGO:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ALGO:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ICP:wf1",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ICP:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ICP:wf3",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ICP:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     }
+    ],
+    "positiveWindows": 0,
+    "totalWindows": 32,
+    "consistencyPct": 0
+   },
+   "robustness": {
+    "scenarios": [],
+    "passRatio": 0,
+    "ok": false
+   },
+   "overfitting": {
+    "flags": {
+     "oos_negative_while_is_positive": false,
+     "walkforward_inconsistent": true,
+     "single_coin_dominance": false,
+     "sample_too_small": true,
+     "extreme_drawdown": false,
+     "fee_fragile": true,
+     "parameter_cliff": false
+    },
+    "warnings": [
+     "walk-forward inconsistent (0/32 vensters positief)",
+     "steekproef te klein (IS 0 / OOS 0 trades; minimum 30/12)",
+     "fragiel t.o.v. fees/slippage — de edge zit te dicht tegen de kosten"
+    ]
+   },
+   "rejectionReasons": [
+    "te weinig in-sample trades (0 < 30)",
+    "te weinig out-of-sample trades (0 < 12)",
+    "out-of-sample netto negatief (0 EUR)",
+    "fee-fragiel: slechts 0% robustness-scenario's positief"
+   ],
+   "perPair": [
+    {
+     "pair": "BTC-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "ETH-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "SOL-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "XRP-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "WLD-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "NEAR-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "ALGO-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    },
+    {
+     "pair": "ICP-EUR",
+     "netPnl": 0,
+     "trades": 0,
+     "winratePct": 0
+    }
+   ],
+   "regimePerformance": {
+    "strong-uptrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    },
+    "weak-uptrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    },
+    "sideways": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    },
+    "high-volatility": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    },
+    "low-volatility": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    },
+    "downtrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    }
+   },
+   "multiMarket": "insufficient",
+   "spec": {
+    "name": "volatility-mean-revert-short",
+    "description": "Short high-volatility spikes in sideways/downtrend when RSI overbought; exit on RSI normalization or 1h trend flip.",
+    "hypothesis": "High-volatility regimes (0.40%+) in sideways/downtrend create mean-reversion shorts. RSI >70 + vol spike = exhaustion; fade into lower vol.",
+    "expected_regime": "high-volatility, sideways or downtrend",
+    "failure_conditions": "Volatility spike continues (trending); RSI stays elevated; 1h trend flips to strong-up. Whipsaws in choppy vol.",
+    "falsification": "OOS net PnL < 0 EUR, OOS winrate <40%, or expectancy < 0.",
+    "timeframe": "15m",
+    "direction": "short",
+    "entry_conditions": [
+     {
+      "kind": "rsi_gt",
+      "value": 70
+     },
+     {
+      "kind": "volatility_gt",
+      "value": 0.4
+     },
+     {
+      "kind": "trend1h",
+      "value": "down"
+     }
+    ],
+    "exit_conditions": [
+     {
+      "kind": "rsi_lt",
+      "value": 50
+     },
+     {
+      "kind": "volatility_lt",
+      "value": 0.25
+     }
+    ],
+    "stop_loss_pct": 3.5,
+    "take_profit_pct": 3,
+    "max_hold_bars": 48,
+    "risk_pct": 0.5,
+    "filters": {
+     "min_volatility_pct": 0.38,
+     "require_trend1h": "down"
+    },
+    "pairs": [
+     "WLD-EUR",
+     "SOL-EUR",
+     "NEAR-EUR"
+    ],
+    "expected_holding_time_min": 30,
+    "origin": "ai-research"
+   },
+   "rationale": "All baseline longs failed; shorts (rsi-fade-short) also failed but with only 1 paper trade. High-vol coins (WLD 0.58%, NEAR 0.47%, SOL 0.26%) show strong downtrend regimes (WLD 5685, NEAR 5043 bars). Mean-reversion into vol contraction is a structural edge in crypto.",
+   "expected_edge": "OOS winrate ≥45%, OOS net PnL ≥+40 EUR, expectancy ≥+0.60 EUR/trade, consistent across WLD/SOL/NEAR.",
+   "expected_failure": "OOS net PnL <0, winrate <35%, or whipsaws in choppy vol (high drawdown)."
+  },
+  {
+   "name": "ema-crossover-trend-confirm",
+   "origin": "ai-research",
+   "hypothesis": "EMA crossovers are noisy in high-vol; in low-vol (0.10–0.20%), they signal cleaner trend starts. Avoid fees by holding longer, exiting on RSI divergence.",
+   "status": "REJECTED",
+   "score": 17,
+   "is": {
+    "trades": 804,
+    "wins": 98,
+    "winratePct": 12.2,
+    "grossPnl": -41.27,
+    "fees": 464.92,
+    "slippage": 92.33,
+    "netPnl": -598.81,
+    "netReturnPct": -59.88,
+    "expectancyEur": -0.74,
+    "profitFactor": 0.13,
+    "avgWin": 0.95,
+    "avgLoss": 0.98,
+    "maxDrawdownPct": 60.49,
+    "avgHoldMin": 230,
+    "maxWinStreak": 3,
+    "maxLossStreak": 36,
+    "exitReasons": {
+     "signaal": 723,
+     "stop-loss": 69,
+     "end-of-data": 3,
+     "take-profit": 9
+    }
+   },
+   "oos": {
+    "trades": 516,
+    "wins": 46,
+    "winratePct": 8.9,
+    "grossPnl": -1,
+    "fees": 310.64,
+    "slippage": 61.77,
+    "netPnl": -373.81,
+    "netReturnPct": -37.38,
+    "expectancyEur": -0.72,
+    "profitFactor": 0.16,
+    "avgWin": 1.51,
+    "avgLoss": 0.94,
+    "maxDrawdownPct": 37.38,
+    "avgHoldMin": 240,
+    "maxWinStreak": 2,
+    "maxLossStreak": 51,
+    "exitReasons": {
+     "signaal": 480,
+     "stop-loss": 29,
+     "take-profit": 7
+    }
+   },
+   "walkforward": {
+    "windows": [
+     {
+      "label": "BTC:wf1",
+      "metrics": {
+       "trades": 98,
+       "wins": 9,
+       "winratePct": 9.2,
+       "grossPnl": -11.96,
+       "fees": 58.6,
+       "slippage": 11.74,
+       "netPnl": -82.27,
+       "netReturnPct": -8.23,
+       "expectancyEur": -0.84,
+       "profitFactor": 0.06,
+       "avgWin": 0.59,
+       "avgLoss": 0.98,
+       "maxDrawdownPct": 8.24,
+       "avgHoldMin": 258,
+       "maxWinStreak": 2,
+       "maxLossStreak": 34,
+       "exitReasons": {
+        "signaal": 90,
+        "stop-loss": 8
+       }
+      }
+     },
+     {
+      "label": "BTC:wf2",
+      "metrics": {
+       "trades": 78,
+       "wins": 6,
+       "winratePct": 7.7,
+       "grossPnl": -0.46,
+       "fees": 47.35,
+       "slippage": 9.26,
+       "netPnl": -57.26,
+       "netReturnPct": -5.73,
+       "expectancyEur": -0.73,
+       "profitFactor": 0.04,
+       "avgWin": 0.42,
+       "avgLoss": 0.83,
+       "maxDrawdownPct": 5.8,
+       "avgHoldMin": 242,
+       "maxWinStreak": 1,
+       "maxLossStreak": 30,
+       "exitReasons": {
+        "signaal": 76,
+        "stop-loss": 1,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "BTC:wf3",
+      "metrics": {
+       "trades": 97,
+       "wins": 13,
+       "winratePct": 13.4,
+       "grossPnl": 1.04,
+       "fees": 58.61,
+       "slippage": 11.68,
+       "netPnl": -69.29,
+       "netReturnPct": -6.93,
+       "expectancyEur": -0.71,
+       "profitFactor": 0.07,
+       "avgWin": 0.39,
+       "avgLoss": 0.89,
+       "maxDrawdownPct": 6.91,
+       "avgHoldMin": 271,
+       "maxWinStreak": 2,
+       "maxLossStreak": 24,
+       "exitReasons": {
+        "signaal": 93,
+        "stop-loss": 4
+       }
+      }
+     },
+     {
+      "label": "BTC:wf4",
+      "metrics": {
+       "trades": 92,
+       "wins": 7,
+       "winratePct": 7.6,
+       "grossPnl": 12.1,
+       "fees": 56.02,
+       "slippage": 11.04,
+       "netPnl": -55.09,
+       "netReturnPct": -5.51,
+       "expectancyEur": -0.6,
+       "profitFactor": 0.27,
+       "avgWin": 2.9,
+       "avgLoss": 0.89,
+       "maxDrawdownPct": 5.51,
+       "avgHoldMin": 226,
+       "maxWinStreak": 1,
+       "maxLossStreak": 41,
+       "exitReasons": {
+        "signaal": 85,
+        "take-profit": 2,
+        "stop-loss": 5
+       }
+      }
+     },
+     {
+      "label": "ETH:wf1",
+      "metrics": {
+       "trades": 68,
+       "wins": 6,
+       "winratePct": 8.8,
+       "grossPnl": -23.56,
+       "fees": 40.9,
+       "slippage": 8.16,
+       "netPnl": -72.59,
+       "netReturnPct": -7.26,
+       "expectancyEur": -1.07,
+       "profitFactor": 0.1,
+       "avgWin": 1.32,
+       "avgLoss": 1.3,
+       "maxDrawdownPct": 7.27,
+       "avgHoldMin": 200,
+       "maxWinStreak": 2,
+       "maxLossStreak": 15,
+       "exitReasons": {
+        "signaal": 55,
+        "stop-loss": 13
+       }
+      }
+     },
+     {
+      "label": "ETH:wf2",
+      "metrics": {
+       "trades": 65,
+       "wins": 4,
+       "winratePct": 6.2,
+       "grossPnl": -3.23,
+       "fees": 39.56,
+       "slippage": 7.7,
+       "netPnl": -50.56,
+       "netReturnPct": -5.06,
+       "expectancyEur": -0.78,
+       "profitFactor": 0.11,
+       "avgWin": 1.59,
+       "avgLoss": 0.93,
+       "maxDrawdownPct": 5.17,
+       "avgHoldMin": 226,
+       "maxWinStreak": 1,
+       "maxLossStreak": 30,
+       "exitReasons": {
+        "signaal": 58,
+        "stop-loss": 5,
+        "take-profit": 1,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "ETH:wf3",
+      "metrics": {
+       "trades": 90,
+       "wins": 17,
+       "winratePct": 18.9,
+       "grossPnl": 13.76,
+       "fees": 54.87,
+       "slippage": 10.86,
+       "netPnl": -52.05,
+       "netReturnPct": -5.21,
+       "expectancyEur": -0.58,
+       "profitFactor": 0.29,
+       "avgWin": 1.26,
+       "avgLoss": 1.01,
+       "maxDrawdownPct": 5.61,
+       "avgHoldMin": 234,
+       "maxWinStreak": 2,
+       "maxLossStreak": 12,
+       "exitReasons": {
+        "signaal": 80,
+        "take-profit": 2,
+        "stop-loss": 8
+       }
+      }
+     },
+     {
+      "label": "ETH:wf4",
+      "metrics": {
+       "trades": 86,
+       "wins": 6,
+       "winratePct": 7,
+       "grossPnl": -6.38,
+       "fees": 51.83,
+       "slippage": 10.32,
+       "netPnl": -68.54,
+       "netReturnPct": -6.85,
+       "expectancyEur": -0.8,
+       "profitFactor": 0.11,
+       "avgWin": 1.37,
+       "avgLoss": 0.96,
+       "maxDrawdownPct": 6.86,
+       "avgHoldMin": 212,
+       "maxWinStreak": 1,
+       "maxLossStreak": 33,
+       "exitReasons": {
+        "signaal": 82,
+        "take-profit": 1,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "SOL:wf1",
+      "metrics": {
+       "trades": 58,
+       "wins": 6,
+       "winratePct": 10.3,
+       "grossPnl": -17.43,
+       "fees": 35.06,
+       "slippage": 6.98,
+       "netPnl": -59.52,
+       "netReturnPct": -5.95,
+       "expectancyEur": -1.03,
+       "profitFactor": 0.04,
+       "avgWin": 0.42,
+       "avgLoss": 1.19,
+       "maxDrawdownPct": 6.01,
+       "avgHoldMin": 228,
+       "maxWinStreak": 2,
+       "maxLossStreak": 13,
+       "exitReasons": {
+        "signaal": 51,
+        "stop-loss": 7
+       }
+      }
+     },
+     {
+      "label": "SOL:wf2",
+      "metrics": {
+       "trades": 80,
+       "wins": 6,
+       "winratePct": 7.5,
+       "grossPnl": 5.09,
+       "fees": 48.72,
+       "slippage": 9.61,
+       "netPnl": -53.37,
+       "netReturnPct": -5.34,
+       "expectancyEur": -0.67,
+       "profitFactor": 0.1,
+       "avgWin": 0.96,
+       "avgLoss": 0.8,
+       "maxDrawdownPct": 5.45,
+       "avgHoldMin": 216,
+       "maxWinStreak": 1,
+       "maxLossStreak": 36,
+       "exitReasons": {
+        "signaal": 77,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "SOL:wf3",
+      "metrics": {
+       "trades": 79,
+       "wins": 15,
+       "winratePct": 19,
+       "grossPnl": 21.42,
+       "fees": 48.93,
+       "slippage": 9.75,
+       "netPnl": -37.2,
+       "netReturnPct": -3.72,
+       "expectancyEur": -0.47,
+       "profitFactor": 0.35,
+       "avgWin": 1.35,
+       "avgLoss": 0.9,
+       "maxDrawdownPct": 4.4,
+       "avgHoldMin": 172,
+       "maxWinStreak": 3,
+       "maxLossStreak": 14,
+       "exitReasons": {
+        "signaal": 70,
+        "stop-loss": 6,
+        "take-profit": 3
+       }
+      }
+     },
+     {
+      "label": "SOL:wf4",
+      "metrics": {
+       "trades": 77,
+       "wins": 6,
+       "winratePct": 7.8,
+       "grossPnl": 2.67,
+       "fees": 46.73,
+       "slippage": 9.24,
+       "netPnl": -53.44,
+       "netReturnPct": -5.34,
+       "expectancyEur": -0.69,
+       "profitFactor": 0.16,
+       "avgWin": 1.7,
+       "avgLoss": 0.9,
+       "maxDrawdownPct": 5.34,
+       "avgHoldMin": 223,
+       "maxWinStreak": 2,
+       "maxLossStreak": 22,
+       "exitReasons": {
+        "signaal": 74,
+        "take-profit": 1,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "XRP:wf1",
+      "metrics": {
+       "trades": 54,
+       "wins": 4,
+       "winratePct": 7.4,
+       "grossPnl": -21.58,
+       "fees": 32.61,
+       "slippage": 6.5,
+       "netPnl": -60.71,
+       "netReturnPct": -6.07,
+       "expectancyEur": -1.12,
+       "profitFactor": 0.03,
+       "avgWin": 0.42,
+       "avgLoss": 1.25,
+       "maxDrawdownPct": 6.22,
+       "avgHoldMin": 244,
+       "maxWinStreak": 1,
+       "maxLossStreak": 21,
+       "exitReasons": {
+        "signaal": 47,
+        "stop-loss": 7
+       }
+      }
+     },
+     {
+      "label": "XRP:wf2",
+      "metrics": {
+       "trades": 67,
+       "wins": 7,
+       "winratePct": 10.4,
+       "grossPnl": -0.28,
+       "fees": 40.81,
+       "slippage": 7.93,
+       "netPnl": -49.16,
+       "netReturnPct": -4.92,
+       "expectancyEur": -0.73,
+       "profitFactor": 0.14,
+       "avgWin": 1.1,
+       "avgLoss": 0.95,
+       "maxDrawdownPct": 4.96,
+       "avgHoldMin": 240,
+       "maxWinStreak": 1,
+       "maxLossStreak": 16,
+       "exitReasons": {
+        "signaal": 62,
+        "take-profit": 1,
+        "stop-loss": 3,
+        "end-of-data": 1
+       }
+      }
+     },
+     {
+      "label": "XRP:wf3",
+      "metrics": {
+       "trades": 62,
+       "wins": 12,
+       "winratePct": 19.4,
+       "grossPnl": 5.54,
+       "fees": 38.04,
+       "slippage": 7.48,
+       "netPnl": -40.05,
+       "netReturnPct": -4.01,
+       "expectancyEur": -0.65,
+       "profitFactor": 0.24,
+       "avgWin": 1.04,
+       "avgLoss": 1.05,
+       "maxDrawdownPct": 4.15,
+       "avgHoldMin": 272,
+       "maxWinStreak": 3,
+       "maxLossStreak": 13,
+       "exitReasons": {
+        "signaal": 57,
+        "stop-loss": 4,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "XRP:wf4",
+      "metrics": {
+       "trades": 31,
+       "wins": 1,
+       "winratePct": 3.2,
+       "grossPnl": -3.37,
+       "fees": 19.04,
+       "slippage": 3.73,
+       "netPnl": -26.2,
+       "netReturnPct": -2.62,
+       "expectancyEur": -0.85,
+       "profitFactor": 0.17,
+       "avgWin": 5.4,
+       "avgLoss": 1.05,
+       "maxDrawdownPct": 2.69,
+       "avgHoldMin": 267,
+       "maxWinStreak": 1,
+       "maxLossStreak": 22,
+       "exitReasons": {
+        "signaal": 28,
+        "stop-loss": 2,
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf1",
+      "metrics": {
+       "trades": 1,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.24,
+       "fees": 0.63,
+       "slippage": 0.13,
+       "netPnl": -0.51,
+       "netReturnPct": -0.05,
+       "expectancyEur": -0.51,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.51,
+       "maxDrawdownPct": 0.06,
+       "avgHoldMin": 30,
+       "maxWinStreak": 0,
+       "maxLossStreak": 1,
+       "exitReasons": {
+        "signaal": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf2",
+      "metrics": {
+       "trades": 4,
+       "wins": 1,
+       "winratePct": 25,
+       "grossPnl": -1.02,
+       "fees": 2.49,
+       "slippage": 0.49,
+       "netPnl": -4.01,
+       "netReturnPct": -0.4,
+       "expectancyEur": -1,
+       "profitFactor": 0.21,
+       "avgWin": 1.06,
+       "avgLoss": 1.69,
+       "maxDrawdownPct": 0.57,
+       "avgHoldMin": 184,
+       "maxWinStreak": 1,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 3,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf3",
+      "metrics": {
+       "trades": 3,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -3.97,
+       "fees": 1.87,
+       "slippage": 0.37,
+       "netPnl": -6.21,
+       "netReturnPct": -0.62,
+       "expectancyEur": -2.07,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 2.07,
+       "maxDrawdownPct": 0.65,
+       "avgHoldMin": 335,
+       "maxWinStreak": 0,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 2,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "WLD:wf4",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "NEAR:wf1",
+      "metrics": {
+       "trades": 21,
+       "wins": 5,
+       "winratePct": 23.8,
+       "grossPnl": 1.5,
+       "fees": 13.04,
+       "slippage": 2.55,
+       "netPnl": -14.17,
+       "netReturnPct": -1.42,
+       "expectancyEur": -0.67,
+       "profitFactor": 0.09,
+       "avgWin": 0.28,
+       "avgLoss": 0.97,
+       "maxDrawdownPct": 1.51,
+       "avgHoldMin": 198,
+       "maxWinStreak": 2,
+       "maxLossStreak": 5,
+       "exitReasons": {
+        "signaal": 19,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf2",
+      "metrics": {
+       "trades": 2,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0.39,
+       "fees": 1.25,
+       "slippage": 0.25,
+       "netPnl": -1.12,
+       "netReturnPct": -0.11,
+       "expectancyEur": -0.56,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 0.56,
+       "maxDrawdownPct": 0.18,
+       "avgHoldMin": 45,
+       "maxWinStreak": 0,
+       "maxLossStreak": 2,
+       "exitReasons": {
+        "signaal": 2
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf3",
+      "metrics": {
+       "trades": 6,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -3.7,
+       "fees": 3.74,
+       "slippage": 0.74,
+       "netPnl": -8.17,
+       "netReturnPct": -0.82,
+       "expectancyEur": -1.36,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.36,
+       "maxDrawdownPct": 0.89,
+       "avgHoldMin": 200,
+       "maxWinStreak": 0,
+       "maxLossStreak": 6,
+       "exitReasons": {
+        "signaal": 4,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "NEAR:wf4",
+      "metrics": {
+       "trades": 16,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": -8.91,
+       "fees": 9.86,
+       "slippage": 1.92,
+       "netPnl": -20.73,
+       "netReturnPct": -2.07,
+       "expectancyEur": -1.3,
+       "profitFactor": 0,
+       "avgWin": 0,
+       "avgLoss": 1.3,
+       "maxDrawdownPct": 2.24,
+       "avgHoldMin": 235,
+       "maxWinStreak": 0,
+       "maxLossStreak": 16,
+       "exitReasons": {
+        "stop-loss": 2,
+        "signaal": 14
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf1",
+      "metrics": {
+       "trades": 8,
+       "wins": 1,
+       "winratePct": 12.5,
+       "grossPnl": -4.47,
+       "fees": 4.95,
+       "slippage": 0.96,
+       "netPnl": -10.43,
+       "netReturnPct": -1.04,
+       "expectancyEur": -1.3,
+       "profitFactor": 0.05,
+       "avgWin": 0.57,
+       "avgLoss": 1.57,
+       "maxDrawdownPct": 1.06,
+       "avgHoldMin": 238,
+       "maxWinStreak": 1,
+       "maxLossStreak": 5,
+       "exitReasons": {
+        "signaal": 6,
+        "stop-loss": 2
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf2",
+      "metrics": {
+       "trades": 0,
+       "wins": 0,
+       "winratePct": 0,
+       "grossPnl": 0,
+       "fees": 0,
+       "slippage": 0,
+       "netPnl": 0,
+       "netReturnPct": 0,
+       "expectancyEur": 0,
+       "profitFactor": null,
+       "avgWin": 0,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0,
+       "avgHoldMin": 0,
+       "maxWinStreak": 0,
+       "maxLossStreak": 0,
+       "exitReasons": {}
+      }
+     },
+     {
+      "label": "ALGO:wf3",
+      "metrics": {
+       "trades": 17,
+       "wins": 3,
+       "winratePct": 17.6,
+       "grossPnl": 2.97,
+       "fees": 10.58,
+       "slippage": 2.08,
+       "netPnl": -9.72,
+       "netReturnPct": -0.97,
+       "expectancyEur": -0.57,
+       "profitFactor": 0.12,
+       "avgWin": 0.44,
+       "avgLoss": 0.79,
+       "maxDrawdownPct": 1.19,
+       "avgHoldMin": 307,
+       "maxWinStreak": 2,
+       "maxLossStreak": 10,
+       "exitReasons": {
+        "signaal": 17
+       }
+      }
+     },
+     {
+      "label": "ALGO:wf4",
+      "metrics": {
+       "trades": 7,
+       "wins": 2,
+       "winratePct": 28.6,
+       "grossPnl": 5.14,
+       "fees": 4.39,
+       "slippage": 0.88,
+       "netPnl": -0.12,
+       "netReturnPct": -0.01,
+       "expectancyEur": -0.02,
+       "profitFactor": 0.98,
+       "avgWin": 3.5,
+       "avgLoss": 1.42,
+       "maxDrawdownPct": 0.61,
+       "avgHoldMin": 167,
+       "maxWinStreak": 1,
+       "maxLossStreak": 3,
+       "exitReasons": {
+        "signaal": 5,
+        "take-profit": 1,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf1",
+      "metrics": {
+       "trades": 19,
+       "wins": 3,
+       "winratePct": 15.8,
+       "grossPnl": -7.15,
+       "fees": 11.72,
+       "slippage": 2.28,
+       "netPnl": -21.2,
+       "netReturnPct": -2.12,
+       "expectancyEur": -1.12,
+       "profitFactor": 0.14,
+       "avgWin": 1.1,
+       "avgLoss": 1.53,
+       "maxDrawdownPct": 2.15,
+       "avgHoldMin": 258,
+       "maxWinStreak": 1,
+       "maxLossStreak": 11,
+       "exitReasons": {
+        "signaal": 16,
+        "stop-loss": 3
+       }
+      }
+     },
+     {
+      "label": "ICP:wf2",
+      "metrics": {
+       "trades": 1,
+       "wins": 1,
+       "winratePct": 100,
+       "grossPnl": 6.31,
+       "fees": 0.64,
+       "slippage": 0.13,
+       "netPnl": 5.54,
+       "netReturnPct": 0.55,
+       "expectancyEur": 5.54,
+       "profitFactor": 99,
+       "avgWin": 5.54,
+       "avgLoss": 0,
+       "maxDrawdownPct": 0.06,
+       "avgHoldMin": 360,
+       "maxWinStreak": 1,
+       "maxLossStreak": 0,
+       "exitReasons": {
+        "take-profit": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf3",
+      "metrics": {
+       "trades": 14,
+       "wins": 2,
+       "winratePct": 14.3,
+       "grossPnl": 0.58,
+       "fees": 8.73,
+       "slippage": 1.73,
+       "netPnl": -9.86,
+       "netReturnPct": -0.99,
+       "expectancyEur": -0.7,
+       "profitFactor": 0.15,
+       "avgWin": 0.89,
+       "avgLoss": 0.97,
+       "maxDrawdownPct": 1.27,
+       "avgHoldMin": 294,
+       "maxWinStreak": 2,
+       "maxLossStreak": 9,
+       "exitReasons": {
+        "signaal": 13,
+        "stop-loss": 1
+       }
+      }
+     },
+     {
+      "label": "ICP:wf4",
+      "metrics": {
+       "trades": 20,
+       "wins": 1,
+       "winratePct": 5,
+       "grossPnl": 0.46,
+       "fees": 12.41,
+       "slippage": 2.43,
+       "netPnl": -14.42,
+       "netReturnPct": -1.44,
+       "expectancyEur": -0.72,
+       "profitFactor": 0.28,
+       "avgWin": 5.48,
+       "avgLoss": 1.05,
+       "maxDrawdownPct": 1.5,
+       "avgHoldMin": 266,
+       "maxWinStreak": 1,
+       "maxLossStreak": 12,
+       "exitReasons": {
+        "signaal": 17,
+        "take-profit": 1,
+        "stop-loss": 2
+       }
+      }
+     }
+    ],
+    "positiveWindows": 1,
+    "totalWindows": 32,
+    "consistencyPct": 3
+   },
+   "robustness": {
+    "scenarios": [],
+    "passRatio": 0,
+    "ok": false
+   },
+   "overfitting": {
+    "flags": {
+     "oos_negative_while_is_positive": false,
+     "walkforward_inconsistent": true,
+     "single_coin_dominance": false,
+     "sample_too_small": false,
+     "extreme_drawdown": true,
+     "fee_fragile": true,
+     "parameter_cliff": false
+    },
+    "warnings": [
+     "walk-forward inconsistent (1/32 vensters positief)",
+     "extreme drawdown OOS (37.38%)",
+     "fragiel t.o.v. fees/slippage — de edge zit te dicht tegen de kosten"
+    ]
+   },
+   "rejectionReasons": [
+    "out-of-sample netto negatief (-373.81 EUR)",
+    "fee-fragiel: slechts 0% robustness-scenario's positief"
+   ],
+   "perPair": [
+    {
+     "pair": "BTC-EUR",
+     "netPnl": -83.66,
+     "trades": 131,
+     "winratePct": 8.4
+    },
+    {
+     "pair": "ETH-EUR",
+     "netPnl": -93.95,
+     "trades": 132,
+     "winratePct": 10.6
+    },
+    {
+     "pair": "SOL-EUR",
+     "netPnl": -80.36,
+     "trades": 117,
+     "winratePct": 8.5
+    },
+    {
+     "pair": "XRP-EUR",
+     "netPnl": -48.59,
+     "trades": 63,
+     "winratePct": 7.9
+    },
+    {
+     "pair": "WLD-EUR",
+     "netPnl": -6.21,
+     "trades": 3,
+     "winratePct": 0
+    },
+    {
+     "pair": "NEAR-EUR",
+     "netPnl": -27.56,
+     "trades": 19,
+     "winratePct": 0
+    },
+    {
+     "pair": "ALGO-EUR",
+     "netPnl": -8.67,
+     "trades": 21,
+     "winratePct": 19
+    },
+    {
+     "pair": "ICP-EUR",
+     "netPnl": -24.81,
+     "trades": 30,
+     "winratePct": 6.7
+    }
+   ],
+   "regimePerformance": {
+    "strong-uptrend": {
+     "trades": 43,
+     "netPnl": -35.42,
+     "winratePct": 16.3
+    },
+    "weak-uptrend": {
+     "trades": 528,
+     "netPnl": -377.64,
+     "winratePct": 13.1
+    },
+    "sideways": {
+     "trades": 608,
+     "netPnl": -456.24,
+     "winratePct": 8.2
+    },
+    "high-volatility": {
+     "trades": 74,
+     "netPnl": -57.99,
+     "winratePct": 12.2
+    },
+    "low-volatility": {
+     "trades": 67,
+     "netPnl": -45.33,
+     "winratePct": 13.4
+    },
+    "downtrend": {
+     "trades": 0,
+     "netPnl": 0,
+     "winratePct": 0
+    }
+   },
+   "multiMarket": "market-specific",
+   "marketScope": "WLD-EUR",
+   "spec": {
+    "name": "ema-crossover-trend-confirm",
+    "description": "EMA50 crosses above EMA200 in low-volatility regime; hold trend with trailing exit on RSI divergence.",
+    "hypothesis": "EMA crossovers are noisy in high-vol; in low-vol (0.10–0.20%), they signal cleaner trend starts. Avoid fees by holding longer, exiting on RSI divergence.",
+    "expected_regime": "low-volatility, trend initiation",
+    "failure_conditions": "Crossover fails to sustain (chop); RSI divergence is false; vol spikes invalidate setup.",
+    "falsification": "OOS net PnL < 0 EUR, OOS winrate <45%, or wfConsistency <35%.",
+    "timeframe": "15m",
+    "direction": "long",
+    "entry_conditions": [
+     {
+      "kind": "ema_above_ema",
+      "period": 50,
+      "period2": 200
+     },
+     {
+      "kind": "price_above_ema",
+      "period": 200
+     },
+     {
+      "kind": "rsi_gt",
+      "value": 45
+     }
+    ],
+    "exit_conditions": [
+     {
+      "kind": "ema_below_ema",
+      "period": 50,
+      "period2": 200
+     },
+     {
+      "kind": "rsi_cross_under",
+      "value": 60
+     }
+    ],
+    "stop_loss_pct": 2,
+    "take_profit_pct": 5,
+    "max_hold_bars": 192,
+    "risk_pct": 0.25,
+    "filters": {
+     "min_volatility_pct": 0.1,
+     "max_volatility_pct": 0.22
+    },
+    "pairs": [
+     "BTC-EUR",
+     "ETH-EUR",
+     "ICP-EUR"
+    ],
+    "expected_holding_time_min": 240,
+    "origin": "ai-research"
+   },
+   "rationale": "Baseline pullback/breakout strategies over-traded and failed on fees. EMA crossovers in low-vol regimes (BTC 1567, ETH 1688 bars) are cleaner; longer holds (4–12h) amortize 0.60% fees. RSI divergence exit avoids late-trend whipsaws.",
+   "expected_edge": "OOS winrate ≥50%, OOS net PnL ≥+80 EUR, expectancy ≥+1.00 EUR/trade, avg hold >4h.",
+   "expected_failure": "OOS net PnL <0, winrate <42%, or excessive drawdown from vol spike invalidating setup."
+  }
+ ],
+ "ai": {
+  "model": "claude-haiku-4-5",
+  "calls": 1,
+  "cost_usd": 0.015574999999999999
+ },
+ "errors": [
+  "hypothese ongeldig (rsi-dip-regime-filter): exit_conditions[1].value (momentum %) ongeldig",
+  "RAW rsi-dip-regime-filter: {\"name\":\"rsi-dip-regime-filter\",\"description\":\"RSI dip entry only in confirmed weak-uptrend (1h), with tighter stops and higher TP to overcome fees.\",\"hypothesis\":\"RSI-dip baseline fails because it enters in choppy/downtrend regimes. Filtering to 1h uptrend + higher TP/tighter SL improves edge.\",\"expected_regime\":\"weak-uptrend confirmed on 1h\",\"failure_conditions\":\"Regime filter reduces trade count below statistical significance; OOS winrate <45%; net PnL remains negative after fees.\",\"falsification\":\"OOS net PnL < 0 EUR or OOS winrate < 40% or wfConsistency < 40%.\",\"timeframe\":\"15m\",\"direction\":\"long\",\"entry_conditions\":[{\"kind\":\"rsi_lt\",\"value\":40},{\"kind\":\"trend1h\",\"value\":\"up\"},{\"kind\":\"price_above_ema\",\"period\":50}],\"exit_conditions\":[{\"kind\":\"rsi_gt\",\"value\":65},{\"kind\":\"mom_lt\",\"bars\":4}],\"stop_loss_pct\":2.5,\"take_profit_pct\":4.5,\"max_hold_bars\":96,\"risk_pct\":0.5,\"filters\":{\"require_trend1h\":\"up\",\"min_volatility_pct\":0.15,\"max_volatility_pct\":0.35},\"pairs\":[\"BTC-EUR\",\"ETH-EUR\",\"NEAR-EUR\"],\"expected_holding_time_min\":60,\"origin\":\"ai-research\"}"
+ ],
+ "summary": "6 strategieën getest: 0 candidate(s), 5 rejected, 1 insufficient. Fouten: hypothese ongeldig (rsi-dip-regime-filter): exit_conditions[1].value (momentum %) ongeldig; RAW rsi-dip-regime-filter: {\"name\":\"rsi-dip-regime-filter\",\"description\":\"RSI dip entry only in confirmed weak-uptrend (1h), with tighter stops and higher TP to overcome fees.\",\"hypothesis\":\"RSI-dip baseline fails because it enters in choppy/downtrend regimes. Filtering to 1h uptrend + higher TP/tighter SL improves edge.\",\"expected_regime\":\"weak-uptrend confirmed on 1h\",\"failure_conditions\":\"Regime filter reduces trade count below statistical significance; OOS winrate <45%; net PnL remains negative after fees.\",\"falsification\":\"OOS net PnL < 0 EUR or OOS winrate < 40% or wfConsistency < 40%.\",\"timeframe\":\"15m\",\"direction\":\"long\",\"entry_conditions\":[{\"kind\":\"rsi_lt\",\"value\":40},{\"kind\":\"trend1h\",\"value\":\"up\"},{\"kind\":\"price_above_ema\",\"period\":50}],\"exit_conditions\":[{\"kind\":\"rsi_gt\",\"value\":65},{\"kind\":\"mom_lt\",\"bars\":4}],\"stop_loss_pct\":2.5,\"take_profit_pct\":4.5,\"max_hold_bars\":96,\"risk_pct\":0.5,\"filters\":{\"require_trend1h\":\"up\",\"min_volatility_pct\":0.15,\"max_volatility_pct\":0.35},\"pairs\":[\"BTC-EUR\",\"ETH-EUR\",\"NEAR-EUR\"],\"expected_holding_time_min\":60,\"origin\":\"ai-research\"}"
+}

@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "research": "tsx scripts/research-run.ts",
+    "research:full": "tsx scripts/research-run.ts full"
   },
   "dependencies": {
     "lightweight-charts": "^5.2.1",
