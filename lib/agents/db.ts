@@ -257,6 +257,16 @@ export async function insertNewsAlert(a: {
   if (!r.ok) throw new Error(`Supabase insertNewsAlert: HTTP ${r.status}`);
 }
 
+/** Recente nieuws-alerts (nieuwste eerst) — dashboard-only, read-only. */
+export async function listNewsAlerts(limit = 20): Promise<NewsAlert[]> {
+  if (!URL_ || !KEY) return [];
+  try {
+    const res = await fetch(`${URL_}/rest/v1/news_alerts?order=created_at.desc&limit=${limit}`, { headers: headers() });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch { return []; }
+}
+
 export async function latestNewsAlert(): Promise<NewsAlert | null> {
   const r = await fetch(
     `${URL_}/rest/v1/news_alerts?select=*&order=created_at.desc&limit=1`,

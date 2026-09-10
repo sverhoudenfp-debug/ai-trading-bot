@@ -1,285 +1,150 @@
 "use client";
 
-// ── MISSION CONTROL — AI Trading System dashboard ──────────────────────
-// Eén overzichtspagina in HUD-stijl: live ticker, coin-status, grafieken
-// met trade-markers, live activiteitenfeed en backtest-historie.
-// De bot-logica (API's, strategie) is volledig onveranderd.
+// ── OVERVIEW — mission control: staat, KPI's, equity, posities, AI ────
+// Alle data uit bestaande read-only endpoints (/api/paper/status,
+// /api/paper/trades, /api/paper/candles). Geen eigen business-logica.
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { PositionsChart } from "./positionschart";
-import { useStatus, useMulti, useLivePrices, type PaperOrder, type PaperState, type MultiPair } from "./status-store";
+import { useStatus, useLivePrices, type PaperState, type PaperOrder } from "./status-store";
+import { Panel, Kpi, Badge, pnlClass, eur, pct, ago, dt, Loading, EmptyState, useJson, EquityChart, Sparkline } from "./ui";
 
-const fmtEUR = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 2 });
-const fmtEUR0 = new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: 0 });
-const fmtPrice = (p: number) =>
-  p >= 100 ? fmtEUR0.format(p) : new Intl.NumberFormat("nl-NL", { style: "currency", currency: "EUR", maximumFractionDigits: p >= 1 ? 2 : 4 }).format(p);
-const dt = (t: number | string) =>
-  new Date(typeof t === "number" ? t * 1000 : t).toLocaleString("nl-NL", { dateStyle: "short", timeStyle: "short" });
-const sign = (x: number, d = 2) => (x >= 0 ? "+" : "") + x.toFixed(d) + "%";
-const cls = (x: number) => (x >= 0 ? "up" : "down");
-
-interface MiniTrade {
-  side: "long" | "short"; entryTime: number; exitTime: number;
-  entryPrice: number; exitPrice: number; pnl: number; pnlPct: number;
-  reason: string; holdHours: number;
+interface TradeRow {
+  id: number; created_at: string | null; pair: string; side: string; price: number;
+  size: number; reason: string; equity_after: number; pnl_eur: number | null; pnl_pct: number | null;
+  strategy?: string | null; ai_explanation?: string | null;
+  context?: { fees_eur?: number; slippage_eur?: number; hold_min?: number; exit_reason?: string } | null;
 }
-interface FeedItem { id: string; time: string; text: string; kind: "info" | "tick" | "order" | "ok" | "err" }
-
-function MiniChart({ p, live, onPick, active, livePrice }: { p: MultiPair; live?: PaperState; onPick: () => void; active: boolean; livePrice?: number }) {
-  const st = live?.status ?? "flat";
-  return (
-    <div className={"minichart" + (active ? " active" : "")} onClick={onPick}>
-      <div className="mc-head">
-        <b>{p.name}</b>
-        <span className={"pill " + (live?.halted ? "halt" : st === "long" ? "long" : st === "short" ? "short" : "wait")}>
-          {live?.halted ? "⏸ PAUZE" : st === "long" ? "🟢 LONG" : st === "short" ? "🔴 SHORT" : "⏳ SCAN"}
-        </span>
-      </div>
-      <div className="mc-price">{fmtPrice(livePrice ?? p.price)}</div>
-      <div className="mc-stats">
-        <span className={cls(p.stats.totalReturnPct)}>bot 45d {sign(p.stats.totalReturnPct, 1)}</span>
-        <span>{p.stats.numTrades} trades</span>
-        <span>win {p.stats.winRatePct.toFixed(0)}%</span>
-      </div>
-    </div>
-  );
+interface Aggregates {
+  closed_trades: number; net_pnl_eur: number; winrate_pct: number | null; profit_factor: number | null;
+  expectancy_eur: number | null; max_drawdown_pct: number; fees_eur: number; slippage_eur: number;
+  start_equity_eur: number; last_equity_eur: number; equity_curve: { t: string; eq: number }[];
 }
 
-export default function Dashboard() {
-  // Gedeelde, gecachte data: één statuspoll voor alle pagina's — paginawissel
-  // kost dus géén nieuwe laadtijd (de data zit al in het geheugen).
-  const paper = useStatus();
-  const { multi, reload: loadMulti } = useMulti();
+export default function Overview() {
+  const status = useStatus();
   const prices = useLivePrices();
-  const [pair, setPair] = useState("BTC-EUR");
-  const [feed, setFeed] = useState<FeedItem[]>([]);
-  const [clock, setClock] = useState("");
-  const seen = useRef<Set<number>>(new Set());
-  const tickNo = useRef(0);
+  const tradesQ = useJson<{ trades: TradeRow[]; aggregates: Aggregates | null; configured: boolean }>("/api/paper/trades?limit=500&aggregates=1", 45_000);
 
-  const addFeed = useCallback((text: string, kind: FeedItem["kind"]) => {
-    setFeed((f) =>
-      [{ id: `${Date.now()}-${Math.random()}`, time: new Date().toLocaleTimeString("nl-NL"), text, kind }, ...f].slice(0, 40)
-    );
-  }, []);
+  if (!status) return <Loading h={300} />;
+  if (status.configured === false) return <EmptyState title="Systeem niet geconfigureerd" hint="SUPABASE_URL ontbreekt — de bot draait, het dashboard kan geen data tonen." />;
 
-  // Feed vullen bij elke statuspoll: nieuwe orders direct als feed-item,
-  // anders een "geen nieuwe signalen"-tik.
-  useEffect(() => {
-    if (!paper) return;
-    const orders: PaperOrder[] = paper.orders ?? [];
-    const fresh = orders.filter((o) => !seen.current.has(o.id));
-    if (seen.current.size === 0) {
-      orders.forEach((o) => seen.current.add(o.id));
-      addFeed("Verbonden met Supabase — orderhistorie gesynchroniseerd", "info");
-      if (paper.blofin?.live) addFeed(`Paper-live actief op Blofin demo — virtueel vermogen $${Number(paper.blofin.equityUsd).toFixed(0)}`, "ok");
-      else if (paper.blofin?.error) addFeed(`Blofin demo: verbinding mislukt — ${paper.blofin.error}`, "err");
-    } else if (fresh.length) {
-      fresh.forEach((o) => {
-        seen.current.add(o.id);
-        const nm = o.pair.split("-")[0];
-        addFeed(
-          o.pnl_eur == null
-            ? `${nm} — ${o.side === "buy" ? "LONG GEOPEND" : "SHORT GEOPEND"} @ ${fmtEUR.format(o.price)} (${o.ai_explanation ? `AI: ${o.ai_explanation.slice(0, 70)}` : o.reason})`
-            : `${nm} — POSITIE GESLOTEN (${o.reason}): ${o.pnl_eur >= 0 ? "+" : "−"}${fmtEUR.format(Math.abs(o.pnl_eur))}`,
-          "order"
-        );
-      });
-    } else {
-      tickNo.current++;
-      addFeed(`Marktscan #${tickNo.current} voltooid — 8 coins · geen nieuwe signalen`, "tick");
-    }
-  }, [paper, addFeed]);
-
-  useEffect(() => {
-    setClock(new Date().toLocaleTimeString("nl-NL"));
-    addFeed("SYSTEEM ONLINE — AI Trading System initialiseren…", "info");
-    const c = setInterval(() => setClock(new Date().toLocaleTimeString("nl-NL")), 1000);
-    return () => clearInterval(c);
-  }, []);
-
-  const sel = multi?.pairs.find((p) => p.pair === pair) ?? null;
-  const stateOf = (pair_: string) => paper?.states.find((s) => s.pair === pair_);
-  // Eén gedeelde pot: cash uit de pot-rij + waarde van alle open posities
-  const potTotal = (paper?.pot?.cash ?? 0) + (paper?.states ?? []).reduce((acc, s) => {
-    const px = prices?.[s.pair] ?? multi?.pairs.find((m) => m.pair === s.pair)?.price ?? 0;
-    if (!s.size || !s.entry_price) return acc;
-    const posVal = s.status === "long" ? s.size * px : s.size * (2 * s.entry_price - px);
-    return acc + posVal;
-  }, 0);
-  const potDayPnl = paper?.pot?.day_start_equity
-    ? (potTotal / paper.pot.day_start_equity - 1) * 100 : 0;
-  // Levend bewijs dat de cron de bot wakker maakt: jongste updated_at
-  // van de coin-states → "X min geleden". Meer dan 15 min oud = waarschuwing,
-  // want dan zijn er minstens 3 ticks van de 5-minuten-wekker overgeslagen.
-  const lastTickHint = (() => {
-    const stamps = (paper?.states ?? []).map((s) => s.updated_at).filter(Boolean) as string[];
-    if (!stamps.length) return null;
-    const ms = Date.now() - Math.max(...stamps.map((t) => Date.parse(t)));
-    if (!isFinite(ms) || ms < 0) return null;
-    const min = Math.round(ms / 60000);
-    if (min > 15) return `⚠ ${min} min geleden`;
-    return `${min} min geleden`;
-  })();
+  const pot = status.pot;
+  const openStates = (status.states ?? []).filter((s) => s.status !== "flat");
+  const exposure = (status.monitor as { exposure?: { notional_eur: number } } | undefined)?.exposure?.notional_eur ?? 0;
+  const equity = pot ? pot.cash + exposure : null;
+  const agg = tradesQ.data?.aggregates;
+  const startEq = agg?.start_equity_eur ?? 1000;
+  const retPct = equity !== null ? ((equity / startEq) - 1) * 100 : null;
+  const dayPnl = pot && equity !== null ? equity - pot.day_start_equity : null;
+  const recentExits = (tradesQ.data?.trades ?? []).filter((t) => t.pnl_eur !== null).slice(0, 12);
+  const signals = status.agents?.signals ?? [];
+  const aiRuns = status.agents?.aiRuns ?? [];
+  const halted = pot?.halted ?? false;
 
   return (
-    <main className="hud">
+    <>
+      {halted && (
+        <div className="halt-banner">
+          <span className="halt-title">TRADING HALTED</span>
+          <span className="dim">Daglimiet bereikt — de bot hervat automatisch na middernacht (Europe/Amsterdam). Bestaande posities worden gewoon bewaakt.</span>
+        </div>
+      )}
 
-      <div className="ticker">
-        {(multi?.pairs ?? []).map((p) => {
-          const st = stateOf(p.pair);
-          return (
-            <span key={p.pair} className="tick-item">
-              <b>{p.pair.replace("-EUR", "")}</b>
-              <span>{fmtPrice(prices?.[p.pair] ?? p.price)}</span>
-              <span className={cls(p.stats.buyHoldPct)}>{sign(p.stats.buyHoldPct, 1)}</span>
-              <span className={"pill sm " + (st?.halted ? "halt" : st?.status === "long" ? "long" : st?.status === "short" ? "short" : "wait")}>
-                {st?.halted ? "PAUZE" : st?.status === "long" ? "LONG" : st?.status === "short" ? "SHORT" : "SCAN"}
-              </span>
-            </span>
-          );
-        })}
-        {!multi && <span className="tick-item muted">systemen opstarten…</span>}
+      <div className="kpi-grid" style={{ marginBottom: 14 }}>
+        <Kpi label="Equity (pot)" value={eur(equity)} sub={`dagstart ${eur(pot?.day_start_equity)} · ${exposure > 0 ? `open ${eur(exposure)}` : "geen open notional"}`} />
+        <Kpi label="Total PnL" value={eur(agg?.net_pnl_eur)} tone={(agg?.net_pnl_eur ?? 0) >= 0 ? "pos" : "neg"} sub={`vandaag ${eur(dayPnl)}`} />
+        <Kpi label="Return" value={pct(retPct)} tone={(retPct ?? 0) >= 0 ? "pos" : "neg"} sub={`start €${startEq.toFixed(0)}`} />
+        <Kpi label="Win Rate" value={agg?.winrate_pct === null || agg?.winrate_pct === undefined ? "—" : `${agg.winrate_pct}%`} sub={`${agg?.closed_trades ?? 0} trades`} />
+        <Kpi label="Profit Factor" value={agg?.profit_factor ?? "—"} sub={`exp ${agg?.expectancy_eur !== null && agg?.expectancy_eur !== undefined ? eur(agg.expectancy_eur) : "—"} /trade`} />
+        <Kpi label="Max Drawdown" value={`${agg?.max_drawdown_pct ?? "—"}%`} tone={(agg?.max_drawdown_pct ?? 0) >= 15 ? "neg" : null} />
+        <Kpi label="Fees betaald" value={eur(agg?.fees_eur)} sub={`slippage ${eur(agg?.slippage_eur)}`} />
+        <Kpi label="Trades 24u" value={((status.monitor as { trades_24h?: { closed: number } })?.trades_24h?.closed ?? "—")} sub={`totaal ${agg?.closed_trades ?? "—"} gesloten`} />
       </div>
 
-      <section id="overzicht">
-        <h2><span className="hash">01</span> LIVE OVERZICHT <span className="hint">één gedeelde pot van €1000 · vandaag {sign(potDayPnl, 1)}</span></h2>
-        <div className="grid4">
-          {(multi?.pairs ?? []).map((p) => {
-            const st = stateOf(p.pair);
-            const inPos = st && st.status !== "flat" && st.size && st.entry_price;
-            return (
-              <div className="statcard" key={p.pair}>
-                <div className="sc-top">
-                  <b>{p.name}</b>
-                  <span className={"pill " + (st?.halted ? "halt" : st?.status === "long" ? "long" : st?.status === "short" ? "short" : "wait")}>
-                    {st?.halted ? "⏸ PAUZE" : st?.status === "long" ? "🟢 LONG" : st?.status === "short" ? "🔴 SHORT" : "⏳ SCAN"}
-                  </span>
-                </div>
-                <div className="big">{fmtEUR.format(prices?.[p.pair] ?? p.price)}</div>
-                <div className="delta">
-                  {inPos
-                    ? `${st?.status === "long" ? "🟢" : "🔴"} ${st?.status} @ ${fmtEUR.format(st!.entry_price!)}`
-                    : "geen positie — de bot scant"}
-                </div>
-                <div className="delta dim">
-                  backtest 45d: <span className={cls(p.stats.totalReturnPct)}>{sign(p.stats.totalReturnPct, 1)}</span> · {p.stats.numTrades} trades · win {p.stats.winRatePct.toFixed(0)}%
-                </div>
-              </div>
-            );
-          })}
-          {!multi && <div className="statcard"><div className="big dim">systemen analyseren…</div></div>}
-        </div>
-      </section>
+      <div className="grid cols-2">
+        <Panel title="Equity curve" note="paper equity na fees — high water mark">
+          {tradesQ.loading ? <Loading h={240} /> : tradesQ.error ? <EmptyState title="Equity-curve onbeschikbaar" /> :
+            agg ? <EquityChart points={agg.equity_curve} start={startEq} /> : <EmptyState title="Nog geen gesloten trades" />}
+        </Panel>
 
-      <section id="grafieken">
-        <h2><span className="hash">02</span> GRAFIEKEN <span className="hint">bot-posities rechtstreeks op de candles · ▲ koop · ▼ exit (groen = winst){lastTickHint ? ` · bot-tick: ${lastTickHint}` : ""}</span></h2>
-        <div className="grid4">
-          {(multi?.pairs ?? []).map((p) => (
-            <MiniChart key={p.pair} p={p} live={stateOf(p.pair)} active={p.pair === pair} onPick={() => setPair(p.pair)} livePrice={prices?.[p.pair]} />
-          ))}
-        </div>
-        {sel && (
-          <div className="card wide">
-            <div className="big-head">
-              <h3>{sel.name} — candles met bot-posities (45 dagen)</h3>
-              <select value={pair} onChange={(e) => setPair(e.target.value)} className="sel">
-                {multi!.pairs.map((p) => <option key={p.pair} value={p.pair}>{p.name}</option>)}
-              </select>
-              <button className="btn" onClick={() => loadMulti()} disabled={!multi}>{multi ? "↻ opnieuw analyseren" : "analyse draait…"}</button>
+        <Panel title="Open posities" note={`${openStates.length} actief`}>
+          {openStates.length === 0 ? <EmptyState title="NO OPEN POSITIONS" hint="De bot heeft momenteel geen openstaande paper-posities." /> : (
+            <div className="tbl-wrap">
+              <table className="tbl">
+                <thead><tr><th>Coin</th><th>Side</th><th className="num">Entry</th><th className="num">Nu</th><th className="num">uPnL</th><th className="num">Hold</th><th>SL/TP</th><th>Strategie</th></tr></thead>
+                <tbody>
+                  {openStates.map((s) => {
+                    const p = prices?.[s.pair] ?? s.entry_price;
+                    const upnl = s.entry_price && p && s.size ? (p - s.entry_price) * s.size : null;
+                    const upnlPct = s.entry_price && p ? ((p - s.entry_price) / s.entry_price) * 100 : null;
+                    const holdMin = s.entry_time ? (Date.now() - Date.parse(s.entry_time)) / 60000 : null;
+                    return (
+                      <tr key={s.pair}>
+                        <td className="mono">{s.pair.replace("-EUR", "")}</td>
+                        <td><Badge tone={s.status === "long" ? "green" : "red"}>{s.status.toUpperCase()}</Badge></td>
+                        <td className="num">{eur(s.entry_price, 2)}</td>
+                        <td className="num">{p ? eur(p, 2) : "—"}</td>
+                        <td className={`num ${pnlClass(upnl)}`}>{eur(upnl)} <span className="faint">({pct(upnlPct)})</span></td>
+                        <td className="num dim">{holdMin !== null ? `${Math.floor(holdMin)}m` : "—"}</td>
+                        <td className="num dim">{s.sl_pct ? `SL ${s.sl_pct}%` : "—"} / {s.tp_pct ? `TP ${s.tp_pct}%` : "—"}</td>
+                        <td className="dim">{s.strategy ?? "—"}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
-            <div className="lw-chart-wrap"><PositionsChart
-              candles={sel.candles} trades={sel.trades} pair={pair}
-              paper={paper?.orders
-                .filter((o) => o.pair === pair)
-                .map((o) => ({ time: o.created_at, side: o.side, price: o.price, pnl: o.pnl_eur, strategy: o.strategy }))
-                .reverse()}
-            /></div>
-            <div className="statrow">
-              <span>bot: <b className={cls(sel.stats.totalReturnPct)}>{sign(sel.stats.totalReturnPct)}</b></span>
-              <span>buy&amp;hold: <b className={cls(sel.stats.buyHoldPct)}>{sign(sel.stats.buyHoldPct)}</b></span>
-              <span>trades: <b>{sel.stats.numTrades}</b> ({sel.stats.numShorts} short)</span>
-              <span>winrate: <b>{sel.stats.winRatePct.toFixed(0)}%</b></span>
-              <span>max. dip: <b className="down">−{sel.stats.maxDrawdownPct.toFixed(1)}%</b></span>
-              <span>kosten: <b>{fmtEUR.format(sel.stats.feesPaid)}</b></span>
-              <span>beste/slechtste: <b className="up">{sign(sel.stats.bestTradePct, 1)}</b> / <b className="down">{sign(sel.stats.worstTradePct, 1)}</b></span>
-            </div>
-          </div>
-        )}
-      </section>
+          )}
+        </Panel>
+      </div>
 
-      <section id="activiteit">
-        <h2><span className="hash">03</span> LIVE ACTIVITEIT <span className="hint">systeemfeed · wat de bot en de AI doen</span></h2>
-        <div className="cols">
-          <div className="card feedcard">
-            <h3>◆ Systeemfeed</h3>
-            {paper?.blofin?.live && (
-              <div className="blofin-strip">
-                ◆ Blofin demo (paper-live): vermogen {" "}
-                {paper.blofin.equityUsd != null ? paper.blofin.equityUsd.toFixed(0) : "?"}{" "}
-                · open posities: {paper.blofin.positions.length}
-                {paper.blofin.positions.length > 0 && (
-                  <> — {paper.blofin.positions.map((q) => `${q.instId} ×${q.contracts} (${q.upl >= 0 ? "+" : ""}${q.upl.toFixed(2)}$)`).join(", ")}</>
-                )}
-              </div>
-            )}
-            {paper?.agents?.aiStats ? (
-              <div className="blofin-strip ai-strip" style={{ marginBottom: 10 }}>
-                🤖 AI-agent {paper.agents.executeMode ? "STUURT LIVE" : "TESTMODUS"} (24u):{" "}
-                {paper.agents.aiStats.calls} scans · {paper.agents.aiStats.proposals} voorstellen · kosten ≈ ${paper.agents.aiStats.costUsd.toFixed(3)}
-                {" "}<a href="/ai" className="ai-link">→ naar de AI-zoektocht</a>
-              </div>
-            ) : null}
-            <div className="feed">
-              {feed.map((f) => (
-                <div key={f.id} className={"feed-item " + f.kind}>
-                  <span className="fi-time">{f.time}</span>
-                  <span className="fi-text">{f.text}</span>
+      <div className="grid cols-2" style={{ marginTop: 14 }}>
+        <Panel title="Recente trades" note="laatste 12 gesloten">
+          {recentExits.length === 0 ? <EmptyState title="Nog geen trades" /> : (
+            <div className="tbl-wrap">
+              <table className="tbl">
+                <thead><tr><th>Tijd</th><th>Coin</th><th>Strategie</th><th className="num">PnL</th><th className="num">PnL %</th><th className="num">Hold</th><th>Exit</th></tr></thead>
+                <tbody>
+                  {recentExits.map((t) => (
+                    <tr key={t.id}>
+                      <td className="dim mono">{t.created_at ? dt(t.created_at) : "—"}</td>
+                      <td className="mono">{t.pair.replace("-EUR", "")}</td>
+                      <td className="dim">{t.strategy ?? "—"}</td>
+                      <td className={`num ${pnlClass(t.pnl_eur)}`}>{eur(t.pnl_eur)}</td>
+                      <td className={`num ${pnlClass(t.pnl_pct)}`}>{pct(t.pnl_pct)}</td>
+                      <td className="num dim">{t.context?.hold_min ? `${Math.round(t.context.hold_min)}m` : "—"}</td>
+                      <td className="dim">{t.context?.exit_reason ?? t.reason}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </Panel>
+
+        <Panel title="AI activity" note={status.agents?.executeMode ? "AI execute-mode: aan" : "AI propose-only"}>
+          {signals.length === 0 && aiRuns.length === 0 ? <EmptyState title="Geen AI-activiteit" hint="Nog geen signalen of AI-runs opgeslagen." /> : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {signals.slice(0, 8).map((sig) => {
+                const tone = sig.outcome === "executed" ? "green" : sig.outcome === "rejected" ? "red" : "neutral";
+                return (
+                  <div key={sig.id} style={{ display: "flex", gap: 10, alignItems: "baseline", fontSize: 13 }}>
+                    <span className="faint mono" style={{ flex: "0 0 88px" }}>{ago(sig.created_at)} geleden</span>
+                    <span className="mono" style={{ flex: "0 0 62px" }}>{sig.pair.replace("-EUR", "")}</span>
+                    <span style={{ flex: "0 0 120px" }} className="dim">{sig.strategy_version}</span>
+                    <Badge tone={tone as "green" | "red" | "neutral"} dot={false}>{sig.outcome}</Badge>
+                    <span className="dim" style={{ fontSize: 12 }}>{sig.outcome_reason ?? sig.reason}</span>
+                  </div>
+                );
+              })}
+              {aiRuns.length > 0 && (
+                <div className="faint" style={{ fontSize: 12 }}>
+                  Laatste AI-run {ago(aiRuns[0].created_at)} geleden · {aiRuns[0].proposals} voorstellen · ${aiRuns[0].cost_usd_est?.toFixed(4)} (est) {aiRuns[0].error ? `· fout: ${aiRuns[0].error}` : ""}
                 </div>
-              ))}
+              )}
             </div>
-          </div>
-          <div className="card feedcard">
-            <h3>◆ Nieuws-radar <span className="hint">de AI beoordeelt het nieuwsbeeld mee</span></h3>
-            {(() => {
-              const nw = paper?.agents?.news;
-              if (!nw) return <p className="delta">Nog geen nieuws-status — de AI-agent schrijft die bij zijn eerste scan.</p>;
-              const lvl = nw.level === "high" ? "halt" : nw.level === "caution" ? "wait" : "long";
-              const verlopen = Date.parse(nw.valid_until) < Date.now();
-              const label = nw.level === "high" ? "HOOG RISICO — geen entries" : nw.level === "caution" ? "WAAKZAAM" : "RUSTIG NIEUWSBEELD";
-              return (
-                <>
-                  <span className={"pill " + lvl}>{verlopen ? label + " (oude status)" : label}</span>
-                  <p className="delta" style={{ marginTop: 8 }}>{nw.reason}</p>
-                  <p className="delta dim" style={{ marginTop: 6 }}>
-                    Laatste beoordeling: {dt(nw.created_at)} · bron: {nw.reason.startsWith("AI:") ? "AI-agent" : "trefwoord-radar"}
-                  </p>
-                </>
-              );
-            })()}
-          </div>
-        </div>
-      </section>
-
-      <section id="regels">
-        <h2><span className="hash">04</span> RISICOREGELS &amp; FASES</h2>
-        <div className="grid4">
-          <div className="card"><h3>Stop-loss / take-profit</h3><div className="big">AI per trade</div><div className="delta">SL 1-10% · TP 0,5-15% — risicocheck keurt elk voorstel</div></div>
-          <div className="card"><h3>Risico per trade</h3><div className="big">5-10%</div><div className="delta">van de pot — AI kiest, code keurt</div></div>
-          <div className="card"><h3>Daglimiet</h3><div className="big">−15%</div><div className="delta">bot pauzeert die dag</div></div>
-          <div className="card"><h3>Houdtijd</h3><div className="big">uren</div><div className="delta">day-trading — AI stuit ook zelf af</div></div>
-        </div>
-        <div className="phases">
-          <div className="phase done"><b>1 · Backtest</b><span>afgerond ✓</span></div>
-          <div className="phase now"><b>2 · Paper trading</b><span>actief — 8 coins · één pot · AI stuurt (longs + shorts) · 24/7</span></div>
-          <div className="phase"><b>3 · Live trading</b><span>echte orders — alleen na goed fase 2</span></div>
-        </div>
-      </section>
-
-      <footer>
-        AI Trading System · data: Bitvavo publieke API · orders: paper + Blofin demo-spiegel · leerproject — niets hier is financieel advies.
-        Cron-tick elke minuut · AI: Claude Haiku · echt geld beweegt er niet.
-      </footer>
-    </main>
+          )}
+        </Panel>
+      </div>
+    </>
   );
 }

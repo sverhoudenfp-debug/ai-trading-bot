@@ -5,7 +5,7 @@
 import { NextResponse } from "next/server";
 import { getStates, listOrders, listOrdersSince, supabaseConfigured, POT_PAIR } from "@/lib/paper/store";
 import { snapshot as blofinSnapshot } from "@/lib/exchange/blofin";
-import { listSignals, latestNewsAlert, aiStats24h, lastAgentRun, listSignalsSince, aiUsageSince } from "@/lib/agents/db";
+import { listSignals, latestNewsAlert, aiStats24h, lastAgentRun, listSignalsSince, aiUsageSince, listNewsAlerts } from "@/lib/agents/db";
 import { aiExecuteEnabled } from "@/lib/agents/config";
 import { DAILY_LOSS_LIMIT_PCT } from "@/lib/risk/config";
 
@@ -26,8 +26,9 @@ export async function GET() {
     // dashboard gewoon werken (agents: null).
     let signals: Awaited<ReturnType<typeof listSignals>> | null = null;
     let news: Awaited<ReturnType<typeof latestNewsAlert>> | null = null;
+    let newsList: Awaited<ReturnType<typeof listNewsAlerts>> = [];
     try {
-      [signals, news] = await Promise.all([listSignals(20), latestNewsAlert()]);
+      [signals, news, newsList] = await Promise.all([listSignals(20), latestNewsAlert(), listNewsAlerts(25)]);
     } catch {
       signals = null; news = null;
     }
@@ -135,7 +136,7 @@ export async function GET() {
       states: states.filter((s) => s.pair !== POT_PAIR),
       orders, blofin,
       agents: signals ? {
-        signals, news, aiStats, aiLast, aiRuns, strategyStats,
+        signals, news, newsList, aiStats, aiLast, aiRuns, strategyStats,
         executeMode: aiExecuteEnabled,
       } : null,
     });

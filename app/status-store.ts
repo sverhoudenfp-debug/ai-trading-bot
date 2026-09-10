@@ -14,6 +14,9 @@ export interface PaperState {
   size: number | null; cost: number | null;
   day: string | null; day_start_equity: number; halted: boolean;
   updated_at?: string | null;
+  sl_pct?: number | null;
+  tp_pct?: number | null;
+  strategy?: string | null;
 }
 export interface PaperOrder {
   id: number; created_at: string; pair: string; side: "buy" | "sell";
@@ -35,6 +38,7 @@ export interface StatusPayload {
   agents?: {
     signals: { id: number; created_at: string; pair: string; side: string; kind: string; reason: string; strategy_version: string; outcome: string; outcome_reason: string | null; ai_explanation?: string | null; proposed_by?: string | null; timeframe?: string | null; sl_pct?: number | null; tp_pct?: number | null; risk_pct?: number | null; confidence?: string | null }[];
     news: { id: number; created_at: string; level: string; reason: string; valid_until: string } | null;
+    newsList?: { id: number; created_at: string; level: string; reason: string; source: string; valid_until: string }[];
     aiStats?: { calls: number; errors: number; proposals: number; costUsd: number } | null;
     aiLast?: { created_at: string; error: string | null } | null;
     aiRuns?: { created_at: string; proposals: number; cost_usd_est: number; error: string | null }[];
@@ -70,6 +74,7 @@ async function fetchStatus() {
     if (j.configured && !j.error) {
       statusCache = j as StatusPayload;
       (statusCache as any).__at = Date.now();
+      (statusCache as any).__atIso = new Date().toISOString();
       notify();
     }
   } catch { /* volgende poll probeert opnieuw */ }
