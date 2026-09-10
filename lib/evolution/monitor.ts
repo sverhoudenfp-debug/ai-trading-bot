@@ -63,17 +63,19 @@ export function computeMonitorVerdict(args: {
   const wins = closed.filter((o) => (o.pnl_eur ?? 0) > 0);
   const losses = closed.filter((o) => (o.pnl_eur ?? 0) <= 0);
   const netPnl = closed.reduce((a, o) => a + (o.pnl_eur ?? 0), 0);
+  // Fase 4-fix: de echte exit-context gebruikt gross_pnl_eur/fees_eur/
+  // slippage_eur (snake_case met _eur); oude key-namen als fallback.
   const grossSum = closed.reduce((a, o) => {
-    const ctx = (o as { context?: { gross?: number; fees?: number; slippage?: number } }).context ?? {};
-    return a + (ctx.gross ?? o.pnl_eur ?? 0);
+    const ctx = (o as { context?: { gross_pnl_eur?: number; gross?: number } }).context ?? {};
+    return a + (ctx.gross_pnl_eur ?? ctx.gross ?? o.pnl_eur ?? 0);
   }, 0);
   const feeSum = closed.reduce((a, o) => {
-    const ctx = (o as { context?: { fees?: number } }).context ?? {};
-    return a + (ctx.fees ?? 0);
+    const ctx = (o as { context?: { fees_eur?: number; fees?: number } }).context ?? {};
+    return a + (ctx.fees_eur ?? ctx.fees ?? 0);
   }, 0);
   const slipSum = closed.reduce((a, o) => {
-    const ctx = (o as { context?: { slippage?: number } }).context ?? {};
-    return a + (ctx.slippage ?? 0);
+    const ctx = (o as { context?: { slippage_eur?: number; slippage?: number } }).context ?? {};
+    return a + (ctx.slippage_eur ?? ctx.slippage ?? 0);
   }, 0);
 
   const holds = closed.map((o) => (o as { context?: { hold_min?: number } }).context?.hold_min ?? 0).filter((x) => x > 0);
@@ -81,11 +83,14 @@ export function computeMonitorVerdict(args: {
   const longestHoldMin = holds.length ? Math.max(...holds) : 0;
 
   // equity-curve voor drawdown (start = 1000-referentie)
-  let eq = 1000;
-  const curve = [1000];
-  for (const o of closed) { eq += o.pnl_eur ?? 0; curve.push(eq); }
-  const peak = Math.max(...curve);
-  const maxDrawdownPct = peak > 0 ? Math.max(0, ((peak - Math.min(...curve)) / peak) * 100) : 0;
+  // Fase 4-fix: running peak — puur stijgende curve = 0% drawdown
+  let eq = 1000; let runPeak = 1000; let maxDD = 0;
+  for (const o of closed) {
+    eq += o.pnl_eur ?? 0;
+    runPeak = Math.max(runPeak, eq);
+    if (runPeak > 0) maxDD = Math.max(maxDD, ((runPeak - eq) / runPeak) * 100);
+  }
+  const maxDrawdownPct = maxDD;
 
   // verlies-streak
   let streak = 0, maxStreak = 0;

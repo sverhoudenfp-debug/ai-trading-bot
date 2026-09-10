@@ -125,6 +125,19 @@ export async function activateCanary(
     active
   );
   if (!check.ok) {
+    // FASE 4 (Deel 21): is het canary-slot bezet, dan NIET weggooien maar
+    // in de wachtrij zetten — de validation-tick bevordert zodra het slot
+    // vrijkomt. Familie-conflicten en duplicaten gaan niet in de wachtrij.
+    const slotTaken = check.blockers.some((b) => b.includes("canary actief"));
+    if (slotTaken && row.status === "PAPER_CANDIDATE") {
+      const queued = await transitionStatus(row.id, "PAPER_CANDIDATE", "WAITING_FOR_CANARY_SLOT", {}, {
+        reason: `canary-slot bezet — in wachtrij gezet (${check.blockers.join("; ")})`,
+        performed_by: performedBy, action: "queue",
+      });
+      if (queued.ok) {
+        return { ok: false, row: queued.row, error: "WAITING_FOR_CANARY_SLOT", blockers: check.blockers };
+      }
+    }
     await writeAudit({
       registry_id: row.id, action: "activate", from_status: row.status, to_status: row.status,
       reason: `activatie GEWEIGERD: ${check.blockers.join("; ")}`, performed_by: performedBy, metrics_at: row.research_metrics,
@@ -132,7 +145,8 @@ export async function activateCanary(
     return { ok: false, row, error: "activatie-voorwaarden niet voldaan", blockers: check.blockers };
   }
 
-  const res = await transitionStatus(row.id, "PAPER_CANDIDATE", "PAPER_ACTIVE", {
+  const from = row.status === "WAITING_FOR_CANARY_SLOT" ? "WAITING_FOR_CANARY_SLOT" : "PAPER_CANDIDATE";
+  const res = await transitionStatus(row.id, from as never, "PAPER_ACTIVE", {
     activated_at: new Date().toISOString(),
     activation_reason: reason,
     canary: true,

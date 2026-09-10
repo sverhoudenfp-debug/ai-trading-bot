@@ -194,3 +194,67 @@ export async function listPaperMetrics(registryId: number, limit = 50): Promise<
     return await res.json();
   } catch { return []; }
 }
+
+// ── FASE 4: paper_validation_runs — gebonden, idempotente validatie-runs ──
+// execution_id is UNIEK (DB-constraint): één run per strategie per dag
+// (Amsterdamse datum) — dubbele runs zijn fysiek onmogelijk.
+export interface ValidationRunRow {
+  id: number;
+  created_at: string;
+  execution_id: string;        // bijv. val-12-2026-09-10
+  registry_id: number;
+  strategy_key: string | null;
+  verdict: string;
+  report: unknown;             // volledig JSON-rapport
+  duration_ms: number | null;
+}
+
+/** Insert met unique-guard: false = run bestaat al (of tabel niet geconfigureerd). */
+export async function insertValidationRun(row: {
+  execution_id: string; registry_id: number; strategy_key: string; verdict: string;
+}): Promise<{ ok: boolean; reason?: string }> {
+  if (!URL_ || !KEY) return { ok: false, reason: "niet geconfigureerd (fail-closed)" };
+  try {
+    const res = await fetch(`${URL_}/rest/v1/paper_validation_runs`, {
+      method: "POST",
+      headers: h(),
+      body: JSON.stringify({ ...row, report: null, duration_ms: null }),
+    });
+    if (res.status === 409) return { ok: false, reason: "run bestaat al voor vandaag (idempotent)" };
+    if (!res.ok) return { ok: false, reason: `insert faalde (${res.status}) — tabel bestaat? supabase-phase4-setup.sql` };
+    return { ok: true };
+  } catch (e) {
+    return { ok: false, reason: String(e instanceof Error ? e.message : e) };
+  }
+}
+
+/** Update de run met het definitieve rapport (na de berekening). */
+export async function completeValidationRun(executionId: string, verdict: string, report: unknown, durationMs: number): Promise<void> {
+  if (!URL_ || !KEY) return;
+  try {
+    await fetch(`${URL_}/rest/v1/paper_validation_runs?execution_id=eq.${encodeURIComponent(executionId)}`, {
+      method: "PATCH",
+      headers: h(),
+      body: JSON.stringify({ verdict, report: JSON.stringify(report), duration_ms: Math.round(durationMs) }),
+    });
+  } catch { /* nooit breken */ }
+}
+
+export async function listValidationRuns(limit = 50): Promise<ValidationRunRow[]> {
+  if (!URL_ || !KEY) return [];
+  try {
+    const res = await fetch(`${URL_}/rest/v1/paper_validation_runs?order=created_at.desc&limit=${limit}`, { headers: h() });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch { return []; }
+}
+
+/** Wachtende canary-candidates (Deel 21-queue), oudste eerst. */
+export async function listWaitingForSlot(limit = 10): Promise<RegistryRow[]> {
+  if (!URL_ || !KEY) return [];
+  try {
+    const res = await fetch(`${URL_}/rest/v1/strategy_registry?status=eq.WAITING_FOR_CANARY_SLOT&order=created_at.asc&limit=${limit}`, { headers: h() });
+    if (!res.ok) return [];
+    return await res.json();
+  } catch { return []; }
+}

@@ -52,6 +52,7 @@ import { amsterdamDay } from "@/lib/time";
 import { CANARY_RISK_CAP_PCT } from "@/lib/evolution/config";
 import { evoStrategyStillActive } from "@/lib/evolution/live";
 import { evolutionMonitorTick } from "@/lib/evolution/tick";
+import { validationTick } from "@/lib/validation/tick";
 
 const slip = SLIPPAGE_PCT / 100;
 const fee = FEE_PCT / 100;
@@ -610,6 +611,20 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
     } catch (e) {
       evolution = { checked: 0, rollbacks: [], warnings: [], errors: [String(e instanceof Error ? e.message : e)] };
     }
+  }
+
+  // ── FASE 4: paper validation tick (gebonden: max 1×/12u, execution-lock
+  //    per strategie per dag in de DB; blokkeert de order-flow nooit) ──
+  if (!dry) {
+    try {
+      const valTick = await validationTick();
+      for (const v of valTick.validated) {
+        if (v.statusChanged) feedActions.push(`📋 VALIDATIE ${v.strategy}: ${v.verdict} (${v.statusChanged})`);
+      }
+      for (const q of valTick.queuePromotions) {
+        feedActions.push(`🟡 CANARY-QUEUE: ${q.strategy} geactiveerd (slot vrij)`);
+      }
+    } catch { /* fail-closed: validatie mag de order-flow nooit breken */ }
   }
 
   // ── opslaan: alle positie-rijen + de pot-rij (releases de run-lock) ───

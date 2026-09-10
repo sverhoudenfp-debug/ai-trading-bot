@@ -36,10 +36,17 @@ interface ActivationRow {
   performed_by: string;
 }
 
+interface ValRun {
+  id: number; created_at: string; strategy_key: string | null;
+  verdict: string; duration_ms: number | null;
+  report?: { metrics?: { closed?: number; netPnl?: number; fees?: number; expectancyEur?: number; maxDrawdownPct?: number }; drift?: { worst?: string } } | string | null;
+}
+
 interface StatusResp {
   configured: boolean;
   registry: RegistryRow[];
   activations: ActivationRow[];
+  validation?: { runs: ValRun[]; paperMetrics: Record<string, unknown[]> };
   live_trading: string;
 }
 
@@ -181,6 +188,38 @@ export default function EvolutionPage() {
               </tbody>
             </table>
           </div>
+        </section>
+
+        {/* FASE 4: PAPER VALIDATION (alleen data, geen redesign) */}
+        <section className="rounded-lg border bg-white p-4">
+          <h2 className="font-semibold mb-2">Paper validation (Fase 4)</h2>
+          {(() => {
+            const runs = data?.validation?.runs ?? [];
+            if (!runs.length) return <p className="text-sm text-neutral-500">Nog geen validatie-runs uitgevoerd (de tick draait max 1x per 12u, of via POST /api/validation/run met token).</p>;
+            return (
+              <div className="space-y-1 text-sm">
+                {runs.slice(0, 12).map((v) => {
+                  const rep = typeof v.report === "string" ? (() => { try { return JSON.parse(v.report); } catch { return null; } })() : v.report ?? null;
+                  const m = rep?.metrics;
+                  return (
+                    <div key={v.id} className="border-b last:border-0 py-1">
+                      <span className="text-neutral-400">{v.created_at.slice(0, 16).replace("T", " ")}</span>{" "}
+                      <span className="font-medium">{v.strategy_key}</span>{" "}
+                      <span className={`rounded px-1.5 py-0.5 text-xs ${
+                        v.verdict === "PAPER_APPROVED" ? "bg-emerald-100 text-emerald-800"
+                        : v.verdict === "FAILED" || v.verdict === "ERROR" ? "bg-red-100 text-red-800"
+                        : v.verdict === "VALIDATION_READY" ? "bg-blue-100 text-blue-800"
+                        : "bg-neutral-100 text-neutral-700"}`}>{v.verdict}</span>{" "}
+                      {m && <span className="text-neutral-600">
+                        {m.closed ?? 0} trades · netto €{m.netPnl ?? 0} · fees €{m.fees ?? 0} · exp €{m.expectancyEur ?? 0}/trade · DD {m.maxDrawdownPct ?? 0}%
+                        {rep?.drift?.worst ? ` · drift ${rep.drift.worst}` : ""}
+                      </span>}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
         </section>
 
         {/* ROLLBACKS */}
