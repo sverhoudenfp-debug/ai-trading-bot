@@ -45,7 +45,16 @@ export interface RegistryRow {
 }
 
 export async function registryConfigured(): Promise<boolean> {
-  return Boolean(URL_ && KEY);
+  if (!URL_ || !KEY) return false;
+  // daadwerkelijk pollen: pas true als de TABEL bestaat (HTTP 200).
+  // Een 404 (migration nog niet gedraaid) of netwerkfout = NOT configured
+  // → UI toont de migration-waarschuwing, activatie blijft fail-closed.
+  try {
+    const res = await fetch(`${URL_}/rest/v1/strategy_registry?select=id&limit=1`, { headers: h(), cache: "no-store" });
+    return res.ok;
+  } catch {
+    return false;
+  }
 }
 
 export async function listRegistry(limit = 100): Promise<RegistryRow[]> {
