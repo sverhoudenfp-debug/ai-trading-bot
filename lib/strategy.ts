@@ -48,10 +48,10 @@ export const DEFAULT_PARAMS: StrategyParams = {
   slPct: 3,       // verbreed na winrate-sweep 9 sep 2026: 60% wr over 90d (was 1.5)
   tpPct: 4,
   maxHoldBars: 64,
-  riskPerTrade: 1,
+  riskPerTrade: 0.5,   // Fase 1: 1% → 0,5% (centrale band: 0,25-1,0%)
   feePct: 0.25,
   slippagePct: 0.05,
-  dailyLossLimitPct: 3,
+  dailyLossLimitPct: 5,   // Fase 1: 3% → 5% op één lijn met DAILY_LOSS_LIMIT_PCT
 };
 
 export interface StrategyState {

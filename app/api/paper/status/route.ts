@@ -3,10 +3,11 @@
 // Geen token nodig: hier staat niets geheims in.
 
 import { NextResponse } from "next/server";
-import { getStates, listOrders, supabaseConfigured, POT_PAIR } from "@/lib/paper/store";
+import { getStates, listOrders, listOrdersSince, supabaseConfigured, POT_PAIR } from "@/lib/paper/store";
 import { snapshot as blofinSnapshot } from "@/lib/exchange/blofin";
-import { listSignals, latestNewsAlert, aiStats24h, lastAgentRun } from "@/lib/agents/db";
+import { listSignals, latestNewsAlert, aiStats24h, lastAgentRun, listSignalsSince, aiUsageSince } from "@/lib/agents/db";
 import { aiExecuteEnabled } from "@/lib/agents/config";
+import { DAILY_LOSS_LIMIT_PCT } from "@/lib/risk/config";
 
 export const dynamic = "force-dynamic";
 
@@ -44,7 +45,7 @@ export async function GET() {
     } catch { /* optioneel */ }
     try {
       const weekAgo = Date.now() - 7 * 86400_000;
-      const orders = await listOrders(100);
+      const orders = await listOrdersSince(new Date(weekAgo).toISOString()); // Fase 1: volledig venster
       const by = new Map<string, { n: number; w: number; pnl: number }>();
       for (const o of orders) {
         if (o.pnl_eur === null || o.strategy === null || o.strategy === undefined) continue;
@@ -58,8 +59,75 @@ export async function GET() {
       })).sort((a, b) => b.pnl_eur - a.pnl_eur);
     } catch { /* optioneel */ }
 
+    // ── Fase 1: monitoring-blok — early-warning voor fee-churn ──────────
+    // Alles wat de afgelopen 24 uur gebeurde: frequentie, winrate, kosten-
+    // uitsplitsing (koers vs fees vs slippage), exit-redenen en guard-
+    // blokkades, zodat een terugval in churn direct zichtbaar is.
+    const monitor: Record<string, unknown> = { available: false };
+    try {
+      const since = new Date(Date.now() - 24 * 3600_000).toISOString();
+      const orders24h = await listOrdersSince(since);
+      const entries24h = orders24h.filter((o) => o.pnl_eur === null);
+      const exits24h = orders24h.filter((o) => o.pnl_eur !== null);
+      const wins = exits24h.filter((o) => (o.pnl_eur ?? 0) > 0).length;
+      const net = exits24h.reduce((a, o) => a + (o.pnl_eur ?? 0), 0);
+      const gross = exits24h.reduce((a, o) => a + ((o as { context?: { gross_pnl_eur?: number } }).context?.gross_pnl_eur ?? 0), 0);
+      const feesPaid = exits24h.reduce((a, o) => a + ((o as { context?: { fees_eur?: number } }).context?.fees_eur ?? 0), 0);
+      const slipPaid = exits24h.reduce((a, o) => a + ((o as { context?: { slippage_eur?: number } }).context?.slippage_eur ?? 0), 0);
+      const hold = exits24h
+        .map((o) => (o as { context?: { hold_min?: number } }).context?.hold_min)
+        .filter((h): h is number => typeof h === "number");
+      const exitReasons: Record<string, number> = {};
+      for (const o of exits24h) exitReasons[o.reason] = (exitReasons[o.reason] ?? 0) + 1;
+      const perPair: Record<string, number> = {};
+      for (const o of entries24h) perPair[o.pair] = (perPair[o.pair] ?? 0) + 1;
+
+      const signals24h = await listSignalsSince(since).catch(() => []);
+      const outcomes: Record<string, number> = {};
+      for (const sig of signals24h) outcomes[sig.outcome] = (outcomes[sig.outcome] ?? 0) + 1;
+
+      const ai = await aiUsageSince(since).catch(() => ({ calls: 0, costUsd: 0, errors: 0 }));
+
+      const openStates = states.filter((s) => s.pair !== POT_PAIR && s.status !== "flat");
+      const exposureNotional = openStates.reduce((a, s) => a + (s.size && s.entry_price ? s.size * s.entry_price : 0), 0);
+
+      monitor.available = true;
+      monitor.trades_24h = {
+        entries: entries24h.length,
+        entries_per_pair: perPair,
+        closed: exits24h.length,
+        winrate_pct: exits24h.length ? Math.round((wins / exits24h.length) * 100) : null,
+        exit_reasons: exitReasons,
+        avg_hold_min: hold.length ? Math.round(hold.reduce((a, b) => a + b, 0) / hold.length) : null,
+        pnl: {
+          net_eur: Math.round(net * 100) / 100,
+          gross_eur: Math.round(gross * 100) / 100,
+          fees_eur: Math.round(feesPaid * 100) / 100,
+          slippage_eur: Math.round(slipPaid * 100) / 100,
+        },
+      };
+      monitor.signals_24h = outcomes;
+      monitor.ai_24h = ai;
+      monitor.exposure = {
+        open_positions: openStates.length,
+        notional_eur: Math.round(exposureNotional * 100) / 100,
+      };
+      monitor.daily_loss = potRow
+        ? {
+            day: potRow.day,
+            day_start_equity: potRow.day_start_equity,
+            limit_pct: DAILY_LOSS_LIMIT_PCT,
+            current_pct: potRow.day_start_equity > 0
+              ? Math.round(((potRow.cash + exposureNotional) / potRow.day_start_equity - 1) * 1000) / 10
+              : null,
+            halted: potRow.halted,
+          }
+        : null;
+    } catch { /* monitor is optioneel */ }
+
     return NextResponse.json({
       configured: true,
+      monitor,
       initialized: states.length > 0,
       pot: potRow
         ? { cash: potRow.cash, day_start_equity: potRow.day_start_equity, halted: potRow.halted }

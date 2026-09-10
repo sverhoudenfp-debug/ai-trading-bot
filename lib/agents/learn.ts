@@ -16,7 +16,7 @@
 //  6. De vaste risicobanden (SL/TP/pot-limieten, veiligheidslaag) raken
 //     NIET aan: leren = sturen, niet remmen op bescherming.
 
-import { listOrders } from "@/lib/paper/store";
+import { listOrdersSince } from "@/lib/paper/store";
 
 const URL_ = process.env.SUPABASE_URL ?? "";
 const KEY = process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
@@ -31,7 +31,7 @@ function headers(extra?: Record<string, string>) {
 }
 
 const WINDOW_DAYS = 14;   // resultaten venster
-const MIN_TRADES = 5;     // minder → nog neutraal
+const MIN_TRADES = Number(process.env.LEARN_MIN_TRADES ?? 10); // minder → nog neutraal (Fase 1: 5→10 tegen kleine-sample-ruis)
 const MAX_STEP = 0.15;    // max verandering per dag
 const W_MIN = 0.5;
 const W_MAX = 1.6;
@@ -68,14 +68,15 @@ export async function getActiveWeights(): Promise<LearnResult | null> {
 async function learnCycle(): Promise<LearnResult> {
   const version = `learn-${new Date().toISOString().slice(0, 10)}`;
 
-  // gesloten trades uit het venster ophalen
-  const since = Date.now() - WINDOW_DAYS * 24 * 3600_000;
-  const orders = await listOrders(500);
+  // gesloten trades uit het venster ophalen — VOLLEDIG venster via
+  // paginering (Fase 1-fix: de oude listOrders(500) kapte stilletjes af)
+  const sinceMs = Date.now() - WINDOW_DAYS * 24 * 3600_000;
+  const orders = await listOrdersSince(new Date(sinceMs).toISOString());
   const closed = orders.filter(
     (o) =>
       o.pnl_eur !== null &&
       !!o.strategy &&
-      Date.parse(o.created_at ?? "") >= since
+      Date.parse(o.created_at ?? "") >= sinceMs
   );
 
   // per strategie: trades, winst, gemiddelde pnl
@@ -111,11 +112,21 @@ async function learnCycle(): Promise<LearnResult> {
   }
   // strategieën zonder nieuwe data houden hun huidige gewicht
 
+  // fee-inzicht: netto-pnl is incl. fees/slippage; toon het aandeel zodat
+  // "slechte entries" vs "fees vernietigden de edge" straks te onderscheiden is
+  const feeNote = (() => {
+    const withFees = closed.filter((o) => (o as { context?: { fees_eur?: number } }).context?.fees_eur != null);
+    if (!withFees.length) return "";
+    const f = withFees.reduce((a, o) => a + ((o as { context?: { fees_eur?: number } }).context!.fees_eur ?? 0), 0);
+    const n = withFees.reduce((a, o) => a + (o.pnl_eur ?? 0), 0);
+    return ` · fees&slip in venster: €${f.toFixed(2)} (netto €${n.toFixed(2)})`;
+  })();
+
   const note =
     stats.length
       ? stats
           .map((s) => `${s.strategy}: ${s.wins}/${s.trades} win (${Math.round(s.winrate * 100)}%) → ×${s.weight.toFixed(2)}`)
-          .join(" · ")
+          .join(" · ") + feeNote
       : "nog te weinig gesloten trades in het 14-daagse venster — gewichten ongewijzigd";
 
   // vorige actieve versie degraderen en nieuwe activeren

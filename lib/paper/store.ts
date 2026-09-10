@@ -104,12 +104,29 @@ export async function saveState(s: PaperState): Promise<void> {
   if (!r.ok) throw new Error(`Supabase saveState: HTTP ${r.status}`);
 }
 
-export async function insertOrder(o: PaperOrder): Promise<void> {
+export async function insertOrder(o: PaperOrderExt): Promise<void> {
+  const ext = {
+    ...(o.timeframe !== undefined ? { timeframe: o.timeframe } : {}),
+    ...(o.confidence !== undefined ? { confidence: o.confidence } : {}),
+    ...(o.context !== undefined && o.context !== null ? { context: o.context } : {}),
+  };
+  // Eerst mét de Fase 1-velden (timeframe/confidence/context). Bestaan die
+  // kolommen nog niet (migration nog niet gedraaid), dan valt de insert
+  // netjes terug op de klassieke velden — de bot verliest géén orders.
   const r = await fetch(`${URL_}/rest/v1/paper_orders`, {
     method: "POST",
     headers: headers(),
-    body: JSON.stringify(o),
+    body: JSON.stringify({ ...o, ...ext }),
   });
+  if (!r.ok && Object.keys(ext).length) {
+    const r2 = await fetch(`${URL_}/rest/v1/paper_orders`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify({ ...o, timeframe: undefined, confidence: undefined, context: undefined }),
+    });
+    if (!r2.ok) throw new Error(`Supabase insertOrder: HTTP ${r2.status}`);
+    return;
+  }
   if (!r.ok) throw new Error(`Supabase insertOrder: HTTP ${r.status}`);
 }
 
@@ -134,4 +151,109 @@ export async function listOrders(limit = 50): Promise<PaperOrder[]> {
     strategy: x.strategy === null || x.strategy === undefined ? null : String(x.strategy),
     ai_explanation: x.ai_explanation === null || x.ai_explanation === undefined ? null : String(x.ai_explanation),
   }));
+}
+
+// ═════════════════ FASE 1-TOEVOEGINGEN ═════════════════════════════════
+
+// ── kolom-beschikbaarheid detecteren (graceful vóór de migration) ──────
+// Nieuwe jsonb-kolommen bestaan pas nadat supabase-phase1-setup.sql is
+// gedraaid. Detecteer één keer per proces of ze er zijn; zo werkt de bot
+// ook vóór de migration (zonder snapshots, met logging).
+const columnCache = new Map<string, boolean>();
+export async function tableHasColumn(table: string, column: string): Promise<boolean> {
+  const key = `${table}.${column}`;
+  if (columnCache.has(key)) return columnCache.get(key)!;
+  try {
+    const r = await fetch(`${URL_}/rest/v1/${table}?select=${column}&limit=1`, {
+      headers: headers(), cache: "no-store",
+    });
+    const ok = r.ok; // 400 = kolom bestaat (nog) niet
+    columnCache.set(key, ok);
+    return ok;
+  } catch {
+    columnCache.set(key, false);
+    return false;
+  }
+}
+
+// ── PaperOrder-uitbreiding: snapshot + fee-uitsplitsing ────────────────
+// context (jsonb) bevat: indicator-snapshot bij entry, en bij exit de
+// uitsplitsing gross/fees/slippage/net — de kolom bestaat pas na de
+// phase1-migration; insertOrder degradeert netjes zonder.
+export interface PaperOrderExt extends PaperOrder {
+  timeframe?: string | null;
+  confidence?: string | null;
+  context?: Record<string, unknown> | null;
+}
+
+// ── volledige orderhistorie sinds een tijdstip (GEEN stille afkap) ─────
+// Fase 1-fix: performance/leer-queries pakten vroeger af bij een vaste
+// limit (100/500) — daarmee "laatste 14 dagen" stiekem "laatste ~500
+// orders". Nu: echte paginering over de volledige periode.
+export async function listOrdersSince(sinceIso: string, maxPages = 100): Promise<PaperOrderExt[]> {
+  const out: PaperOrderExt[] = [];
+  const limit = 1000;
+  for (let page = 0; page < maxPages; page++) {
+    const r = await fetch(
+      `${URL_}/rest/v1/paper_orders?created_at=gte.${encodeURIComponent(sinceIso)}&order=created_at.asc&limit=${limit}&offset=${page * limit}`,
+      { headers: headers(), cache: "no-store" }
+    );
+    if (!r.ok) throw new Error(`Supabase listOrdersSince: HTTP ${r.status}`);
+    const rows = (await r.json()) ?? [];
+    for (const x of rows) {
+      out.push({
+        id: Number(x.id),
+        created_at: String(x.created_at),
+        pair: String(x.pair),
+        side: x.side as "buy" | "sell",
+        price: Number(x.price),
+        size: Number(x.size),
+        reason: String(x.reason),
+        equity_after: Number(x.equity_after),
+        pnl_eur: x.pnl_eur === null ? null : Number(x.pnl_eur),
+        pnl_pct: x.pnl_pct === null ? null : Number(x.pnl_pct),
+        strategy: x.strategy === null || x.strategy === undefined ? null : String(x.strategy),
+        ai_explanation: x.ai_explanation === null || x.ai_explanation === undefined ? null : String(x.ai_explanation),
+        timeframe: x.timeframe === null || x.timeframe === undefined ? null : String(x.timeframe),
+        confidence: x.confidence === null || x.confidence === undefined ? null : String(x.confidence),
+        context: (x.context ?? null) as Record<string, unknown> | null,
+      });
+    }
+    if (rows.length < limit) break; // klaar
+  }
+  return out;
+}
+
+
+// ── ATOMAIRE RUN-LOCK (concurrentie-bescherming) ───────────────────────
+// Twee gelijktijdige cron-runs zijn de bron van dubbele orders. We claimen
+// de pot-rij atoom via een conditional PATCH: alleen als entry_time < nu
+// wordt entry_time op de toekomst (TTL) gezet. De DB serialiseert de
+// UPDATE — de tweede run krijgt 0 rijen terug en stopt.
+// De pot-rij gebruikt entry_time nooit voor iets anders (de pot heeft geen
+// positie), dus dit veld is hier veilig te gebruiken als lock-veld.
+// saveState(pot) aan het eind van de run zet entry_time terug op null →
+// lock automatisch vrij. Bij een crash loopt de TTL af (zelfherstellend).
+const LOCK_ROW = "1970-01-01T00:00:00+00:00";
+export async function claimRunLock(ttlMin = 5): Promise<boolean> {
+  const now = Date.now();
+  const until = new Date(now + ttlMin * 60_000).toISOString();
+  // 1. éénmalige initialisatie als het veld nog null is (idempotent, veilig)
+  await fetch(`${URL_}/rest/v1/paper_state?pair=eq.${encodeURIComponent(POT_PAIR)}&entry_time=is.null`, {
+    method: "PATCH",
+    headers: headers({ Prefer: "return=minimal" }),
+    body: JSON.stringify({ entry_time: LOCK_ROW }),
+  }).catch(() => undefined);
+  // 2. atomaire claim: alleen slagen als entry_time < nu
+  const r = await fetch(
+    `${URL_}/rest/v1/paper_state?pair=eq.${encodeURIComponent(POT_PAIR)}&entry_time=lt.${encodeURIComponent(new Date(now).toISOString())}`,
+    {
+      method: "PATCH",
+      headers: headers({ Prefer: "return=representation" }),
+      body: JSON.stringify({ entry_time: until }),
+    }
+  );
+  if (!r.ok) return true; // lock-tabel niet beschikbaar → liever blijven draaien (risk-guards blijven actief)
+  const rows = (await r.json()) ?? [];
+  return Array.isArray(rows) && rows.length > 0;
 }

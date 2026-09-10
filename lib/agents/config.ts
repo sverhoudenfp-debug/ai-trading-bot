@@ -1,18 +1,9 @@
 // ── AI-agent configuratie ────────────────────────────────────────────────
-// Nieude risico-instellingen voor de gecombineerde AI-agent (9 sep 2026).
-// De oude 1%-risico/-3%-daglimiet bleef gelden voor de regel-strategie;
-// bij AI-signalen gelden deze bredere kaders, gecontroleerd door het
-// veiligheids-laagje in lib/agents/orders.ts.
+// Fase 1: alle risico-limieten (risico per trade, notional, exposure,
+// fee-guard, cooldown, frequency, daglimiet, AI-budget) zijn verhuisd naar
+// lib/risk/config.ts — EÉN centrale plek. Hier blijven alleen de
+// AI-specifieke instellingen over die geen risico zijn.
 
-export const AI_RISK_MIN_PCT = 5;    // minimaal risico per AI-trade (% van de pot)
-export const AI_RISK_MAX_PCT = 10;   // maximaal risico per AI-trade (% van de pot)
-export const AI_DAY_LIMIT_PCT = 15;  // daglimiet -15% (ipv -3%): vangt 2 verlies-trades
-                                      // op rij bij 10% risico, ~4 bij 5% risico
-export const AI_SL_MIN_PCT = 1;      // geldige stop-loss range
-export const AI_SL_MAX_PCT = 10;
-export const AI_TP_MIN_PCT = 0.5;    // geldige take-profit range
-export const AI_TP_MAX_PCT = 15;
-export const AI_MAX_COST_PCT = 95;   // max % van de kas in één positie
 // Slim interval: open posities of hoge volatiliteit → AI scant elke minuut
 // (cron-tik); rustige markt → hoogstens elke AI_QUIET_INTERVAL_MIN minuten.
 export const AI_QUIET_INTERVAL_MIN = Number(process.env.AI_QUIET_INTERVAL_MIN ?? "15");

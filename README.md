@@ -1,3 +1,26 @@
+# FASE 1 — Hardening (10 sep 2026)
+
+De bot is in Fase 1 grondig gehard; zie `supabase-phase1-setup.sql` voor de
+bijbehorende (optionele maar aanbevolen) migration en `.env.example` voor alle
+nieuwe, centraal configureerbare limieten. Kort:
+
+- **Risico per trade: 0,25–1,0% van de pot** (hard gecleand, was 5–10%).
+- **Notional cap 25% van equity per trade; totaal open ≤ 50%; max 4 posities** (was: 95% van de kas).
+- **Fee-guard:** trades waarvan de TP de ~0,6% round-trip-kosten niet ≥2,5× dekt of netto RR < 1,0 hebben, worden hard geblokkeerd.
+- **Min-hold 15 min** op AI-exits (SL/TP/daglimiet/nieuws-high altijd toegestaan) + **cooldown 10 min per pair** na een exit.
+- **Frequentie-limieten:** 2 entries/pair/uur, 6/pair/dag, 8/uur, 20/dag.
+- **Daglimiet −5%** + verlies-snelheids-guard (≥3 verliezen in 60 min → 60 min pauze).
+- **Atomaire claims + run-lock:** dubbele/gelijke-tijdige verwerking is onmogelijk (DB-niveau).
+- **Strikte AI-output-validatie + max 2 voorstellen/run** (code-level).
+- **AI-budget:** max 30 calls/uur, 240/dag, $3/dag — budget op → AI zwijgt, risicobeheer loopt door.
+- **Handelsdag = Europe/Amsterdam** (was UTC).
+- **BloFin-demo-reconciliation** elke tick + safety-guard: mirror werkt uitsluitend tegen het demo-host.
+- Nog steeds volledig PAPER/DEMO — geen enkele live-activering mogelijk.
+
+Tests: `npm test` (42 safety-tests). Type-check: `npm run typecheck`.
+
+---
+
 # AI Trading Bot — Silvijn Verhouden
 
 AI-gestuurde crypto day-trading bot (BTC/EUR) met eigen dashboard.

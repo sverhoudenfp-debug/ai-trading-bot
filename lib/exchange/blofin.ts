@@ -13,7 +13,16 @@ const SECRET = process.env.BLOFIN_SECRET_KEY ?? "";
 const PASSPHRASE = process.env.BLOFIN_PASSPHRASE ?? "";
 
 export const blofinConfigured = Boolean(API_KEY && SECRET && PASSPHRASE);
-export const blofinLive = blofinConfigured && (process.env.PAPER_LIVE ?? "") === "blofin";
+
+// ── FASE 1 SAFETY-GUARD: DEMO-ONLY ─────────────────────────────────────
+// De mirror mag alléén tegen het BloFin-demo-host praten. Elk host zonder
+// "demo" in de naam, of PAPER_LIVE ≠ "blofin", zet de mirror hard uit.
+// Hiermee kan geen enkele configuratie in Fase 1 (per ongeluk) live raken.
+const hostIsDemo = HOST.toLowerCase().includes("demo");
+export const blofinLive = blofinConfigured && hostIsDemo && (process.env.PAPER_LIVE ?? "") === "blofin";
+if (blofinConfigured && !hostIsDemo) {
+  console.warn("[blofin] BLOFIN_DEMO_HOST is geen demo-omgeving — mirror uitgeschakeld (safety-guard)");
+}
 
 // Bitvavo EUR-paar → Blofin USDT-instrument
 export const BLOFIN_INST: Record<string, string> = {

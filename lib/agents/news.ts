@@ -14,27 +14,12 @@
 // handelt dan door op de laatste bekende status, net als vóór deze agent.
 
 import { insertNewsAlert, latestNewsAlert } from "./db";
+import { classifyTitle } from "./newsMatch";
+import { NEWS_STALE_GRACE_MIN } from "@/lib/risk/config";
 
-const COIN_WORDS = [
-  "bitcoin", "btc", "ethereum", "eth", "solana", "sol", "xrp", "ripple",
-  "worldcoin", "wld", "near", "algorand", "algo", "internet computer", "icp",
-];
+// Keyword-radar verhuisd naar lib/agents/newsMatch.ts (token-matching
+// i.p.v. substring — Fase 1-fix voor o.a. "Payward" → "war").
 
-// Macro-schokken die de hele markt raken (hoge volatiliteit verwacht)
-const HIGH_KEYWORDS = [
-  "fed ", "fomc", "cpi", "inflation", "interest rate", "rate cut", "rate hike",
-  "hike", "recession", "war", "sanction", "liquidation", "flash crash", "crash",
-  "hack", "hacked", "exploit", "breach", "billion stolen", "sec sues", "sues",
-  "indicted", "ban", "banned", "depeg", "stablecoin collapse", "bankrupt",
-  "insolvent", "emergency", "executive order",
-];
-
-// Minder heftig maar wel relevant — alert blijven, geen blokkade
-const CAUTION_KEYWORDS = [
-  "etf", "regulation", "lawsuit", "probe", "investigation", "delist",
-  "listing", "upgrade", "fork", "hack alert", "outflow", "inflow",
-  "treasury", "approval", "delay", "veto", "tariff", "downgrade",
-];
 
 export interface NewsItem {
   title: string;
@@ -81,6 +66,8 @@ export async function assessNews(): Promise<{
   level: "ok" | "caution" | "high";
   reason: string;
   headlines: string[];
+  category: string | null;
+  affectedPairs: string | null;
 }> {
   // 1. items van het laatste uur verzamelen (fallback-feed als de eerste faalt)
   const windowStart = Math.floor(Date.now() / 1000) - 3600;
@@ -102,40 +89,53 @@ export async function assessNews(): Promise<{
 
   if (items.length === 0) {
     // Geen nieuws of feeds onbereikbaar → geen nieuwe status, fail-open
-    return { level: "ok", reason: "geen nieuws-items gevonden in het laatste uur", headlines: [] };
+    return { level: "ok", reason: "geen nieuws-items gevonden in het laatste uur", headlines: [], category: "none", affectedPairs: null };
   }
 
-  // 2. sleutelwoord-radar
+  // 2. sleutelwoord-radar (token-matching, zie newsMatch.ts)
   const highHits: string[] = [];
   const cautionHits: string[] = [];
+  const categories = new Set<string>();
+  const affected = new Set<string>();
   for (const it of items) {
-    const t = ` ${it.title.toLowerCase()} `;
-    if (HIGH_KEYWORDS.some((k) => t.includes(k))) highHits.push(it.title);
-    else if (CAUTION_KEYWORDS.some((k) => t.includes(k))) cautionHits.push(it.title);
+    const c = classifyTitle(it.title);
+    if (c.level === "high") {
+      highHits.push(it.title);
+      categories.add(c.category);
+      c.affectedPairs.forEach((p) => affected.add(p));
+    } else if (c.level === "caution") {
+      cautionHits.push(it.title);
+      categories.add(c.category);
+      c.affectedPairs.forEach((p) => affected.add(p));
+    }
   }
-  // coin-specifiek: onze munten in een negatief verhaal?
-  const coinAlert = items.filter((it) => {
-    const t = ` ${it.title.toLowerCase()} `;
-    return COIN_WORDS.some((c) => t.includes(c)) &&
-      (HIGH_KEYWORDS.some((k) => t.includes(k)) || CAUTION_KEYWORDS.some((k) => t.includes(k)));
-  });
 
   const source_ = source; // voor de return
   if (highHits.length > 0) {
     return {
       level: "high",
-      reason: `${highHits.length} hoogrisico-kop(pen) in het laatste uur${coinAlert.length ? " — raakt mogelijk onze munten" : ""}`,
+      reason: `${highHits.length} hoogrisico-kop(pen) in het laatste uur${affected.size ? ` — raakt ${[...affected].map((p) => p.replace("-EUR", "")).join(", ")}` : ""}`,
       headlines: highHits.slice(0, 2),
+      category: [...categories].sort()[0] ?? null,
+      affectedPairs: [...affected].sort().join(",") || null,
     };
   }
-  if (cautionHits.length > 0 || coinAlert.length > 0) {
+  if (cautionHits.length > 0) {
     return {
       level: "caution",
-      reason: `${cautionHits.length + coinAlert.length} relevante kop(pen) in het laatste uur — geen blokkade`,
-      headlines: [...cautionHits, ...coinAlert.map((c) => c.title)].slice(0, 2),
+      reason: `${cautionHits.length} relevante kop(pen) in het laatste uur — geen blokkade`,
+      headlines: cautionHits.slice(0, 2),
+      category: [...categories].sort()[0] ?? null,
+      affectedPairs: [...affected].sort().join(",") || null,
     };
   }
-  return { level: "ok", reason: `rustig nieuwsbeeld (${items.length} items gecontroleerd)`, headlines: [] };
+  return {
+    level: "ok",
+    reason: `rustig nieuwsbeeld (${items.length} items gecontroleerd)`,
+    headlines: [],
+    category: "none",
+    affectedPairs: null,
+  };
 }
 
 /**
@@ -164,6 +164,8 @@ export async function newsAgent(): Promise<{ ran: boolean; level: string; reason
       reason: a.headlines.length ? `${a.reason} · "${a.headlines[0].slice(0, 90)}"` : a.reason,
       source: "rss:cointelegraph+coindesk",
       valid_until: new Date(Date.now() + validMin * 60_000).toISOString(),
+      category: a.category,
+      affected_pairs: a.affectedPairs,
     });
     return { ran: true, level: a.level, reason: a.reason, headlines: a.headlines };
   } catch (e) {
@@ -176,13 +178,17 @@ export async function currentNewsStatus(): Promise<{
   level: "ok" | "caution" | "high" | "unknown";
   reason: string;
   fresh: boolean;
+  ageMin: number | null; // leeftijd van de laatste alert (min)
+  stale: boolean;        // verlopen + grace voorbij → fail-closed relevant
 }> {
   try {
     const last = await latestNewsAlert();
-    if (!last) return { level: "unknown", reason: "nog geen nieuws-status", fresh: false };
+    if (!last) return { level: "unknown", reason: "nog geen nieuws-status", fresh: false, ageMin: null, stale: true };
     const fresh = Date.parse(last.valid_until) > Date.now();
-    return { level: last.level, reason: last.reason, fresh };
+    const ageMin = (Date.now() - Date.parse(last.created_at)) / 60_000;
+    const stale = !fresh && ageMin > (fresh ? 0 : NEWS_STALE_GRACE_MIN);
+    return { level: last.level, reason: last.reason, fresh, ageMin: Math.round(ageMin), stale };
   } catch {
-    return { level: "unknown", reason: "news_alerts niet leesbaar", fresh: false };
+    return { level: "unknown", reason: "news_alerts niet leesbaar", fresh: false, ageMin: null, stale: true };
   }
 }

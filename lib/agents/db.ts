@@ -53,15 +53,106 @@ export interface NewSignal {
   confidence?: string | null;
   consumed?: boolean;
   outcome?: string;
+  // Fase 1: rijkere proposal-data (jsonb-kolommen, pas na migration actief;
+  // insertSignal valt netjes terug zonder deze velden)
+  expected_move_pct?: number | null;
+  expected_duration_min?: number | null;
+  setup_quality?: string | null;
+  thesis?: string | null;
+  invalidation?: string | null;
 }
 
+const SIGNAL_EXT_KEYS = [
+  "expected_move_pct", "expected_duration_min", "setup_quality",
+  "thesis", "invalidation",
+] as const;
+
 export async function insertSignal(sig: NewSignal): Promise<void> {
+  const ext: Record<string, unknown> = {};
+  for (const k of SIGNAL_EXT_KEYS) {
+    const v = (sig as unknown as Record<string, unknown>)[k];
+    if (v !== undefined && v !== null) ext[k] = v;
+  }
   const r = await fetch(`${URL_}/rest/v1/trade_signals`, {
     method: "POST",
     headers: headers(),
-    body: JSON.stringify(sig),
+    body: JSON.stringify({ ...sig, ...ext }),
   });
+  if (!r.ok && Object.keys(ext).length) {
+    // kolommen bestaan nog niet (phase1-migration nog niet gedraaid)
+    // → opnieuw zonder de nieuwe velden; het signaal mag nooit verloren gaan
+    const fallback: Record<string, unknown> = { ...sig };
+    for (const k of SIGNAL_EXT_KEYS) delete fallback[k];
+    const r2 = await fetch(`${URL_}/rest/v1/trade_signals`, {
+      method: "POST",
+      headers: headers(),
+      body: JSON.stringify(fallback),
+    });
+    if (!r2.ok) throw new Error(`Supabase insertSignal: HTTP ${r2.status}`);
+    return;
+  }
   if (!r.ok) throw new Error(`Supabase insertSignal: HTTP ${r.status}`);
+}
+
+/**
+ * Fase 1 — ATOMAIRE SIGNAL-CLAIM.
+ * claimSignal = één conditional UPDATE (consumed=false → true) op DB-niveau.
+ * Twee gelijktijdige runs: de DB serialiseert; precies één krijgt de rij
+ * terug (return=representation), de ander een lege array. Daarna wordt de
+ * definitieve outcome apart gepatcht (markSignal).
+ * Bestaande (onverbruikte) signalen gaan nooit verloren: een claim faalt
+ * alleen als een ándere uitvoering het signaal net heeft geclaimd.
+ */
+export async function claimSignal(id: number, claimedBy: string): Promise<boolean> {
+  const r = await fetch(
+    `${URL_}/rest/v1/trade_signals?id=eq.${id}&consumed=eq.false`,
+    {
+      method: "PATCH",
+      headers: headers({ Prefer: "return=representation" }),
+      body: JSON.stringify({
+        consumed: true,
+        consumed_at: new Date().toISOString(),
+        outcome: "claimed",
+        outcome_reason: `geclaimd door run ${claimedBy}`,
+      }),
+    }
+  );
+  if (!r.ok) return false; // claimen mislukt → ander heeft hem al
+  const rows = (await r.json()) ?? [];
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+/** AI-budget-check: aantal aanroepen + geschatte kosten sinds tijdstip. */
+export async function aiUsageSince(sinceIso: string): Promise<{ calls: number; costUsd: number; errors: number }> {
+  const r = await fetch(
+    `${URL_}/rest/v1/agent_runs?created_at=gte.${encodeURIComponent(sinceIso)}&select=cost_usd_est,error&limit=1000`,
+    { headers: headers(), cache: "no-store" }
+  );
+  if (!r.ok) return { calls: 0, costUsd: 0, errors: 0 }; // tabel er nog niet → budget-check faalt open
+  const rows = (await r.json()) ?? [];
+  let costUsd = 0, errors = 0;
+  for (const x of rows) {
+    costUsd += Number(x.cost_usd_est ?? 0);
+    if (x.error) errors += 1;
+  }
+  return { calls: rows.length, costUsd, errors };
+}
+
+/** Signalen sinds een tijdstip (monitoring, paginering). */
+export async function listSignalsSince(sinceIso: string, maxPages = 20): Promise<TradeSignal[]> {
+  const out: TradeSignal[] = [];
+  const limit = 1000;
+  for (let page = 0; page < maxPages; page++) {
+    const r = await fetch(
+      `${URL_}/rest/v1/trade_signals?created_at=gte.${encodeURIComponent(sinceIso)}&select=*&order=created_at.asc&limit=${limit}&offset=${page * limit}`,
+      { headers: headers(), cache: "no-store" }
+    );
+    if (!r.ok) break;
+    const rows = (await r.json()) ?? [];
+    for (const x of rows) out.push(mapSignal(x));
+    if (rows.length < limit) break;
+  }
+  return out;
 }
 
 /** Onverbruikte signalen die nog vers zijn (binnen `freshMin` minuten). */
@@ -153,6 +244,10 @@ export async function insertNewsAlert(a: {
   reason: string;
   source: string;
   valid_until: string;
+  // Fase 1: gestructureerde categorie + onze coins die het raakt
+  // (kolommen bestaan pas na phase1-migration; valt netjes terug)
+  category?: string | null;
+  affected_pairs?: string | null;
 }): Promise<void> {
   const r = await fetch(`${URL_}/rest/v1/news_alerts`, {
     method: "POST",
