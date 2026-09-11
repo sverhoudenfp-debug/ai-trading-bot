@@ -653,6 +653,15 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
   // saveState eerst: reconciliation vergelijkt de persistente staat — als
   // het opslaan faalt, throwt de run hier en draait reconciliation niet
   // tegen een tussenstaat (fail-safe).
+  // LOCK-RELEASE (audit 11 sep): de pot-rij is tevens de run-lock (veld
+  // entry_time, zie claimRunLock). De in-memory pot werd NÁ de claim geladen
+  // en droeg dus de lock-timestamp — saveState(pot) schreef die terug, zodat
+  // de lock pas na de volledige TTL (5 min) verviel in plaats van bij
+  // run-einde. Effect: de bot draaide feitelijk 1× per ~5 min i.p.v. elke
+  // minuut (bewezen in blofin_reconciliation: ~10 rijen/uur). Fix: lock
+  // expliciet vrijgeven vóór de save; crasht de save, dan vervalt de lock
+  // alsnog via de TTL (fail-safe).
+  pot.entry_time = null;
   if (!dry) await Promise.all([...states.map((s) => saveState(s)), saveState(pot)]);
   if (!dry) {
     try {

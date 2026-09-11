@@ -130,3 +130,73 @@ describe("15. Reconciliation race-safety (mirror-open ≠ extra)", () => {
     expect(m?.action).toContain("NOOIT automatisch her-openen");
   });
 });
+
+describe("16. Reconciliation adversarial (audit 11 sep — Deel 3 aanvullend)", () => {
+  const shortIcp = { pair: "ICP-EUR", status: "short", size: 53.82 } as never;
+
+  it("paper SHORT + BloFin SHORT → match, geen actie", async () => {
+    mockGetStates.mockResolvedValue([shortIcp]);
+    mockGetPositions.mockResolvedValue([demoPos("ICP-USDT", -5382)]);
+    const r = await runReconciliation([]);
+    expect(r?.ok).toBe(true);
+    expect(mockClose).not.toHaveBeenCalled();
+  });
+
+  it("paper LONG + BloFin SHORT → side_mismatch: log-only, NOOIT sluiten (auto-correctie zou de paper-kant kunnen verdubbelen)", async () => {
+    mockGetStates.mockResolvedValue([longIcp]);
+    mockGetPositions.mockResolvedValue([demoPos("ICP-USDT", -5382)]);
+    const r = await runReconciliation([]);
+    expect(mockClose).not.toHaveBeenCalled();
+    const m = r?.mismatches.find((x) => x.instId === "ICP-USDT");
+    expect(m?.severity).toBe("side_mismatch");
+    expect(m?.action).toContain("geen auto-correctie");
+  });
+
+  it("size-grens exact op de 20%-tolerantie: geen mismatch; één contract erboven wél size_mismatch (log-only)", async () => {
+    mockGetStates.mockResolvedValue([longIcp]); // 5382 expected
+    // exact +20% (6458.4 → floor 6458): binnen tolerantie
+    mockGetPositions.mockResolvedValue([demoPos("ICP-USDT", 6458)]);
+    expect((await runReconciliation([]))?.ok).toBe(true);
+    // ruim boven de tolerantie: size_mismatch
+    mockGetPositions.mockResolvedValue([demoPos("ICP-USDT", 7000)]);
+    const r = await runReconciliation([]);
+    const m = r?.mismatches.find((x) => x.instId === "ICP-USDT");
+    expect(m?.severity).toBe("size_mismatch");
+    expect(mockClose).not.toHaveBeenCalled();
+  });
+
+  it("BloFin API faalt (timeout/500) → reconciliation rapporteert de fout, sluit niets, breekt de run niet", async () => {
+    mockGetStates.mockResolvedValue([flatIcp]);
+    mockGetPositions.mockRejectedValue(new Error("fetch failed: network timeout"));
+    const actions: string[] = [];
+    const r = await runReconciliation(actions);
+    expect(r?.ok).toBe(false);
+    expect((r?.error ?? "")).toContain("timeout");
+    expect(mockClose).not.toHaveBeenCalled();
+    expect(actions.some((a) => a.includes("reconciliatie FOUT"))).toBe(true);
+  });
+
+  it("stale close-mislukking (BloFin weigert de sluit-order) → fout gelogd, run blijft heel, volgende run probeert opnieuw", async () => {
+    mockGetStates.mockResolvedValue([flatIcp]);
+    mockGetPositions.mockResolvedValue([demoPos("ICP-USDT", 5382)]);
+    mockClose.mockRejectedValue(new Error("Blofin: order rejected"));
+    const actions: string[] = [];
+    const r = await runReconciliation(actions);
+    expect(mockClose).toHaveBeenCalledTimes(1);
+    const m = r?.mismatches.find((x) => x.instId === "ICP-USDT");
+    expect(m?.action).toContain("sluiten mislukt");
+    expect(actions.some((a) => a.includes("reconciliatie FOUT"))).toBe(true);
+  });
+
+  it("na een geslaagde stale-sluiting is de volgende reconciliation-run schoon (geen dubbele correctie)", async () => {
+    mockGetStates.mockResolvedValue([flatIcp]);
+    mockGetPositions.mockResolvedValueOnce([demoPos("ICP-USDT", 5382)]).mockResolvedValueOnce([]);
+    mockClose.mockResolvedValue("1000136728584");
+    const r1 = await runReconciliation([]);
+    expect(r1?.ok).toBe(false);
+    expect(mockClose).toHaveBeenCalledTimes(1);
+    const r2 = await runReconciliation([]);
+    expect(r2?.ok).toBe(true); // demo nu leeg ↔ paper flat
+    expect(mockClose).toHaveBeenCalledTimes(1); // géén tweede sluiting
+  });
+});

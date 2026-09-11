@@ -55,7 +55,11 @@ async function blofin<T>(method: string, path: string, body?: unknown): Promise<
   const ts = Date.now().toString();
   const nonce = crypto.randomUUID();
   const bodyStr = body ? JSON.stringify(body) : "";
+  // AUDIT 11 sep: harde timeout — een hangende BloFin-call mag de run niet
+  // vastpinnen tot de Vercel-timeout; na 10s falen de callers afgevangen in
+  // hun eigen try/catch (mirror/reconciliation: log-only, run blijft heel).
   const res = await fetch(HOST + path, {
+    signal: AbortSignal.timeout(10_000),
     method,
     headers: {
       "Content-Type": "application/json",
@@ -77,7 +81,7 @@ export async function getInstruments(): Promise<Instrument[]> {
   if (instrumentsCache && Date.now() - instrumentsCache.at < 3600_000) {
     return instrumentsCache.data;
   }
-  const res = await fetch(`${HOST}/api/v1/market/instruments`, { cache: "no-store" });
+  const res = await fetch(`${HOST}/api/v1/market/instruments`, { cache: "no-store", signal: AbortSignal.timeout(10_000) });
   const json = await res.json();
   if (json.code !== "0") throw new Error("Blofin: instrumenten ophalen mislukt");
   instrumentsCache = { at: Date.now(), data: json.data as Instrument[] };

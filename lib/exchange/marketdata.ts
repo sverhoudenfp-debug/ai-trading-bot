@@ -31,7 +31,9 @@ export async function fetchCandles(
   for (let guard = 0; guard < 12 && end > endTarget; guard++) {
     const start = Math.max(endTarget, end - windowMs + intervalMin * 60 * 1000);
     const url = `https://api.bitvavo.com/v2/${market}/candles?interval=${intervalMin}m&start=${start}&end=${end}&limit=1440`;
-    const res = await fetch(url);
+    // AUDIT 11 sep: harde timeout — marktdata mag de run nooit laten hangen;
+    // een falend pair wordt door de callers fail-closed overgeslagen.
+    const res = await fetch(url, { signal: AbortSignal.timeout(15_000) });
     // 400 = Bitvavo kent voor deze range geen candles (begin van de historie
     // bereikt) → gewoon stoppen, geen fout. Andere statussen zijn wél fout.
     if (res.status === 400) break;
