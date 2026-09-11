@@ -50,7 +50,7 @@ import {
 } from "@/lib/risk/config";
 import { amsterdamDay } from "@/lib/time";
 import { CANARY_RISK_CAP_PCT } from "@/lib/evolution/config";
-import { ensureTodayLimit, shiftDayStatsFrom } from "@/lib/risk/dailyLimit";
+import { ensureTodayLimit, shiftDay, shiftDayStatsFrom } from "@/lib/risk/dailyLimit";
 import { evoStrategyStillActive } from "@/lib/evolution/live";
 import { evolutionMonitorTick } from "@/lib/evolution/tick";
 import { validationTick } from "@/lib/validation/tick";
@@ -242,7 +242,10 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
   // bewust afwezig; dit is géén risicoknop maar een pauze-grens.
   let yesterdayStats: { closedTrades: number; netPnlEur: number; winratePct: number } | null = null;
   try {
-    const yesterday = amsterdamDay(new Date(Date.now() - 24 * 3600_000));
+    // AUDIT 11 sep: gisteren als KALENDERDAG (shiftDay), niet via `now − 24h`
+    // (DST: op de 25-uurs wintertijdstijd dag geeft ms-aftrek de zelfde dag
+    // terug) — identiek aan de gisteren-definitie in ensureTodayLimit zelf.
+    const yesterday = shiftDay(today, -1);
     const orders48h = dry ? [] : await listOrdersSince(new Date(Date.now() - 48 * 3600_000).toISOString()).catch(() => [] as PaperOrderExt[]);
     yesterdayStats = shiftDayStatsFrom(orders48h, yesterday);
   } catch { /* stats optioneel — beslislogica heeft een null-pad */ }

@@ -185,3 +185,21 @@ describe("Adaptief daglimiet — persistentie & restart", () => {
     expect(amsterdamDay(new Date("2026-09-11T13:45:00.000Z"))).toBe("2026-09-11"); // 15:45 Amsterdam
   });
 });
+
+describe("17. shiftDay DST-proof (audit 11 sep)", () => {
+  it("kalenderdag-aftrek werkt op de wintertijd-terugdag (25-uurs dag)", async () => {
+    const { shiftDay } = await import("@/lib/risk/dailyLimit");
+    expect(shiftDay("2026-10-25", -1)).toBe("2026-10-24"); // nacht waarin de klok terug gaat
+  });
+  it("kalenderdag-aftrek werkt op de zomertijd-dag (23-uurs dag)", async () => {
+    const { shiftDay } = await import("@/lib/risk/dailyLimit");
+    expect(shiftDay("2026-03-29", -1)).toBe("2026-03-28"); // nacht waarin de klok vooruit gaat
+  });
+  it("gisteren-definitie in orders.ts is identiek aan die in ensureTodayLimit (geen ms-aftrek meer)", async () => {
+    const src = (await import("node:fs")).readFileSync("lib/agents/orders.ts", "utf8");
+    expect(src).toContain("const yesterday = shiftDay(today, -1);");
+    expect(src).not.toContain("amsterdamDay(new Date(Date.now() - 24"); // ms-aftrek voor gisteren is verboden
+    // NB: het rollende 24-uursvenster voor frequentie-guards (listOrdersSince)
+    // is bewust ms-gebaseerd — dat is géén kalenderdag-grens.
+  });
+});

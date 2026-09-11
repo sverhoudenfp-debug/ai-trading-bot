@@ -233,7 +233,10 @@ export function shiftDayStatsFrom(
 }
 
 /** Amsterdamse datum ± n dagen (YYYY-MM-DD). */
-function shiftDay(iso: string, deltaDays: number): string {
+/** Kalenderdag-verschuiving op YYYY-MM-DD (DST-proof: géén ms-aftrek —
+ *  AUDIT 11 sep: `now − 24h` geeft op de laatste uren van een 25-uurs
+ *  wintertijdstijd dag de zélfde kalenderdag terug. */
+export function shiftDay(iso: string, deltaDays: number): string {
   const [y, m, d] = iso.split("-").map(Number);
   const dt = new Date(Date.UTC(y, m - 1, d + deltaDays));
   return dt.toISOString().slice(0, 10);
