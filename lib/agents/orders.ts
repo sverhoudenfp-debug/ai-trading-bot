@@ -81,7 +81,8 @@ async function mirrorBlofin(
   action: "open" | "open_short" | "close",
   pair: string,
   coinSize: number,
-  actions: string[]
+  actions: string[],
+  openedThisRun?: Set<string>
 ): Promise<void> {
   if (!blofinLive) return;
   const instId = BLOFIN_INST[pair];
@@ -96,9 +97,11 @@ async function mirrorBlofin(
       await setLeverage1x(instId);
       if (action === "open") {
         const orderId = await marketLong(instId, contracts);
+        openedThisRun?.add(instId); // race-safe: reconciliation sluit hem nooit zelf
         actions.push(`blofin demo: LONG ${contracts} contracts ${instId} geplaatst (order ${orderId.slice(-6)})`);
       } else {
         const orderId = await marketShort(instId, contracts);
+        openedThisRun?.add(instId); // race-safe: reconciliation sluit hem nooit zelf
         actions.push(`blofin demo: SHORT ${contracts} contracts ${instId} geplaatst (order ${orderId.slice(-6)})`);
       }
     } else {
@@ -432,6 +435,9 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
   }
 
   // ── STAP 3: entry-signalen verwerken ────────────────────────────────
+  // race-safe: mirror-opens van déze run registreren — reconciliation mag
+  // een zojuist geopende demo-positie nooit als "extra" sluiten
+  const mirrorOpenedThisRun = new Set<string>();
   const openCosts = states.reduce((a, s) => a + (s.cost ?? 0), 0);
   const openNotionalNow = states.reduce((a, s) => a + posValue(s), 0);
   const openPositionsNow = states.filter((s) => s.status !== "flat").length;
@@ -584,7 +590,7 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
       },
     });
     const acts: string[] = [];
-    await mirrorBlofin(isLong ? "open" : "open_short", s.pair, size, acts);
+    await mirrorBlofin(isLong ? "open" : "open_short", s.pair, size, acts, mirrorOpenedThisRun);
     await mark(sig, "executed", `order geplaatst: ${size.toFixed(6)} @ ${entry.toFixed(2)} (risico ${riskPct}% van de pot, notioneel €${(size * entry).toFixed(0)})`);
     feedActions.push(`${s.pair}: ${isLong ? "LONG" : "SHORT"} ${size.toFixed(6)} @ ${entry.toFixed(2)} EUR · risico ${riskPct}%${acts.length ? ` · ${acts[0]}` : ""}`);
   }
@@ -599,14 +605,15 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
   }
 
   // ── STAP 5: BloFin demo reconciliation ──────────────────────────────
+  // RACE-SAFE (11 sep 2026): reconciliation draait PAS NADAT de paper-state
+  // van deze run volledig is gepersisteerd (onderstaande saveState). Vóór deze
+  // fix draaide hij vóór de save: een market-order vult bij BloFin vrijwel
+  // direct, maar de DB kende de nieuwe paper-state nog niet → de verse
+  // demo-positie werd als "extra" geclassificeerd en binnen ~2 sec door de
+  // reconciliatie zelf gesloten. Nu: (1) pas na persistence, (2) opens van
+  // deze run zijn protected en worden nooit gesloten, (3) echte afwijkingen
+  // (stale/verweesde demo-posities) worden nog steeds veilig gesloten.
   let reconciliation: { ok: boolean; mismatches: unknown[]; error?: string } | null = null;
-  if (!dry) {
-    try {
-      reconciliation = await runReconciliation(feedActions);
-    } catch (e) {
-      reconciliation = { ok: false, mismatches: [], error: String(e instanceof Error ? e.message : e) };
-    }
-  }
 
   // ── FASE 3: evolution-monitor-tick (bounded, fail-closed, max 1×/5 min) ──
   let evolution: { checked: number; rollbacks: { strategy: string; triggers: string[] }[]; warnings: { strategy: string; warnings: string[] }[]; errors: string[] } | null = null;
@@ -643,7 +650,17 @@ export async function orderAgent(dry = false, runId = "manual"): Promise<{
   }
 
   // ── opslaan: alle positie-rijen + de pot-rij (releases de run-lock) ───
+  // saveState eerst: reconciliation vergelijkt de persistente staat — als
+  // het opslaan faalt, throwt de run hier en draait reconciliation niet
+  // tegen een tussenstaat (fail-safe).
   if (!dry) await Promise.all([...states.map((s) => saveState(s)), saveState(pot)]);
+  if (!dry) {
+    try {
+      reconciliation = await runReconciliation(feedActions, mirrorOpenedThisRun);
+    } catch (e) {
+      reconciliation = { ok: false, mismatches: [], error: String(e instanceof Error ? e.message : e) };
+    }
+  }
   return {
     ok: true,
     pot: totalEquity(),

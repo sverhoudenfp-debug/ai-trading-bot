@@ -5,6 +5,8 @@
 // demo-posities (BloFin). Bij een mismatch:
 //   • "extra" (demo positie die paper niet kent) → veilig sluiten op demo
 //     (virtueel geld, geen risico, voorkomt sluipende divergentie);
+//     TENZIE de positie door de lopende bot-run zélf is geopend
+//     (race-safe protection — zie runReconciliation);
 //   • "missing" / "size_mismatch" → alléén loggen (NOOIT automatisch
 //     her-openen — dat zou de spiegel kunnen verdubbelen).
 // Een BloFin-fout verdwijnt nooit stil: hij komt in het run-antwoord en
@@ -50,8 +52,17 @@ export function compareRecon(
 }
 
 /** Volledige reconciliation-run (alleen als de BloFin-mirror actief is). */
+// RACE-SAFE: reconciliation hoort pas te draaien nadat de paper-state van
+// de lopende run volledig is gepersisteerd (orderAgent roept dit aan na
+// saveState). Als extra bescherming krijgt runReconciliation de instIds mee
+// die déze run via de mirror heeft geopend: een verse demo-positie daarop
+// wordt NOOIT als "extra" gesloten — ook niet als reconciliation onverhoopt
+// tegen een tussenstaat aanloopt. Idempotent: herhaalde runs met dezelfde
+// protection sluiten niets; echte achtergebleven posities (niet beschermd)
+// worden nog steeds veilig gesloten.
 export async function runReconciliation(
-  actions: string[]
+  actions: string[],
+  protectedInstIds: ReadonlySet<string> = new Set()
 ): Promise<{ ok: boolean; mismatches: ReconMismatch[]; error?: string } | null> {
   if (!blofinLive) return null;
   try {
@@ -74,16 +85,22 @@ export async function runReconciliation(
     const res = compareRecon(expected, actual);
     const mismatches: ReconMismatch[] = res.mismatches;
 
-    // veilige correctie: extra demo-positie (paper kent hem niet) → sluiten
+    // veilige correctie: extra demo-positie (paper kent hem niet) → sluiten;
+    // MAAR: door déze run geopend (race-safe protection) → nooit sluiten
     for (const m of mismatches) {
       if (m.severity === "extra") {
-        try {
-          const orderId = await closePosition(m.instId);
-          m.action = `extra demo-positie veilig gesloten (order ${orderId.slice(-6)})`;
+        if (protectedInstIds.has(m.instId)) {
+          m.action = "race-safe: deze run geopend — NIET gesloten, alleen gelogd";
           actions.push(`reconciliatie: ${m.instId} ${m.action}`);
-        } catch (e) {
-          m.action = `sluiten mislukt: ${String(e instanceof Error ? e.message : e)}`;
-          actions.push(`reconciliatie FOUT: ${m.instId} ${m.action}`);
+        } else {
+          try {
+            const orderId = await closePosition(m.instId);
+            m.action = `extra demo-positie veilig gesloten (order ${orderId.slice(-6)})`;
+            actions.push(`reconciliatie: ${m.instId} ${m.action}`);
+          } catch (e) {
+            m.action = `sluiten mislukt: ${String(e instanceof Error ? e.message : e)}`;
+            actions.push(`reconciliatie FOUT: ${m.instId} ${m.action}`);
+          }
         }
       } else {
         actions.push(`reconciliatie mismatch ${m.severity}: ${m.instId} paper=${m.paper} demo=${m.demo} → ${m.action}`);
